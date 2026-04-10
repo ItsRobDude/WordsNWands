@@ -547,7 +547,7 @@ Deterministic resolution requirements:
 1. Build eligible set from current board at primitive evaluation time.
 2. `target_count` is an upper bound; if `target_count > eligible.length`, apply to `eligible.length` and stop.
 3. Sampling must be without replacement.
-4. For `targeting: 'random_eligible'`, use seeded deterministic ordering then take first `N`:
+4. For `targeting: 'random_eligible'`, use seeded deterministic pseudo-random selection in authoritative runtime, implemented as seeded deterministic ordering then take first `N` (replay-stable):
    - primary: ascending hash(`encounter_seed + creature_cast_index + primitive_step_index + tile_id`)
    - secondary: `row` ascending
    - tertiary: `col` ascending
@@ -572,7 +572,7 @@ Text snapshot legend:
 - `X*` means Wand marker on tile letter `X`
 - `[F]`, `[S]`, `[D]`, `[B]` mean frozen/sooted/dull/bubble respectively
 
-All examples assume `targeting: 'random_eligible'` with deterministic seeded ordering from section 6.2.
+All examples assume `targeting: 'random_eligible'` with seeded deterministic pseudo-random selection in authoritative runtime from section 6.2.
 
 Frozen (`target_count = 2`):
 
