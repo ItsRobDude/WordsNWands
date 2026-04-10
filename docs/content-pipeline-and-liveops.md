@@ -332,6 +332,19 @@ AI must not be the final authority for:
 - live challenge approval
 - validation snapshot approval
 
+### 7.4 Validation snapshot curation protocol linkage
+Validation snapshot approvals must follow the operational curation protocol defined in:
+
+- `docs/word-validation-and-element-rules.md`, Section **18. Operational Curation Protocol**
+
+This linkage is mandatory so that content operations and gameplay-validation policy remain synchronized for:
+
+- candidate-word review fields
+- tier acceptance thresholds and overrides
+- reviewer dispute handling and SLA
+- pre-release batch QA checks
+- post-release rollback handling for mistaken acceptance or tag changes
+
 ---
 
 ## 8. Versioning and Package Rules

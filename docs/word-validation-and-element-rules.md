@@ -808,7 +808,91 @@ Validation and element-tag changes should not happen silently in a way that make
 
 ---
 
-## 18. Board-Generation Interaction Rules
+## 18. Operational Curation Protocol
+
+This section defines the required review protocol for candidate-word decisions before they enter a validation snapshot.
+
+### 18.1 Mandatory review fields per candidate word
+Each candidate word record must include all of the following fields before approval:
+
+- **frequency/familiarity evidence source**
+  - reference to the source used to justify ordinary-player familiarity
+  - enough detail for another reviewer to reproduce the judgment
+- **tone classification**
+  - one of: `family-safe`, `review-required`, `blocked`
+- **element rationale (if tagged)**
+  - required when assigning a non-Arcane element
+  - must explain literal meaning and why the tag is player-intuitive
+- **confidence score**
+  - numeric score from `0.00` to `1.00`
+  - reflects reviewer confidence in both acceptance and tagging choice
+
+Candidate records missing any required field are not eligible for `approved` status.
+
+### 18.2 Acceptance thresholds for Tier A/B/C decisions
+Use lexicon fairness tiers from Section 16 with the following decision thresholds:
+
+- **Tier A (Strong fit)**  
+  - default decision: `accept`
+  - minimum confidence: `>= 0.80`
+  - if tagged non-Arcane, element rationale is mandatory
+- **Tier B (Acceptable fit)**  
+  - default decision: `accept` (often Arcane unless tag clarity is strong)
+  - minimum confidence: `>= 0.65`
+  - non-Arcane tag requires confidence `>= 0.75`
+- **Tier C (Poor fit)**  
+  - default decision: `reject`
+  - acceptance requires explicit override
+
+#### Override approvals
+Any override of the defaults above (especially Tier C acceptance or low-confidence acceptance) must be approved by the **content owner** and recorded with a short rationale in the snapshot change notes.
+
+### 18.3 Dispute policy for reviewer disagreement
+When reviewers disagree on validity or tag:
+
+- **default action**
+  - if the word appears family-safe and reasonably familiar: `valid + Arcane`
+  - if familiarity or tone safety is unclear: hold as `invalid` until resolved
+- **escalation owner**
+  - content owner (final decision authority)
+- **decision SLA**
+  - finalize within **2 business days** of escalation for ordinary snapshot work
+  - for release-blocking disputes, finalize before snapshot cut; unresolved words remain out of the release
+
+### 18.4 Batch-change QA checks before snapshot release
+Before publishing a new validation snapshot, run and review all of the following:
+
+- **acceptance-rate delta check**
+  - compare accepted-word rate versus prior approved snapshot
+  - flag large unexpected swings for manual review
+- **element-distribution drift check**
+  - compare per-element tag distribution versus prior snapshot
+  - investigate large shifts that lack intentional design rationale
+- **profanity/blocklist regression check**
+  - verify blocked categories remain blocked
+  - verify no newly accepted words violate family-friendly restrictions
+
+Any flagged issue must be either:
+
+- fixed before release, or
+- explicitly documented as intentional and approved by the content owner
+
+### 18.5 Post-release rollback policy for mistaken acceptance/tag changes
+If a released snapshot contains mistaken validity or element decisions:
+
+1. classify incident severity (`high`, `medium`, `low`) based on trust impact
+2. create a corrective snapshot patch with minimal scope
+3. prefer the least disruptive trust-preserving fix:
+   - revert mistaken element tag to Arcane, or
+   - revert mistaken acceptance to invalid when tone/safety requires it
+4. document affected words and rationale in release notes
+5. preserve active-session stability by applying corrections only through versioned snapshot updates (no silent runtime reinterpretation)
+
+For severe family-friendly regressions, rollback should be treated as expedited and prioritized over non-critical content work.
+
+---
+
+## 19. Board-Generation Interaction Rules
 
 This document does not own board generation, but it does impose fairness requirements on it.
 
@@ -826,7 +910,7 @@ When board-generation systems intentionally bias for likely playability, they sh
 
 ---
 
-## 19. Out of Scope for v1
+## 20. Out of Scope for v1
 
 The following are out of scope for the current validation and element system unless later documented:
 
@@ -841,7 +925,7 @@ The following are out of scope for the current validation and element system unl
 
 ---
 
-## 20. Summary Rule
+## 21. Summary Rule
 
 Words 'n Wands! should validate words in a way that feels:
 
