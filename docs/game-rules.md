@@ -444,7 +444,15 @@ For successful valid casts:
 - `finalDamage = round(baseDamage × matchupMultiplier × wandMultiplier × sootMultiplier)`
 - if no Wand tile is used, `wandMultiplier = 1.0`
 - if no Sooted tile is used, `sootMultiplier = 1.0`
+- rounding function is **round-half-up to nearest integer** for non-negative values (equivalent to `Math.round` behavior for gameplay damage)
+- tie-break behavior: exact `.5` values round **up** to the next integer
+- explicit tie example: if `baseDamage = 14`, `matchupMultiplier = 1.5`, `wandMultiplier = 1.0`, and `sootMultiplier = 0.75`, then raw damage is `15.75`; if multipliers produce `15.5`, `finalDamage` must resolve to `16`
 - any successful valid cast that reaches damage resolution must deal at least `1` final damage
+
+Implementation consistency note:
+
+- all gameplay runtimes and automated tests must call the same rounding utility for `finalDamage`
+- canonical shared helper for implementers: `packages/game-rules/src/damage/roundFinalDamage.ts` exporting `roundFinalDamage(rawDamage: number): number`
 
 Wand bonuses should support exciting tactical moments without turning the board into a power-up circus.
 
