@@ -867,7 +867,17 @@ Rules:
 - any authored out-of-band balance value with `warn` severity requires an active waiver entry
 - `error` severity out-of-band values are never auto-waived by content-only metadata; they require explicit governance exception handling outside ordinary authoring flow
 
-#### 8.2.a Encounter balance metadata and waiver contract
+#### 8.2.a Player assist action gating contract (M1-M2 and later)
+
+- M1 and M2 ship with no player-invoked hint/clue runtime contract.
+- Only automatic dead-board Spark Shuffle recovery is allowed during active encounter play in M1-M2.
+- If player-invoked hints/clues are introduced in a later milestone, `docs/implementation-contracts.md` must define all of the following before implementation ships:
+  - trigger source (exact button/surface and availability state)
+  - gameplay effect (for example, one valid path candidate highlight and its lifetime)
+  - pressure impact (exact move/countdown/currency effects)
+  - anti-abuse constraints (cooldown, per-encounter limit, and any disable conditions)
+
+#### 8.2.b Encounter balance metadata and waiver contract
 
 ```ts
 export interface RuntimeEncounterBalanceMetadata {
