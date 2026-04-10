@@ -391,22 +391,20 @@ The game should prefer tuning across those combined levers rather than relying o
 
 Damage must be understandable and consistent.
 
-### Base damage rule
-Longer words deal more base damage.
+### Canonical source requirement
+Damage rules in this document are normative but not independently authored.
 
-Current v1 formula:
+For formula constants, rounding mode, minimum-damage floor, and version pin behavior, use the canonical section:
 
-- `baseDamage = 8 + 3 × (wordLength - 3) + max(0, wordLength - 5)`
+- `docs/implementation-contracts.md` → **Section 5.2.1, “Damage Model v1 (canonical)”**
 
-Reference values:
+Damage model version identifier used by gameplay and authoring:
 
-- 3 letters: `8`
-- 4 letters: `11`
-- 5 letters: `14`
-- 6 letters: `18`
-- 7 letters: `22`
-- 8 letters: `26`
-- 9 letters: `30`
+- `damage_model_v1`
+
+Damage Model v1 fingerprint string (must match canonical and encounter-balance docs exactly):
+
+- `DMV1|base=8+3*(L-3)+max(0,L-5)|matchup=1.5,1.0,0.7,1.0|wand=1.25|soot=0.75|round=half_up|min=1`
 
 ### Strategic balance rule
 The damage system should support real tension between:
@@ -419,44 +417,17 @@ If weakness words always dominate regardless of size, word-building depth shrink
 
 The right balance is that both lines of play should matter often.
 
-### Element multiplier rule
-The word’s element modifies its damage based on the creature’s current matchup.
+### Element/Wand/Soot/final-damage rules
+Element matchup, Wand bonus, Soot penalty, rounding mode, and final-damage floor are defined by the canonical `damage_model_v1` contract.
 
-Current standard direction:
+This section must not redefine those constants; it must only reference and comply with:
 
-- weakness hit: `1.5x`
-- neutral hit: `1.0x`
-- resistance hit: `0.7x`
-- Arcane hit: `1.0x` unless a mode explicitly changes that rule
-
-### Wand bonus rule
-If a valid cast includes a Wand tile:
-
-- the final damage receives a `1.25x` bonus
-- the Wand tile is consumed like a normal tile
-- the Wand tile should feel helpful, not mandatory
-
-### Soot penalty rule
-If a valid cast includes one or more Sooted tiles, apply one total soot penalty:
-
-- `sootMultiplier = 0.75`
-- multiple Sooted tiles in one cast do not stack extra penalties
-
-### Final damage formula rule
-For successful valid casts:
-
-- `finalDamage = round(baseDamage × matchupMultiplier × wandMultiplier × sootMultiplier)`
-- if no Wand tile is used, `wandMultiplier = 1.0`
-- if no Sooted tile is used, `sootMultiplier = 1.0`
-- rounding function is **round-half-up to nearest integer** for non-negative values (equivalent to `Math.round` behavior for gameplay damage)
-- tie-break behavior: exact `.5` values round **up** to the next integer
-- explicit tie example: if `baseDamage = 14`, `matchupMultiplier = 1.5`, `wandMultiplier = 1.0`, and `sootMultiplier = 0.75`, then raw damage is `15.75`; if multipliers produce `15.5`, `finalDamage` must resolve to `16`
-- any successful valid cast that reaches damage resolution must deal at least `1` final damage
+- `docs/implementation-contracts.md` → **Section 5.2.1, “Damage Model v1 (canonical)”**
 
 Implementation consistency note:
 
-- all gameplay runtimes and automated tests must call the same rounding utility for `finalDamage`
-- canonical shared helper for implementers: `packages/game-rules/src/damage/roundFinalDamage.ts` exporting `roundFinalDamage(rawDamage: number): number`
+- all gameplay runtimes and automated tests that compute expected damage must import the same canonical damage constants/version and rounding helper
+- recommended canonical module path: `packages/game-rules/src/damage/damageModelV1.ts`
 
 Wand bonuses should support exciting tactical moments without turning the board into a power-up circus.
 
