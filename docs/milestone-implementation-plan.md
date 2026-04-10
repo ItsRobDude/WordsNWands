@@ -88,6 +88,7 @@ These docs may be created just before the milestone that needs them, but they mu
 - `docs/technical-architecture.md`
 - `docs/engineering-standards.md`
 - `docs/implementation-contracts.md`
+- `docs/milestone-locked-constants.md`
 - `docs/audio-visual-style-guide.md`
 - `docs/accessibility-localization-and-device-support.md`
 - `docs/content-pipeline-and-liveops.md`
@@ -294,6 +295,7 @@ Milestone 1 is a **single-device, local-first, content-bundled vertical slice** 
 ### Docs required before Milestone 1 begins
 - all Milestone 0 docs
 - `docs/implementation-contracts.md`
+- `docs/milestone-locked-constants.md`
 - `docs/audio-visual-style-guide.md`
 - `docs/accessibility-localization-and-device-support.md`
 
@@ -378,6 +380,7 @@ Milestone 2 should not spend major effort on a decorative world map unless it cl
 - all Milestone 1 docs
 - `docs/technical-architecture.md` finalized enough for shared package boundaries
 - `docs/implementation-contracts.md` expanded for progression and encounter records if needed
+- `docs/milestone-locked-constants.md` reviewed and updated for M2 locks before implementation
 
 ### Definition of done
 Milestone 2 is done when:
@@ -587,6 +590,7 @@ At minimum:
 - `docs/technical-architecture.md`
 - `docs/engineering-standards.md`
 - `docs/implementation-contracts.md`
+- `docs/milestone-locked-constants.md`
 - `docs/audio-visual-style-guide.md`
 - `docs/accessibility-localization-and-device-support.md`
 - `docs/content-pipeline-and-liveops.md`

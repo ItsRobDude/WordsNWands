@@ -296,6 +296,7 @@ Rules:
 - `repeated_words` stores normalized cast history for repeat rejection
 - `moves_remaining` must never exceed `move_budget_total`
 - the four version pins above are required for restore/debug trust
+- any change to locked milestone constants in `docs/milestone-locked-constants.md` requires corresponding version-pin updates in this contract file within the same change
 - `damage_model_version` is required for deterministic restore/debug replay and must match the active canonical damage model contract version
 - runtime state should be complete enough that battle resolution does not depend on hidden UI state
 
