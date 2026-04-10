@@ -222,7 +222,8 @@ Word games are “feel” products: players spend most of their time in a thinki
 Platform guidance emphasizes using feedback (color, text, sound, haptics) so users can perceive state changes even if they’re not looking at the screen or if the device is silenced—implying you should design redundant channels (not sound-only). [70]
 Apple guidance for haptics stresses consistency and using system-appropriate patterns; Android guidance similarly recommends “less is more,” co-designing visuals/audio/haptics, and avoiding legacy buzzy vibrations. [71]
 A WWDC design session explicitly teaches designing audio and haptics in harmony with interactive moments, which maps directly to word-game micro-feedback like letter placement, invalid word, and solve celebration. [72]
-Concrete best practices for word games - Short, subtle confirmation sounds for letter placement and word acceptance; distinct but gentle error cues (invalid word, no moves). [73]
+Concrete best practices for word games:
+- Short, subtle confirmation sounds for letter placement and word acceptance; distinct but gentle error cues (invalid word, no moves). [73]
 - Haptics only where they clarify a state change (tap/commit, reward claim), not continuously. [74]
 - “Win” moments should be satisfying but not startling: many word games are played in quiet contexts (bed, commute).
 ### Music: support focus, don’t compete with cognition
@@ -232,7 +233,8 @@ Smooth micro-animations improve perceived quality by clarifying transitions and 
 However, research also suggests sound effects do not always improve objective task performance, which implies a pragmatic standard: add “juice” where it clarifies state, not as constant decoration. [77]
 ### Accessibility: requirements that matter in word games
 Word games are text-heavy; accessibility is not optional if you want broad adoption.
-High-impact practices: - Subtitles/captions before sound plays if any tutorial or narrative uses audio; don’t trap users in an uncaptioned intro. [78]
+High-impact practices:
+- Subtitles/captions before sound plays if any tutorial or narrative uses audio; don’t trap users in an uncaptioned intro. [78]
 - Color-blind safe feedback: do not rely solely on color to convey correctness or rarity; add shape/icons/pattern. (Platform guidance pushes redundant feedback channels.) [79]
 - Scalable typography and readable contrast for letter tiles, rack, and clue text; word games fail catastrophically when letters aren’t legible. [80]
 Finally, accessibility isn’t only ethical—it’s strategic. A larger reachable audience increases the ceiling on retention and monetization without resorting to more aggressive tactics.
