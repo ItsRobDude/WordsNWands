@@ -315,6 +315,16 @@ The game should not gate ordinary play behind energy or stamina timers in the co
 ### 8.5 No gacha rule
 The game should not depend on loot boxes, gacha-style randomness, or blind-purchase creature progression.
 
+### 8.6 Player assist monetization boundary (M1-M2 lock)
+No player-invoked hints/clues in M1–M2; only automatic Spark Shuffle dead-board recovery.
+
+Economy and fairness implications:
+
+- M1-M2 must not sell, bundle, or reward consumable hints/clues because player-invoked hint/clue actions do not exist in those milestones.
+- Spark Shuffle is automatic board-recovery safety behavior and must not be sold, metered, or tied to ad views.
+- If hint/clue assists are introduced after M2, they must remain non-pay-to-win: no purchase path may provide unlimited in-encounter pressure bypass versus non-paying players.
+- Any future hint economy must define strict usage limits, pressure tradeoffs, and parity safeguards before monetization surfaces go live.
+
 ---
 
 ## 9. Main Progression Reward Rules

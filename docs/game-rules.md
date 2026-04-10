@@ -692,6 +692,15 @@ Concrete example:
 - before Spark Shuffle: `current_countdown = 2`, `moves_remaining = 9`
 - after Spark Shuffle: `current_countdown = 2`, `moves_remaining = 9`
 
+### Player Assist Actions (M1-M2)
+No player-invoked hints/clues in M1–M2; only automatic Spark Shuffle dead-board recovery.
+
+Rules:
+
+- M1 and M2 provide no hint button, clue surface, or equivalent player-invoked assist action during active encounters.
+- The only assist-like recovery allowed in M1-M2 is automatic dead-board recovery through Spark Shuffle under the rules above.
+- Any future player-invoked hint/clue feature must be introduced explicitly in focused docs and implementation contracts before release.
+
 ### Recovery pressure rule
 Board recovery may still preserve some encounter tension, but it should not feel like a hidden slap to the player for something outside their control.
 
