@@ -538,6 +538,15 @@ Recommended default sequence:
 4. the board reshuffles into a playable state
 5. play resumes
 
+### Player Assist Actions (M1-M2)
+No player-invoked hints/clues in M1–M2; only automatic Spark Shuffle dead-board recovery.
+
+Screen and interaction implications:
+
+- Do not surface a hint/clue button, affordance, or modal in M1-M2 battle HUD flows.
+- Dead-board recovery remains automatic system behavior and should be communicated as board recovery, not a player-invoked tool.
+- Any future hint/clue surface must be added as a deliberate milestone change with updated contracts and economy boundaries.
+
 ### Recovery-tone rule
 The recovery should feel like the game helping the player, not punishing them for something outside their control.
 
