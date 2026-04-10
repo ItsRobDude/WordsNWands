@@ -355,6 +355,83 @@ Rules:
 - the gameplay engine should not trust `traced_word_display` over `normalized_word`
 - the board-path validator should confirm that the selected positions are legal for the current board
 
+### 5.1.1 Companion input-binding contract (gesture trace -> `selected_positions`)
+
+This companion contract defines the deterministic mapping from pointer gesture traces to `CastSubmission.selected_positions` so input UX and gameplay validation remain aligned.
+
+Cross-document alignment requirements:
+
+- cast feedback/lifecycle behavior must align with `docs/screens-and-session-flow.md` section 11 (**Core Battle Interaction Flow**, including Rejected Cast Feedback ordering)
+- normalization behavior must align with `docs/word-validation-and-element-rules.md` section 5 (**Word Normalization Rules**)
+
+Trace payload contract:
+
+```ts
+export interface TracePointerSample {
+  pointer_id: number;
+  x_px: number; // viewport-local board-space x coordinate in pixels
+  y_px: number; // viewport-local board-space y coordinate in pixels
+  t_ms: number; // monotonically increasing trace timestamp (ms)
+}
+
+export interface CastTracePayload {
+  trace_id: string;
+  phase: 'start' | 'move' | 'end' | 'cancel';
+  samples: TracePointerSample[]; // ordered by t_ms ascending
+}
+```
+
+Output contract:
+
+```ts
+export type BoundSelectedPositions = BoardPosition[];
+```
+
+Binding rules:
+
+- only one active `pointer_id` may drive one cast trace at a time
+- `samples` must be processed in ascending `t_ms`; out-of-order samples are ignored
+- binding output is append-only during active tracing, except for explicit backtrack behavior below
+- partial traces are represented as a transient, non-submitted `BoundSelectedPositions` candidate until lifecycle commit
+
+Deterministic snapping rules (pointer coordinates -> tile cells):
+
+- board geometry for snapping must come from the current rendered board bounds and fixed `rows=6`, `cols=6`
+- each sample snaps to exactly one candidate cell using deterministic floor division into row/col buckets:
+  - `col = clamp(floor((x_px - board_left_px) / cell_width_px), 0, cols - 1)`
+  - `row = clamp(floor((y_px - board_top_px) / cell_height_px), 0, rows - 1)`
+- samples outside board bounds do not append positions and do not mutate existing trace selection
+- when multiple samples snap to the same cell consecutively, they collapse to a single effective cell visit (no duplicate append)
+- the snapped position must reference the canonical board coordinate (`row`, `col`) at binding time
+
+Path growth rules:
+
+- legal transition requirement: every newly appended tile must be adjacent to the current tail tile, where adjacency includes horizontal, vertical, and diagonal (Chebyshev distance `<= 1`)
+- non-adjacent jumps are disallowed and ignored for growth; trace remains at last legal tail tile
+- tile reuse is disallowed within one submission candidate (no de-dup append of prior non-tail tiles)
+- backtracking behavior is deterministic:
+  - if the newly snapped tile equals the immediate predecessor of the current tail tile, pop the current tail tile (single-step rewind)
+  - repeated backtrack samples may continue popping one tile per predecessor match
+  - backtracking never inserts new duplicates; it only shortens the candidate path
+- selecting a previously used non-predecessor tile does not mutate the path (remains no-op)
+
+Submission/cancel lifecycle:
+
+- commit-on-release: when `phase = 'end'`, submission is committed only if current candidate path length is `>= 1`; committed payload writes `selected_positions` from current candidate path order
+- discard-on-cancel: `phase = 'cancel'` always discards candidate trace and produces no `CastSubmission`
+- discard-on-empty-release: `phase = 'end'` with empty candidate path produces no `CastSubmission`
+- post-submit/reset rule: after `end` or `cancel`, transient candidate trace must clear before next trace start
+- partial trace representation:
+  - during `start`/`move`, keep candidate `selected_positions` as UI-transient only
+  - partial candidate is never persisted as canonical cast history until a committed release occurs
+
+Normalization coupling rules:
+
+- `traced_word_display` must be derived from selected tiles in candidate order by concatenating tile letters exactly as displayed to the player during trace feedback
+- committed `traced_word_display` for `CastSubmission` must be recomputed from committed `selected_positions` (never copied from stale UI text buffers)
+- `normalized_word` must be derived from committed `traced_word_display` using canonical normalization policy in `docs/word-validation-and-element-rules.md` section 5 before lexicon lookup
+- lexicon lookup and repeat-word checks must key on `normalized_word`, not on display-form text
+
 ### 5.2 Valid cast resolution contract
 
 ```ts
