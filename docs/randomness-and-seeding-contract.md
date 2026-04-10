@@ -131,6 +131,11 @@ Rules:
 - Seed label: `spark_shuffle`
 - Spark Shuffle must use Fisher–Yates shuffle with draws from this stream only.
 - Post-shuffle “board is playable” checks and any required re-shuffle attempts consume from this same stream.
+- `max_shuffle_retries_per_recovery_cycle` is a canonical v1 constant set to `3`.
+- If retry cap is reached and board is still dead, fallback sequence is mandatory:
+  1. regenerate board via deterministic emergency seed branch
+  2. if still dead, end encounter safely in recoverable error state with retry CTA
+- Retry-cap fallback must preserve fairness: no additional move consumption and no countdown decrement/reset.
 
 ---
 
@@ -184,6 +189,11 @@ Required automated tests:
 
 4. **Spark Shuffle determinism**
    - For fixed seed and fixed pre-shuffle board, resulting shuffle sequence and playable-board retry count must match across repeated runs.
+
+5. **Spark Shuffle retry-cap determinism**
+   - For fixed seed and a crafted pre-shuffle dead-board case that reaches `max_shuffle_retries_per_recovery_cycle`, fallback outcome must be deterministic.
+   - If emergency branch succeeds, regenerated board must match across repeated runs.
+   - If emergency branch fails, recoverable error termination state and retry CTA payload must match across repeated runs.
 
 ---
 

@@ -329,7 +329,7 @@ Every successful player turn follows this exact order.
 12. If the countdown reaches zero, the creature casts its spell and the countdown resets.
 13. Temporary tile-state durations tick down for surviving tiles after cast resolution.
 14. Dead-board detection runs on the fully resolved board (after refill, Bubble resolution, creature spell resolution if any, and tile-state decrement).
-15. If dead board is detected, Spark Shuffle triggers immediately; if the first shuffle is still dead, Spark Shuffle retries until the board is playable.
+15. If dead board is detected, Spark Shuffle triggers immediately; if the first shuffle is still dead, Spark Shuffle retries up to `max_shuffle_retries_per_recovery_cycle`, then follows retry-cap fallback rules.
 16. Every Spark Shuffle trigger in that cycle applies zero move change and zero countdown change.
 17. Control returns to the player.
 
@@ -684,6 +684,7 @@ For **v1**, Spark Shuffle pressure behavior is a **global rule**, not configurab
 
 - Spark Shuffle consumes **0 moves**
 - Spark Shuffle changes creature countdown by **0** (no decrement, no reset)
+- `max_shuffle_retries_per_recovery_cycle` is a canonical constant set to **3**
 - this rule applies to standard, boss, and event encounters in v1
 - there is no per-encounter override for this behavior in v1 content contracts
 
@@ -691,6 +692,18 @@ Concrete example:
 
 - before Spark Shuffle: `current_countdown = 2`, `moves_remaining = 9`
 - after Spark Shuffle: `current_countdown = 2`, `moves_remaining = 9`
+
+### Spark Shuffle retry-cap fallback rule (v1)
+If Spark Shuffle reaches `max_shuffle_retries_per_recovery_cycle` and the board is still dead, the recovery path must follow this order:
+
+1. attempt one deterministic emergency-board regeneration branch tied to the same encounter seed lineage
+2. if the emergency branch still cannot produce a playable board, end the encounter safely in a recoverable error state and show a retry CTA
+
+Fairness rule for retry-cap fallback:
+
+- retry-cap handling must not consume additional player moves
+- retry-cap handling must not decrement or reset creature countdown
+- this keeps system recovery failures from becoming hidden player penalties
 
 ### Recovery pressure rule
 Board recovery may still preserve some encounter tension, but it should not feel like a hidden slap to the player for something outside their control.
