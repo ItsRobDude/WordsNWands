@@ -436,14 +436,23 @@ Canonical ownership:
 
 Current focused-doc direction for this repo:
 
-- `docs/game-rules.md`
-- `docs/word-validation-and-element-rules.md`
-- `docs/creature-and-encounter-rules.md`
-- `docs/screens-and-session-flow.md`
-- `docs/technical-architecture.md`
-- `docs/engineering-standards.md`
-- `docs/implementation-contracts.md`
-- `docs/milestone-implementation-plan.md`
+- Gameplay
+  - `docs/game-rules.md`
+  - `docs/word-validation-and-element-rules.md`
+  - `docs/creature-and-encounter-rules.md`
+  - `docs/progression-economy-and-monetization.md`
+  - `docs/content-pipeline-and-liveops.md`
+- UX
+  - `docs/screens-and-session-flow.md`
+  - `docs/audio-visual-style-guide.md`
+  - `docs/accessibility-localization-and-device-support.md`
+- Architecture
+  - `docs/technical-architecture.md`
+  - `docs/implementation-contracts.md`
+- Operations
+  - `docs/engineering-standards.md`
+  - `docs/analytics-and-experimentation.md`
+  - `docs/milestone-implementation-plan.md`
 
 Words 'n Wands! should not depend on contributors guessing the rules from scattered code.
 
