@@ -382,6 +382,13 @@ Rules:
 - spark shuffle is a system recovery event, not player blame
 - spark shuffle resolution must be explicit so UI, logs, and tests can treat it differently from normal creature actions
 - board recovery must not sneak in hidden penalties
+- v1 Spark Shuffle pressure behavior is global: it consumes `0` moves and applies `0` countdown change
+- v1 Spark Shuffle pressure behavior is not configurable per encounter type
+
+Concrete example:
+
+- before Spark Shuffle: `current_countdown = 2`, `moves_remaining = 9`
+- after Spark Shuffle: `current_countdown = 2`, `moves_remaining = 9`
 
 ---
 
@@ -608,6 +615,10 @@ export interface RuntimeEncounterDefinition {
   contentVersion: string;
 }
 ```
+
+Rules:
+
+- `RuntimeEncounterDefinition` intentionally has no Spark Shuffle countdown/move override field in v1; runtime must apply the global Spark Shuffle pressure rule from section 5.6 without per-encounter guessing
 
 ### 8.3 Board config contract
 

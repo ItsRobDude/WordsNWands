@@ -354,7 +354,7 @@ Invalid words consume **0 moves**.
 Repeated words consume **0 moves**.
 
 ### Failed-board-state recovery rule
-Automatic board recovery actions may consume or not consume countdown progress depending on the documented board-safety rules, but they should not feel like hidden punishment.
+Automatic board recovery actions must follow the explicit Spark Shuffle pressure rule in this document.
 
 ### Current tuning direction
 Normal encounters should feel:
@@ -695,6 +695,19 @@ The default recovery action is a **Spark Shuffle**:
 - the board reshuffles into a new playable state
 - the game clearly communicates that the board was refreshed
 - the recovery should feel like assistance, not punishment
+
+### Spark Shuffle pressure rule (v1 global standard)
+For **v1**, Spark Shuffle pressure behavior is a **global rule**, not configurable per encounter type:
+
+- Spark Shuffle consumes **0 moves**
+- Spark Shuffle changes creature countdown by **0** (no decrement, no reset)
+- this rule applies to standard, boss, and event encounters in v1
+- there is no per-encounter override for this behavior in v1 content contracts
+
+Concrete example:
+
+- before Spark Shuffle: `current_countdown = 2`, `moves_remaining = 9`
+- after Spark Shuffle: `current_countdown = 2`, `moves_remaining = 9`
 
 ### Recovery pressure rule
 Board recovery may still preserve some encounter tension, but it should not feel like a hidden slap to the player for something outside their control.
