@@ -232,15 +232,24 @@ Home should not feel like:
 - a map overloaded with ornaments
 - a multi-tab obligation dashboard
 
-### Current Home direction
-For the current early product direction, Home should likely contain:
+### Home implementation matrix
 
-- a clear primary “Play” or “Continue” action
-- current progression card or next encounter card
-- small progress summary
-- optional daily/weekly flavor entry if available
-- settings/profile entry
-- creature journal or collection entry later, if it stays light
+| surface_item | milestone | requirement_level (must/should/may) | gating_condition |
+| --- | --- | --- | --- |
+| Continue Adventure primary action card (canonical progression target) | M2+ | must | Starter gate cleared and at least one mainline encounter where `is_unlocked = 1` and `best_star_rating = 0`; card points to the first such encounter in canonical order. |
+| Resume Encounter entry | M1+ | must | An unresolved active encounter exists and restore routing does not send the player directly into battle. |
+| Current progression / next encounter card treatment (visual context around Continue Adventure) | M1+ | should | Mainline progression surface is available on Home. |
+| Small progress summary | M1+ | may | Progress snapshot data is available and surface remains lightweight/readable. |
+| Daily/weekly flavor entry | M3+ | may | Daily/weekly systems are implemented and remain secondary to main progression. |
+| Settings/Profile entry | M1+ | may | Settings/Profile surfaces are implemented and remain secondary to play flow. |
+| Creature journal / collection entry | M3+ | may | Journal/collection has meaningful content and does not add clutter. |
+
+### M1-M2 Home negative rules (must not appear)
+- dedicated daily/weekly hub surfaces as primary Home content
+- creature journal/codex entry points when journal content is empty or placeholder-only
+- store/monetization-first placements, tabs, or callouts
+- social/competitive hub entry points
+- decorative placeholder tabs or “coming soon” Home clutter
 
 ### Canonical Milestone 2 Home primary-action rule
 After the starter gate is cleared, Home’s primary progression card must point to:
