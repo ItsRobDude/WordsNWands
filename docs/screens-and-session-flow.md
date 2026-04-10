@@ -198,6 +198,41 @@ The first-time flow should aim to give the player a fast, readable early win.
 
 The goal is confidence, not proving difficulty.
 
+### Starter tutorial cue sequence (canonical)
+The starter encounter uses a fixed cue sequence so onboarding behavior is deterministic and testable.
+
+| Cue stage | Trigger condition | Dismissal behavior | Gameplay state |
+| --- | --- | --- | --- |
+| `cue_01_trace_word` | First starter run enters `in_progress` with no successful cast yet. | Auto-dismiss immediately after first **valid** swipe submission is accepted, or manually dismiss via `Got it` while keeping cue eligible to re-open on next submit attempt. | **Blocked** (board input locked except tutorial CTA). |
+| `cue_02_release_to_cast` | Player has traced at least one legal path while `cue_01_trace_word` is complete and no valid cast has resolved yet. | Auto-dismiss when the player releases a legal path and cast submission resolves (valid or rejected). | **Non-blocking** (board remains interactive). |
+| `cue_03_read_countdown` | First valid cast from starter run finishes resolution and creature survives. | Tap-to-dismiss or auto-dismiss after `2.0s`, whichever comes first. | **Non-blocking**. |
+| `cue_04_watch_creature_spell` | Countdown reaches `0` in starter run and creature spell banner starts. | Auto-dismiss after the spell resolution completes. | **Blocked** only during normal creature-spell lock window (no extra tutorial lock). |
+| `cue_05_loss_retry_prompt` | Starter encounter ends in `lost`. | Dismiss by pressing primary CTA `Retry Starter`; no close/X bypass. | **Blocked** until player selects retry or leaves via secondary `Return to Title` when available. |
+| `cue_06_win_next_step` | Starter encounter ends in `won`. | Dismiss by pressing primary CTA `Begin Chapter 1`. | **Blocked** until CTA selection (result progression gate). |
+
+### Starter cue repetition and interruption rules
+- `cue_01_trace_word`, `cue_02_release_to_cast`, and `cue_03_read_countdown` are **show-once per local player profile** after first successful display+dismiss cycle.
+- `cue_04_watch_creature_spell` is **event-bound**: show each time the starter creature actually casts in a run, but never outside starter encounter scope.
+- `cue_05_loss_retry_prompt` repeats on every starter loss until starter gate completion.
+- `cue_06_win_next_step` appears on each starter win result surface, but starter progression gating means it is typically seen once before routing to Home.
+
+Repeat-on-failure behavior:
+- If the player loses starter before completing `cue_01`–`cue_03`, unfinished stages remain eligible and must show on the next retry from the first unmet stage.
+- Completed cue stages must not replay on retry unless explicitly event-bound (`cue_04`) or result-bound (`cue_05` / `cue_06`).
+
+Interruption recovery behavior (background/kill/resume):
+- If interruption occurs during an active starter run, restore to the same encounter state first, then re-evaluate pending cue stage eligibility from persisted tutorial state.
+- If interruption occurs while a **blocked** cue is open (`cue_01`, `cue_05`, `cue_06`), that cue must re-open on resume before normal board/Home interaction.
+- If interruption occurs during a non-blocking cue (`cue_02`, `cue_03`, `cue_04`), resume gameplay immediately and re-show only if that stage remained unfinished at interruption time.
+- Process kill and warm resume use identical cue-restoration logic; no special-case skipping based on interruption type.
+
+### Canonical starter timeline
+1. **First launch (new profile):** route to starter flow, show `cue_01` then `cue_02`/`cue_03` as triggers occur.
+2. **Starter loss:** show `cue_05_loss_retry_prompt`; starter gate remains uncleared (`has_completed_starter_encounter = 0`).
+3. **Retry starter:** resume starter flow with only unfinished show-once cues plus normal event/result cues.
+4. **Starter win:** show `cue_06_win_next_step`; set starter gate cleared state.
+5. **Post-win route:** primary CTA routes player to Home with Chapter 1 as next mainline action.
+
 ### Account friction rule
 The player must not be forced through login, profile setup, cloud prompts, or social setup before understanding the game.
 

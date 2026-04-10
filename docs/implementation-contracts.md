@@ -107,6 +107,18 @@ export type AppPrimarySurface =
   | 'result'
   | 'settings'
   | 'profile';
+
+export type StarterTutorialCueStage =
+  | 'none'
+  | 'cue_01_trace_word'
+  | 'cue_02_release_to_cast'
+  | 'cue_03_read_countdown'
+  | 'cue_04_watch_creature_spell'
+  | 'cue_05_loss_retry_prompt'
+  | 'cue_06_win_next_step'
+  | 'completed';
+
+export type StarterTutorialBlockState = 'none' | 'blocked' | 'non_blocking';
 ```
 
 Rules:
@@ -115,6 +127,7 @@ Rules:
 - Invalid and repeated casts do **not** leave `in_progress`.
 - Result acknowledgement is UI-local and must not rewrite canonical outcome state.
 - Restart creates a new encounter run; it does not mutate a completed result into an unfinished state.
+- `StarterTutorialCueStage` tracks deterministic first-time cue progression and must align with `docs/screens-and-session-flow.md` section 5 cue ordering.
 
 ---
 
@@ -695,6 +708,10 @@ export interface PlayerProfileRecord {
   local_player_id: string;
   has_completed_starter_encounter: 0 | 1;
   starter_result_outcome: 'unplayed' | 'won' | 'lost';
+  starter_tutorial_current_stage: StarterTutorialCueStage;
+  starter_tutorial_block_state: StarterTutorialBlockState;
+  starter_tutorial_completed_stages_json: string; // JSON array of StarterTutorialCueStage values for show-once cues
+  starter_tutorial_last_interrupted_stage: StarterTutorialCueStage;
   created_at_utc: string;
   updated_at_utc: string;
 }
@@ -709,6 +726,10 @@ Rules:
 - `starter_result_outcome = 'lost'` is allowed while `has_completed_starter_encounter = 0`
 - starter loss does not count as starter-gate completion
 - launch and Home routing must treat `has_completed_starter_encounter`, not mere starter attempt history, as the onboarding gate truth
+- `starter_tutorial_current_stage` is the deterministic progression pointer used to decide the next eligible starter cue.
+- `starter_tutorial_completed_stages_json` stores show-once completion markers (`cue_01_trace_word`, `cue_02_release_to_cast`, `cue_03_read_countdown`) and must not include event/result-bound cues.
+- `starter_tutorial_block_state` stores whether interruption recovery must reopen a blocking cue before normal interaction.
+- `starter_tutorial_last_interrupted_stage` stores interruption checkpointing for background/kill/resume recovery and should be `'none'` when no cue was active at interruption time.
 
 ### 7.2 `player_settings_records`
 
@@ -812,6 +833,9 @@ export interface ActiveEncounterSnapshotRecord {
   board_json: string;
   creature_state_json: string;
   repeated_words_json: string;
+  starter_tutorial_current_stage: StarterTutorialCueStage;
+  starter_tutorial_block_state: StarterTutorialBlockState;
+  starter_tutorial_last_interrupted_stage: StarterTutorialCueStage;
   last_surface: AppPrimarySurface;
   created_at_utc: string;
   updated_at_utc: string;
@@ -827,6 +851,7 @@ Rules:
 - this table stores exact restore truth, not a lossy summary
 - a terminal `session_state` may still remain here briefly until the result screen is acknowledged and cleanup rules run
 - restore must prefer this snapshot over guessed screen history
+- starter tutorial cue state fields in this table must mirror the latest persisted profile/tutorial state at snapshot write time so hard-resume behavior is deterministic.
 
 ---
 
@@ -1022,6 +1047,29 @@ When the starter encounter resolves:
   - keep `player_profile_records.has_completed_starter_encounter = 0`
   - update the starter encounter progress/result records normally
   - unlock nothing
+
+
+### 9.1.a Canonical first-time starter timeline contract
+
+The canonical onboarding timeline is:
+
+1. **First launch**
+   - route to `starter_flow`
+   - starter tutorial begins from `starter_tutorial_current_stage = 'cue_01_trace_word'`
+2. **Starter loss**
+   - write `starter_result_outcome = 'lost'`
+   - keep `has_completed_starter_encounter = 0`
+   - route to starter loss result with retry CTA (`cue_05_loss_retry_prompt`)
+3. **Starter retry**
+   - keep route inside `starter_flow`
+   - resume cues from persisted stage markers (show-once stages remain skipped once completed)
+4. **Starter win**
+   - write `starter_result_outcome = 'won'`
+   - set `has_completed_starter_encounter = 1`
+   - show starter win next-step prompt (`cue_06_win_next_step`)
+5. **Route to Home**
+   - clear starter gate
+   - route to `home` and point primary progression CTA to first unlocked, uncleared mainline encounter
 
 ### 9.2 Mainline win transition rules
 
