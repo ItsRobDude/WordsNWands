@@ -329,7 +329,7 @@ Every successful player turn follows this exact order.
 12. If the countdown reaches zero, the creature casts its spell and the countdown resets.
 13. Temporary tile-state durations tick down for surviving tiles after cast resolution.
 14. Dead-board detection runs on the fully resolved board (after refill, Bubble resolution, creature spell resolution if any, and tile-state decrement).
-15. If dead board is detected, Spark Shuffle triggers immediately; if the first shuffle is still dead, Spark Shuffle retries until the board is playable.
+15. If dead board is detected, Spark Shuffle triggers immediately; if the first shuffle is still dead, Spark Shuffle retries up to `max_shuffle_retries_per_recovery_cycle`, then follows retry-cap fallback rules.
 16. Every Spark Shuffle trigger in that cycle applies zero move change and zero countdown change.
 17. Control returns to the player.
 
@@ -684,6 +684,7 @@ For **v1**, Spark Shuffle pressure behavior is a **global rule**, not configurab
 
 - Spark Shuffle consumes **0 moves**
 - Spark Shuffle changes creature countdown by **0** (no decrement, no reset)
+- `max_shuffle_retries_per_recovery_cycle` is a canonical constant set to **3**
 - this rule applies to standard, boss, and event encounters in v1
 - there is no per-encounter override for this behavior in v1 content contracts
 

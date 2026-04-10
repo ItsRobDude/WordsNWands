@@ -409,8 +409,9 @@ The resolution pipeline below is mandatory for every **validated cast** (`submis
 18. If dead board is detected, trigger Spark Shuffle recovery immediately:
     - detection is required at step 17 for every non-terminal valid cast cycle
     - additional dead-board checks are allowed during internal spell primitive execution, but do not replace step 17
-    - Spark Shuffle may chain/retry in the same cast cycle if the first shuffle output is still dead
+    - Spark Shuffle may chain/retry in the same cast cycle if the first shuffle output is still dead, up to `max_shuffle_retries_per_recovery_cycle = 3`
     - each retry must preserve `moves_remaining` and `current_countdown` (zero move change, zero countdown change)
+    - on retry-cap hit, run fallback sequence: deterministic emergency board regeneration branch, then recoverable-error encounter end + retry CTA if still dead
 19. Finalize post-resolution state (`moves_remaining`, `repeated_words`, board snapshot, countdown_after, did_win/did_lose flags).
 
 Worked example (Dull + Sooted + weakness candidate):
@@ -487,6 +488,10 @@ export interface CreatureSpellResolution {
 ```ts
 export interface SparkShuffleResolution {
   trigger_reason: 'dead_board';
+  max_shuffle_retries_per_recovery_cycle: 3;
+  retries_attempted: number;
+  did_hit_retry_cap: boolean;
+  fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end';
   did_recover_playable_state: boolean;
 }
 ```
@@ -498,6 +503,11 @@ Rules:
 - board recovery must not sneak in hidden penalties
 - v1 Spark Shuffle pressure behavior is global: it consumes `0` moves and applies `0` countdown change
 - v1 Spark Shuffle pressure behavior is not configurable per encounter type
+- `max_shuffle_retries_per_recovery_cycle` is a canonical v1 constant and must be `3`
+- if retry cap is reached without a playable board, fallback sequence is:
+  1. deterministic emergency board regeneration branch (seeded from encounter seed lineage)
+  2. if still dead board, terminate encounter into recoverable error state with retry CTA
+- retry-cap fallback must preserve fairness: no additional move consumption and no countdown decrement/reset
 
 Concrete example:
 
@@ -1176,6 +1186,7 @@ export type CanonicalAnalyticsEventName =
   | 'encounter.cast_resolved'
   | 'encounter.creature_spell_triggered'
   | 'encounter.dead_board_recovered'
+  | 'encounter.spark_shuffle_retry_cap_hit'
   | 'encounter.won'
   | 'encounter.lost'
   | 'encounter.result_viewed'
@@ -1214,6 +1225,9 @@ export interface CanonicalGameplayAnalyticsFields {
   matchup_result: MatchupResult | null;
   moves_remaining: number | null;
   rejection_reason: CastRejectionReason | null;
+  spark_shuffle_retries_attempted: number | null;
+  spark_shuffle_retry_cap: number | null;
+  spark_shuffle_fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end' | null;
 }
 ```
 
@@ -1234,6 +1248,7 @@ Required behavior:
 - analytics must not send raw cast text by default
 - analytics must not send full board snapshots by default
 - event transport failures must be non-blocking for gameplay and persistence
+- `encounter.spark_shuffle_retry_cap_hit` is required whenever Spark Shuffle reaches retry cap (even if deterministic emergency regeneration succeeds)
 
 ---
 
@@ -1245,6 +1260,7 @@ Required behavior:
 - determinism tests must include:
   - same `encounter_seed` + same valid-cast sequence => identical board/countdown/outcome
   - mid-encounter snapshot restore => identical subsequent outcomes vs uninterrupted run
+  - Spark Shuffle retry-cap case => identical retries attempted, fallback outcome, and post-fallback state for same seed/input sequence
 - if a contract shape becomes annoying to use, fix it here first rather than working around it separately in each package
 
 ### Final rule
