@@ -338,7 +338,6 @@ Minimum failure reasons include:
 
 - missing/invalid `damage_model_version`
 - divergence from canonical Damage Model v1 fingerprint/constants
->>>>>>> main
 
 ---
 
