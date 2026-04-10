@@ -325,6 +325,49 @@ Economy and fairness implications:
 - If hint/clue assists are introduced after M2, they must remain non-pay-to-win: no purchase path may provide unlimited in-encounter pressure bypass versus non-paying players.
 - Any future hint economy must define strict usage limits, pressure tradeoffs, and parity safeguards before monetization surfaces go live.
 
+### 8.7 Repeated-loss assistance policy (fail-soft, non-monetized)
+Words 'n Wands! uses a **limited repeated-loss assistance system** for the same uncleared encounter.
+
+Trigger thresholds (same encounter, consecutive losses):
+
+- after **2** consecutive losses: show one optional encouragement + strategy tip card before retry
+- after **3** consecutive losses: enable optional **gentle board bias** for the next retry only
+- after **4** consecutive losses: offer an optional **easier variant** for that encounter attempt only
+
+Allowed assist forms:
+
+- one-time tutorial-style tip card with plain-language strategy guidance
+- gentle board bias tuned for readability and near-term solvability (for example, slightly improved vowel/consonant balance or one early weakness opportunity)
+- optional easier variant with explicitly labeled reduced pressure (for example, +1 move budget or -1 spell pressure step)
+
+Forbidden assist forms:
+
+- paid revive offers
+- pay-to-continue prompts in active battle flow
+- hidden stat boosts that are not disclosed to the player
+- monetized assist unlocks that let spending players bypass difficulty while non-spending players cannot
+
+Star/progression implications:
+
+- normal (unassisted) clear: can earn up to 3 stars as usual
+- clear with tip-only assist shown but no mechanical assist enabled: normal star rules still apply
+- clear with gentle board bias enabled: star result is capped at **2 stars**
+- clear with optional easier variant enabled: star result is capped at **1 star**
+- any assisted clear that is still a win **does unlock** the next mainline encounter under the normal `win_any_stars` rule
+
+UI copy tone requirements:
+
+- encouragement copy must be warm, neutral, and agency-preserving
+- never shame the player, imply incompetence, or frame assist use as failure
+- copy should emphasize optionality (for example: “Want a gentler next try?”)
+
+Reset/expiration rules:
+
+- consecutive-loss counter resets immediately when the player wins that encounter
+- counter also resets if the player wins a different encounter, or after **24 hours** without attempting that encounter
+- tip card is shown once per trigger threshold per encounter until reset
+- gentle board bias and easier variant each expire after one assisted attempt (win or loss), then must be re-earned by threshold
+
 ---
 
 ## 9. Main Progression Reward Rules
