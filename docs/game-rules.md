@@ -642,6 +642,11 @@ Board generation and refill should be guided by a structure that favors:
 
 The board should not feel obviously scripted, but it also should not feel like a hostile random mess.
 
+Technical contract cross-link:
+
+- `docs/implementation-contracts.md` → **Section 8.3, “Board config contract”** (canonical versioned letter-distribution config and validation)
+- `docs/randomness-and-seeding-contract.md` → **Section 5.2, “Refill generation after cast”** (canonical weighted draw mapping and retry semantics)
+
 ### Start-of-encounter fairness rule
 A new encounter should begin with a board that contains valid playable words.
 
@@ -650,6 +655,10 @@ The player should not open a battle into an unusable board.
 Current v1 target:
 
 - starting board should contain at least `8` valid castable words of length 3+
+
+Implementation lock:
+
+- Start-board generosity intent is enforced through the same canonical weighted-letter and refill/generation contracts above; balancing may change profile content/version without changing RNG stream semantics.
 
 ### Refill fairness rule
 Standard refill behavior should strongly prefer producing continuing playability.
@@ -660,6 +669,10 @@ Current v1 target:
 
 - post-refill boards should usually provide at least `4` valid castable words of length 3+
 - if post-refill yields fewer than `1` valid castable word, dead-board recovery triggers immediately
+
+Implementation lock:
+
+- Refill fairness must follow the technical contract path in `docs/randomness-and-seeding-contract.md` §5.2 and `docs/implementation-contracts.md` §8.3 rather than prose-only tuning.
 
 ### Dead-board rule
 A **dead board** is a board state with no valid playable words under the current rules.
