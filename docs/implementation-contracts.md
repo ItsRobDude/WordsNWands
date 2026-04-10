@@ -819,6 +819,7 @@ export interface RuntimeEncounterDefinition {
   introFlavorText: string | null;
   rewardDefinition: RuntimeRewardDefinition | null;
   boardConfig: RuntimeBoardConfig;
+  balanceMetadata: RuntimeEncounterBalanceMetadata;
   contentVersion: string;
 }
 ```
@@ -826,6 +827,31 @@ export interface RuntimeEncounterDefinition {
 Rules:
 
 - `RuntimeEncounterDefinition` intentionally has no Spark Shuffle countdown/move override field in v1; runtime must apply the global Spark Shuffle pressure rule from section 5.6 without per-encounter guessing
+- `balanceMetadata.waivers` is required and must be present even when empty (`[]`)
+- any authored out-of-band balance value with `warn` severity requires an active waiver entry
+- `error` severity out-of-band values are never auto-waived by content-only metadata; they require explicit governance exception handling outside ordinary authoring flow
+
+#### 8.2.a Encounter balance metadata and waiver contract
+
+```ts
+export interface RuntimeEncounterBalanceMetadata {
+  authoredFailRateBand: 'low' | 'medium' | 'high';
+  shippabilityStatus:
+    | 'prototype'
+    | 'tune-required'
+    | 'candidate-shippable'
+    | 'shippable';
+  waivers: RuntimeEncounterBalanceWaiver[];
+}
+
+export interface RuntimeEncounterBalanceWaiver {
+  waiverId: string;
+  ruleId: string;
+  reason: string;
+  approver: string;
+  reviewByUtc: string; // ISO-8601 UTC
+}
+```
 
 ### 8.3 Board config contract
 
@@ -946,6 +972,7 @@ These interfaces define runtime content/schema validation boundaries for encount
 ```ts
 export interface RuntimeValidationResult {
   ok: boolean;
+  findings: RuntimeValidationFinding[];
   errors: Array<{
     code:
       | 'schema_invalid'
@@ -959,6 +986,17 @@ export interface RuntimeValidationResult {
     message: string;
     field_path?: string;
   }>;
+}
+```
+
+```ts
+export interface RuntimeValidationFinding {
+  rule_id: string;
+  severity: 'error' | 'warn' | 'info';
+  measured_value: string | number | boolean | null;
+  threshold: string;
+  remediation_hint: string;
+  field_path?: string;
 }
 ```
 
