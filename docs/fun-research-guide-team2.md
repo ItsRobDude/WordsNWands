@@ -33,14 +33,46 @@ Adversarial / novelty variants (e.g., “the game fights back”).
 These succeed mostly as shareable curiosities rather than long-lived services: the hook is novelty and identity (“I beat the evil version”). [10]
 ## Comparative landscape of top apps and design patterns
 The table below compares a set of major word games across core loop, monetization, and retention scaffolding. “Session length” and DAU/MAU are often not publicly disclosed at a per-title level; when unavailable, entries use either store-stated play patterns or clearly marked estimates.
-| App | Primary subgenre | Core loop | Monetization model | Retention tactics observed | Social/competitive features | Session model (typical) | DAU/MAU or scale signals (if available) |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Words With Friends[11] | Async word board / multi-mode hub | Take a turn → score/optimize tiles → wait for opponent/daily modes → repeat [12] | Hybrid: ads + IAP; seasonal “Rewards Pass” with free/premium tracks (4-week seasons) [13] | Daily goal streaks; multi-mode daily play; pass progression; clubs with shared goals [14] | Clubs; async matches; additional competitive modes [15] | Turns are “snackable,” but multi-game concurrency can extend play (estimate: ~2–10 min per visit depending on active games) | GDC talk notes “multiple tens of millions of users” across With Friends games [16] |
-| Wordscapes[17] | Level-based word connect + heavy LiveOps | Solve level → earn currency/resources → unlock/advance collections/events → repeat [18] | Hybrid: IAP + ads; extra “ad removal” options appear in release notes; event currencies and sinks [19] | Daily puzzle (unique daily board + butterfly collection); weekly collection events; weekend tournaments with crowns [20] | Tournaments; (optionally) teams; competitive crown collection [21] | Store copy explicitly frames “10 mins a day” usage [22] | Sensor estimates (US, recent month): ~400k downloads and ~$2m revenue (est.) [23] |
-| Wordle[24] | Daily limited-attempt deduction | One daily puzzle → 6 guesses → share/compare → return tomorrow [25] | Initially free after joining NYT Games; NYT uses games portfolio and subscriptions more broadly (Wordle acquisition low-seven figures; remained free at move) [26] | Daily ritual; social sharing; portfolio cross-pollination (Wordle brought “tens of millions” of people into NYT audience per NYT CFO quote) [26] | Social sharing; later, multi-game leaderboard for friends/“puzzle people” [27] | Intentionally bounded (estimate: ~1–10 min/day) | Impact signal: “tens of millions” of new audience members attributed to acquisition, driving subscriptions [28] |
-| Letterpress[29] | Competitive territory-control word board | Find word → claim tiles → contest territory → repeat until board resolves [30] | Freemium (currently positioned as free across platforms) [30] | Long-term retention tends to come from rematches, stats, and social competition rather than heavy LiveOps (inference from feature set) [30] | Real-time play, bots, chat, stats/leaderboards; group play [30] | Short match bursts (estimate: ~3–15 min) | No public DAU/MAU located in primary sources reviewed |
-| Word Cookies[31] | Level-based word connect | Swipe letters → discover target words → progress through large level map [32] | Ads + IAP (coins/ad-free); ads include banners/interstitials/videos (variant listing) [33] | Massive level volume (“Over 30,000 levels”); “daily” light engagement implied; sessions shaped by level cadence [32] | Mostly solo; social is typically external (sharing) rather than structured modes (varies by regional build) | Short repeatable sessions; marathon potential due to level count | No reliable DAU/MAU located in primary sources reviewed |
-| Bonza Word Puzzle[34] | Crossword-jigsaw-trivia hybrid | Reassemble themed fragments → complete puzzle → do daily/community puzzles → repeat [35] | Typically puzzle-pack and/or IAP driven; positioned around daily puzzles + UGC (store descriptions emphasize daily/community) [36] | Daily puzzles; community-designed puzzles; puzzle creator feature [37] | “Challenge friends” via custom puzzles (light social) [36] | Daily puzzle supports a short ritual; packs enable longer sessions | No reliable DAU/MAU located in primary sources reviewed |
+App	Primary subgenre	Core loop	Monetization model	Retention tactics observed	Social/competitive features	Session model (typical)	DAU/MAU or scale signals (if available)
+Words With Friends[11]
+Async word board / multi-mode hub	Take a turn → score/optimize tiles → wait for opponent/daily modes → repeat [12]
+Hybrid: ads + IAP; seasonal “Rewards Pass” with free/premium tracks (4-week seasons) [13]
+Daily goal streaks; multi-mode daily play; pass progression; clubs with shared goals [14]
+Clubs; async matches; additional competitive modes [15]
+Turns are “snackable,” but multi-game concurrency can extend play (estimate: ~2–10 min per visit depending on active games)	GDC talk notes “multiple tens of millions of users” across With Friends games [16]
+
+Wordscapes[17]
+Level-based word connect + heavy LiveOps	Solve level → earn currency/resources → unlock/advance collections/events → repeat [18]
+Hybrid: IAP + ads; extra “ad removal” options appear in release notes; event currencies and sinks [19]
+Daily puzzle (unique daily board + butterfly collection); weekly collection events; weekend tournaments with crowns [20]
+Tournaments; (optionally) teams; competitive crown collection [21]
+Store copy explicitly frames “10 mins a day” usage [22]
+Sensor estimates (US, recent month): ~400k downloads and ~$2m revenue (est.) [23]
+
+Wordle[24]
+Daily limited-attempt deduction	One daily puzzle → 6 guesses → share/compare → return tomorrow [25]
+Initially free after joining NYT Games; NYT uses games portfolio and subscriptions more broadly (Wordle acquisition low-seven figures; remained free at move) [26]
+Daily ritual; social sharing; portfolio cross-pollination (Wordle brought “tens of millions” of people into NYT audience per NYT CFO quote) [26]
+Social sharing; later, multi-game leaderboard for friends/“puzzle people” [27]
+Intentionally bounded (estimate: ~1–10 min/day)	Impact signal: “tens of millions” of new audience members attributed to acquisition, driving subscriptions [28]
+
+Letterpress[29]
+Competitive territory-control word board	Find word → claim tiles → contest territory → repeat until board resolves [30]
+Freemium (currently positioned as free across platforms) [30]
+Long-term retention tends to come from rematches, stats, and social competition rather than heavy LiveOps (inference from feature set) [30]
+Real-time play, bots, chat, stats/leaderboards; group play [30]
+Short match bursts (estimate: ~3–15 min)	No public DAU/MAU located in primary sources reviewed
+Word Cookies[31]
+Level-based word connect	Swipe letters → discover target words → progress through large level map [32]
+Ads + IAP (coins/ad-free); ads include banners/interstitials/videos (variant listing) [33]
+Massive level volume (“Over 30,000 levels”); “daily” light engagement implied; sessions shaped by level cadence [32]
+Mostly solo; social is typically external (sharing) rather than structured modes (varies by regional build)	Short repeatable sessions; marathon potential due to level count	No reliable DAU/MAU located in primary sources reviewed
+Bonza Word Puzzle[34]
+Crossword-jigsaw-trivia hybrid	Reassemble themed fragments → complete puzzle → do daily/community puzzles → repeat [35]
+Typically puzzle-pack and/or IAP driven; positioned around daily puzzles + UGC (store descriptions emphasize daily/community) [36]
+Daily puzzles; community-designed puzzles; puzzle creator feature [37]
+“Challenge friends” via custom puzzles (light social) [36]
+Daily puzzle supports a short ritual; packs enable longer sessions	No reliable DAU/MAU located in primary sources reviewed
 ## Core success factors in word games
 A successful mobile word game is best understood as a system that repeatedly converts language effort into felt progress. The best products reduce friction in the language effort (input, legibility, dictionary clarity) and amplify felt progress via feedback, pacing, and meta-structure.
 ### Gameplay mechanics that scale

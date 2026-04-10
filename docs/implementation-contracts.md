@@ -694,6 +694,10 @@ Rules:
 - this record supports first-time routing truth
 - starter completion must not be inferred only from UI navigation history
 - this record is local-first and may later map to account data if cloud features are added
+- `has_completed_starter_encounter = 1` means the starter gate has been cleared by a win
+- `starter_result_outcome = 'lost'` is allowed while `has_completed_starter_encounter = 0`
+- starter loss does not count as starter-gate completion
+- launch and Home routing must treat `has_completed_starter_encounter`, not mere starter attempt history, as the onboarding gate truth
 
 ### 7.2 `player_settings_records`
 
@@ -722,6 +726,7 @@ One row per encounter identifier for lightweight local progression truth.
 export interface EncounterProgressRecord {
   encounter_id: string;
   is_unlocked: 0 | 1;
+  first_unlocked_at_utc: string | null;
   best_star_rating: 0 | 1 | 2 | 3;
   first_completed_at_utc: string | null;
   last_completed_at_utc: string | null;
@@ -733,7 +738,11 @@ export interface EncounterProgressRecord {
 
 Rules:
 
-- `best_star_rating = 0` means no win recorded yet
+- `is_unlocked = 1` means the encounter is launchable from normal progression surfaces
+- `is_unlocked` is monotonic in ordinary progression flow and must not revert from `1` to `0`
+- `best_star_rating = 0` means the encounter has never been won
+- `win_count = 0` and `loss_count > 0` means unlocked-and-attempted but not yet cleared
+- `first_unlocked_at_utc` records the first time the encounter became unlocked and does not change on replay
 - this contract is intentionally lightweight enough to support list/path progression without overcommitting to a specific map structure
 - additive progression fields are allowed later, but this table should remain a stable per-encounter record
 
@@ -902,7 +911,38 @@ export interface RuntimeRewardDefinition {
 }
 ```
 
-### 8.5 Phase rule contract
+### 8.5 Progression definition contract
+
+```ts
+export type ProgressionTopology = 'chapter_linear_v1';
+export type MainlineUnlockCondition = 'win_any_stars';
+
+export interface RuntimeProgressionDefinition {
+  progression_version: string;
+  topology: 'chapter_linear_v1';
+  starter_encounter_id: string;
+  chapters: RuntimeProgressionChapterDefinition[];
+}
+
+export interface RuntimeProgressionChapterDefinition {
+  chapter_id: string;
+  display_name: string;
+  habitat_theme_id: string;
+  sort_index: number;
+  encounter_ids: string[]; // ordered mainline encounter ids only
+}
+```
+
+Rules:
+
+- `starter_encounter_id` must not appear inside `chapters[*].encounter_ids`
+- each mainline encounter ID must appear exactly once across all chapters
+- canonical mainline order is defined by `sort_index`, then `encounter_ids[]` order
+- the next mainline encounter for unlock purposes is derived only from that canonical order
+- boss encounters may appear in mainline chapter order
+- event encounters do not gate mainline progression by default in Milestone 2
+
+### 8.6 Phase rule contract
 
 ```ts
 export interface RuntimePhaseRule {
@@ -924,7 +964,63 @@ Rules:
 
 ---
 
-## 9. Validation Snapshot Runtime Contracts
+## 9. Canonical progression transition rules
+
+Progression changes are applied only when a terminal encounter result is committed.
+
+### 9.1 Starter result transition rules
+
+When the starter encounter resolves:
+
+- on win:
+  - set `player_profile_records.has_completed_starter_encounter = 1`
+  - set `player_profile_records.starter_result_outcome = 'won'`
+  - update the starter encounter progress/result records normally
+  - unlock the first mainline encounter if it is locked
+- on loss:
+  - set `player_profile_records.starter_result_outcome = 'lost'`
+  - keep `player_profile_records.has_completed_starter_encounter = 0`
+  - update the starter encounter progress/result records normally
+  - unlock nothing
+
+### 9.2 Mainline win transition rules
+
+When a mainline encounter resolves with outcome `won`:
+
+- update its `best_star_rating` using max(existing, new)
+- set `first_completed_at_utc` if this is the first win
+- set `last_completed_at_utc`
+- increment `win_count`
+- find the canonical next mainline encounter from `RuntimeProgressionDefinition`
+- if a next mainline encounter exists and is locked:
+  - set `is_unlocked = 1`
+  - set `first_unlocked_at_utc` if null
+- unlock at most one next mainline encounter from a single win
+
+### 9.3 Mainline loss transition rules
+
+When a mainline encounter resolves with outcome `lost`:
+
+- increment `loss_count`
+- do not change `best_star_rating`
+- do not change unlock state for any encounter
+
+### 9.4 Replay rules
+
+Replays may change:
+- `best_star_rating`
+- `last_completed_at_utc`
+- `win_count`
+- `loss_count`
+
+Replays must not:
+- relock any encounter
+- unlock more than the single canonical next encounter
+- change chapter order or next-action truth
+
+---
+
+## 10. Validation Snapshot Runtime Contracts
 
 These interfaces define app/runtime validation boundaries for word lookup and element lookup.
 
@@ -990,11 +1086,11 @@ Preferred v1 implementation:
 
 ---
 
-## 10. Content Runtime Validation Contracts
+## 11. Content Runtime Validation Contracts
 
 These interfaces define runtime content/schema validation boundaries for encounter and creature activation.
 
-### 10.1 Generic validation result contract
+### 11.1 Generic validation result contract
 
 ```ts
 export interface RuntimeValidationResult {
@@ -1028,7 +1124,7 @@ export interface RuntimeValidationFinding {
 }
 ```
 
-### 10.2 Runtime content validator contract
+### 11.2 Runtime content validator contract
 
 ```ts
 export interface ContentPackageRuntimeValidator {
@@ -1047,13 +1143,13 @@ Required runtime behavior:
 
 ---
 
-## 11. Analytics Event Contracts
+## 12. Analytics Event Contracts
 
 This section pins canonical event names, required properties, and privacy/redaction rules.
 
 It mirrors the later analytics-doc direction while giving TypeScript-facing shapes now.
 
-### 11.1 Canonical event names
+### 12.1 Canonical event names
 
 ```ts
 export type CanonicalAnalyticsEventName =
@@ -1077,7 +1173,7 @@ export type CanonicalAnalyticsEventName =
   | 'settings.updated';
 ```
 
-### 11.2 Base required analytics properties
+### 12.2 Base required analytics properties
 
 ```ts
 export interface AnalyticsEventBase {
@@ -1092,7 +1188,7 @@ export interface AnalyticsEventBase {
 }
 ```
 
-### 11.3 Gameplay analytics fields
+### 12.3 Gameplay analytics fields
 
 ```ts
 export interface CanonicalGameplayAnalyticsFields {
@@ -1111,7 +1207,7 @@ export interface CanonicalGameplayAnalyticsFields {
 }
 ```
 
-### 11.4 Redaction/privacy contract
+### 12.4 Redaction/privacy contract
 
 ```ts
 export interface AnalyticsPrivacyGuard {
@@ -1131,7 +1227,7 @@ Required behavior:
 
 ---
 
-## 12. Contract Usage Guidance
+## 13. Contract Usage Guidance
 
 - `packages/game-rules` and `packages/validation` should own these exported contracts where practical
 - `apps/mobile` should consume contracts and avoid redefining parallel shape types
