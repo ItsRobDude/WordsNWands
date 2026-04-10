@@ -609,8 +609,15 @@ For code changes, these checks are mandatory:
 - `build:check`
 - `content:validate` when relevant
 - `expo:doctor` when relevant
+- `battle-formula-version:check` when battle-critical docs or contracts change
 
 The exact script names can vary internally, but the behaviors above are mandatory.
+
+`battle-formula-version:check` requirement:
+- compare the canonical combat math formula version declared in `docs/implementation-contracts.md` against all battle-critical numeric references in:
+  - `docs/game-rules.md`
+  - `docs/word-validation-and-element-rules.md`
+- fail CI (blocking merge) if formula-version identifiers are missing or mismatched in any referenced battle-critical section
 
 ### Docs-only PRs
 Docs-only PRs do not need full app build validation, but they should still avoid breaking doc references, file names, or source-of-truth consistency.
@@ -733,6 +740,7 @@ Reviews should focus on substance, not style nitpicks already enforced automatic
 - does this increase Android app fragility unnecessarily?
 - does this create future restore/state confusion?
 - does this keep the product family-friendly and readable?
+- if battle-critical numeric docs are touched, do all referenced formula-version identifiers match the canonical version?
 
 ### Review principle
 A change should not be approved just because it technically passes if it makes the codebase harder to understand later.
@@ -751,6 +759,44 @@ A PR is not ready to merge unless:
 - any AI-generated logic in critical paths has been reviewed carefully
 
 If a PR changes battle truth but does not mention that explicitly in the summary, it is not ready.
+
+---
+
+## Appendix A. Spec Conflict Resolution
+
+This appendix defines the required process for resolving conflicts between docs when battle-critical numeric semantics are involved.
+
+### A.1 Battle-critical numeric precedence order
+
+For formulas, multiplier values, evaluation order, clamping, and rounding:
+
+1. `docs/implementation-contracts.md` is authoritative for canonical combat math and rounding behavior.
+2. `docs/game-rules.md` is authoritative for player-facing gameplay explanation and must mirror the canonical formula version from implementation contracts.
+3. `docs/word-validation-and-element-rules.md` may reference damage behavior context, but must not override canonical combat math.
+4. If code disagrees with docs, code is not authoritative; reconcile docs first, then update code and tests.
+
+Authoritative rounding rule: the canonical source is `docs/implementation-contracts.md` (including tie behavior and shared helper contract).
+
+### A.2 Required same-PR updates for canonical combat math changes
+
+Any PR that changes canonical combat math (formula, multipliers, evaluation order, clamp policy, or rounding semantics) must include all of the following in the **same PR**:
+
+- canonical combat math version bump in `docs/implementation-contracts.md`
+- dependent doc updates that reference the changed math semantics (at minimum `docs/game-rules.md`; plus any other impacted focused docs)
+- deterministic fixture updates for affected automated tests (including shared battle-logic fixtures and expected outputs tied to the changed formula version)
+
+If any one of the three is missing, the PR is not merge-ready.
+
+### A.3 Conflict discovered checklist (required in PR description/final report)
+
+When a conflict is discovered, include this checklist verbatim and complete each item:
+
+- [ ] **Conflicting docs/sections identified** (list exact doc paths + section names)
+- [ ] **Chosen interpretation stated** (which rule is being used now)
+- [ ] **Fairness/trust impact justified** (why this interpretation preserves deterministic, fair player outcomes)
+- [ ] **Mandatory follow-up doc edits listed** (explicit docs/sections that must be reconciled next)
+
+This checklist is mandatory whenever battle-critical docs disagree, even if no code changes are included in the PR.
 
 ---
 
