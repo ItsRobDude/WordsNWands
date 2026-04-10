@@ -526,6 +526,37 @@ Invalid or repeated word cues should be clear but gentle.
 
 They should correct the player without sounding scolding or harsh.
 
+Shared terminology contract (cross-doc):
+
+- **Rejected Cast Feedback**: the full player-facing feedback cycle for `submission_kind: 'invalid' | 'repeated'`, from submit resolution through return to idle.
+- **RejectedCastResolution**: the canonical gameplay contract in `docs/implementation-contracts.md` section 5.4; AV cues must not imply or mask gameplay mutation outside that contract.
+
+Required AV specification for Rejected Cast Feedback:
+
+- **Tint change (primary visual):**
+  - apply a soft reject tint to traced path tiles and/or traced word chip only
+  - do not flash the entire board background
+  - avoid aggressive red alarm treatment; prefer muted warm-magenta or cool-violet family accents consistent with overall palette tone
+- **Dissolve/reset window:**
+  - reject tint fade-in: `80–140ms`
+  - hold/readability beat: `40–90ms`
+  - dissolve-to-neutral: `100–190ms`
+  - total target duration: `220–420ms` (aligned with session-flow timing contract)
+- **Audio cue:**
+  - single short, soft-edged “oops” cue (`90–180ms`)
+  - low-to-mid intensity, no buzzer/siren/noise burst character
+  - keep peak loudness clearly below strong-hit and creature-cast cues
+- **Optional subtle haptic:**
+  - optional light tap only, max one pulse
+  - never long buzz, stacked pulses, or harsh impact profile
+  - must respect haptics-off setting
+
+Gentle/not-scolding guardrails:
+
+- Cue language and timbre should feel “try again” rather than “wrong answer.”
+- Avoid visual snapbacks that feel punitive (hard shakes, aggressive flashes, error spam).
+- Repeated invalid casts should remain calm and consistent; do not escalate toward shaming or alarm-like feedback.
+
 ### 13.5 Creature action cues
 Creature spell sounds should communicate personality and disruption, but should still fit the family-friendly magical tone.
 

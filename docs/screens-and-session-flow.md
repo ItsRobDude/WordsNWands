@@ -454,6 +454,29 @@ A completed swipe should feel deliberate and satisfying.
 The player should know when the game has accepted the cast attempt.
 
 ### Invalid submission behavior
+Shared terminology contract (cross-doc):
+
+- **Rejected Cast Feedback**: the full player-facing feedback cycle that starts immediately after a submitted cast is resolved as `submission_kind: 'invalid' | 'repeated'` and ends when the battle HUD returns to idle.
+- **RejectedCastResolution**: the canonical gameplay contract from `docs/implementation-contracts.md` section 5.4 that defines invariant gameplay outcomes for rejected casts.
+
+Interaction sequence after submit (required order):
+
+1. **Submit transition:** player ends swipe; UI enters transient `cast_submit_pending` for feedback lock (input disabled for this micro-beat only).
+2. **Resolution transition:** gameplay resolves to `RejectedCastResolution`; encounter remains canonical `in_progress` and UI enters `rejected_cast_feedback_active`.
+3. **Invariant lock:** during `rejected_cast_feedback_active`, gameplay truth must match contract invariants:
+   - no board mutation
+   - no countdown mutation
+   - no move-budget mutation
+4. **Visual treatment:** show a gentle rejection treatment on traced tiles/word chip only (not full-board punishment), then dissolve back to neutral board presentation.
+5. **Timeout window:** rejection treatment should complete within a short readable feedback window (`220–420ms` total).
+6. **Return-to-idle transition:** after timeout completion, clear transient styling and return to normal playable idle (`battle_input_ready`) with full control restored.
+
+Timing/readability requirements:
+
+- Input lock should be brief and bounded to the feedback window only.
+- If multiple invalid submissions happen quickly, each Rejected Cast Feedback cycle should run independently; do not queue long chained lockouts.
+- Return-to-idle must be deterministic and should occur no later than `~450ms` from submit end in normal runtime conditions.
+
 When the player submits an invalid or repeated word:
 
 - the battle should remain calm and readable
