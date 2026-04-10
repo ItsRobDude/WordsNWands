@@ -919,8 +919,27 @@ export interface RuntimeBoardConfig {
   seedMode: 'generated' | 'fixed_seed';
   fixedSeed: string | null;
   allowWandTiles: boolean;
+  letterDistributionProfileId: string; // e.g. `letter_distribution_v1`
+  letterWeightEntries: RuntimeLetterWeightEntry[]; // canonical weighted A-Z entries for this runtime config
+  namedLetterPoolId: string | null; // optional named pool alias, e.g. `v1_default_pool`
+}
+
+export interface RuntimeLetterWeightEntry {
+  letter: string; // normalized uppercase A-Z only
+  weight: number; // finite positive non-zero numeric weight
 }
 ```
+
+Rules:
+
+- `letterDistributionProfileId` is required and versioned so balancing can evolve additively (for example, `letter_distribution_v1`) without changing RNG semantics.
+- `namedLetterPoolId` is optional metadata for authored presets and does not change draw algorithm behavior by itself.
+- `letterWeightEntries` is the canonical runtime source for weighted refill and initial-board letter selection.
+- `letterWeightEntries` must contain exactly one entry per letter `A` through `Z`.
+- normalization must canonicalize letters to uppercase ASCII and reject non-`A`-`Z` values.
+- every `weight` must be finite, non-zero, and strictly greater than `0`.
+- deterministic ordering is mandatory: runtime consumers must process `letterWeightEntries` in ascending letter order (`A`..`Z`) before building cumulative weighted ranges.
+- duplicate letters are invalid after normalization and must fail runtime validation.
 
 ### 8.4 Reward contract
 
