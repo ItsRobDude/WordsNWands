@@ -1,5 +1,3 @@
-# WordsNWands
-
 # Words 'n Wands! — Android-First Magical Word Battle Game
 
 Words 'n Wands! is an Android-first, portrait-first magical word battle game built around **swiping real words from a falling letter board to cast spells against playful creatures**.
