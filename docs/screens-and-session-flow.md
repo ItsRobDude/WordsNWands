@@ -138,6 +138,15 @@ On app launch, the routing priority should be:
 2. otherwise route a first-time player into the starter flow
 3. otherwise route the player to Home
 
+### Canonical starter-gate routing rule
+If no unresolved active encounter exists and the starter gate has not been cleared, the app routes into starter flow.
+
+Starter gate truth is:
+- `has_completed_starter_encounter = 1` -> starter gate cleared
+- `has_completed_starter_encounter = 0` -> starter gate not cleared
+
+A starter loss does not route the player into normal Home progression.
+
 ### No wasted startup rule
 The app should not make the player step through unnecessary intro layers before they can understand or re-enter the main loop.
 
@@ -233,6 +242,18 @@ For the current early product direction, Home should likely contain:
 - settings/profile entry
 - creature journal or collection entry later, if it stays light
 
+### Canonical Milestone 2 Home primary-action rule
+After the starter gate is cleared, Home’s primary progression card must point to:
+
+- the first mainline encounter in canonical order where:
+  - `is_unlocked = 1`
+  - `best_star_rating = 0`
+
+This is the player’s main “Continue Adventure” target.
+
+Replaying an older cleared encounter must not replace this Home primary-action target.
+Because of the one-next-unlock model, this should normally be exactly one encounter.
+
 ### Resume rule from Home
 If an encounter is currently in progress, Home should not pretend there is no active session.
 
@@ -245,23 +266,35 @@ It should surface a clear **Resume Encounter** path or route directly into the b
 ### Main progression surface rule
 Progression should be readable and lightweight.
 
-Because the game does not currently depend on a heavy story campaign, the progression surface should favor:
+### Canonical progression surface encounter states
+Each mainline encounter should appear in one of four states:
 
-- a simple encounter list
-- a minimalist path
-- or a clean chapter/habitat selection model
+- `locked`
+- `unlocked_unplayed`
+- `unlocked_attempted`
+- `cleared`
 
-over a large decorative world map with high UI maintenance cost.
+Recommended derivation:
+- `locked`: `is_unlocked = 0`
+- `unlocked_unplayed`: `is_unlocked = 1`, `win_count = 0`, `loss_count = 0`
+- `unlocked_attempted`: `is_unlocked = 1`, `win_count = 0`, `loss_count > 0`
+- `cleared`: `best_star_rating > 0`
 
-### Map/path direction
-If a map exists, it should be:
+Cleared encounters show best stars.
+Locked encounters show a simple unlock hint based on the immediately preceding encounter.
 
-- simple
-- low-clutter
-- readable at a glance
-- secondary to the battle itself
+### Canonical Milestone 2 progression surface
+Milestone 2 uses a chapter-linear progression surface.
 
-The map should support play, not try to become the game.
+Recommended presentation:
+- ordered chapter cards or chapter strips
+- current chapter expanded by default
+- past chapters collapsed but reviewable
+- future chapters visible in a light locked state
+- no branching node web
+- no decorative world-map clutter
+
+The surface should show one obvious next encounter, not multiple equally primary choices.
 
 ### Locked-content rule
 Future encounters may be visually present before unlock, but only if that presentation stays clean and understandable.
@@ -645,6 +678,23 @@ Typical next-step actions may include:
 - Return to Home
 
 Do not overload the result screen with too many branches.
+
+### Result-screen next-action rule
+
+After a starter win:
+- primary CTA: `Begin Chapter 1`
+
+After a first-clear mainline win that unlocks a new encounter:
+- primary CTA: `Next Encounter`
+
+After a replay win with no new unlock:
+- primary CTA: `Return to Home` or `Continue Adventure`
+
+After a loss:
+- primary CTA: `Retry`
+- secondary CTA: `Return to Home`
+
+A loss must never imply that future already-unlocked encounters were relocked.
 
 ---
 
