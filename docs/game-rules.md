@@ -327,7 +327,11 @@ Every successful player turn follows this exact order.
 10. If the creature reaches zero HP, the encounter ends immediately in victory.
 11. If the creature is still alive, its cast countdown is evaluated.
 12. If the countdown reaches zero, the creature casts its spell and the countdown resets.
-13. Control returns to the player.
+13. Temporary tile-state durations tick down for surviving tiles after cast resolution.
+14. Dead-board detection runs on the fully resolved board (after refill, Bubble resolution, creature spell resolution if any, and tile-state decrement).
+15. If dead board is detected, Spark Shuffle triggers immediately; if the first shuffle is still dead, Spark Shuffle retries until the board is playable.
+16. Every Spark Shuffle trigger in that cycle applies zero move change and zero countdown change.
+17. Control returns to the player.
 
 This order must remain consistent.
 

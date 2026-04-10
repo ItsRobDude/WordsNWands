@@ -358,7 +358,13 @@ The resolution pipeline below is mandatory for every **validated cast** (`submis
     - Sooted: decrement after this successful cast; clear when duration reaches `0`
     - Dull: decrement after this successful cast; clear when duration reaches `0`
     - Bubble: already cleared in step 5 for surviving Bubble tiles; consumed Bubble tiles cleared at consumption
-17. Finalize post-resolution state (`moves_remaining`, `repeated_words`, board snapshot, countdown_after, did_win/did_lose flags).
+17. Run dead-board detection on the **fully resolved post-cast board** (after refill, Bubble resolution, creature spell resolution if any, and tile-state duration decrement).
+18. If dead board is detected, trigger Spark Shuffle recovery immediately:
+    - detection is required at step 17 for every non-terminal valid cast cycle
+    - additional dead-board checks are allowed during internal spell primitive execution, but do not replace step 17
+    - Spark Shuffle may chain/retry in the same cast cycle if the first shuffle output is still dead
+    - each retry must preserve `moves_remaining` and `current_countdown` (zero move change, zero countdown change)
+19. Finalize post-resolution state (`moves_remaining`, `repeated_words`, board snapshot, countdown_after, did_win/did_lose flags).
 
 Worked example (Dull + Sooted + weakness candidate):
 
@@ -374,6 +380,20 @@ Resolution:
 3. Damage math: `round(14 * 1.0 * 1.0 * 0.75) = round(10.5) = 11`; minimum clamp not needed.
 4. Creature survives, so weakness stall check uses post-Dull matchup (`neutral`), meaning **no stall**; countdown decrements from `2` to `1`.
 5. Surviving Frozen/Sooted/Dull durations decrement once now; consumed state tiles were already cleared when selected.
+
+Worked example (cast cycle that triggers Spark Shuffle):
+
+- Start of cast: `moves_remaining = 9`, `countdown_before = 2`, creature HP above `0`
+- Cast resolves as a non-weakness hit, so countdown decrements to `1`
+- Countdown is not `0`, so creature spell does not fire in this cycle
+- After refill + Bubble + tile-state decrement, dead-board detection runs and finds `0` valid playable words
+
+Resolution:
+
+1. Spark Shuffle triggers from `trigger_reason = 'dead_board'`.
+2. First shuffle result is still dead, so Spark Shuffle retries once in the same cast cycle.
+3. Second shuffle produces a playable board, ending recovery.
+4. Final state remains `moves_remaining = 9`, `countdown_after = 1` (no Spark Shuffle pressure side-effects across either trigger).
 
 ### 5.4 Rejected cast resolution contract
 
