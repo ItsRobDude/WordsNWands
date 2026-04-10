@@ -590,10 +590,15 @@ Restarting an encounter should be deliberate, not easy to mis-tap.
 ### Restart behavior
 A restart should create a fresh run of that encounter according to its authored rules.
 
-### Seed behavior direction
-If encounter seeds or board determinism are later formalized, restart behavior must be documented clearly in the implementation and progression docs.
+### Seed behavior rule
+Restart must create a fresh encounter attempt with a newly generated `encounter_seed` unless a fixed-seed mode is explicitly active (for authored/testing scenarios).
 
-For now, the player-facing rule is simply that restart means **a fresh attempt**, not a corrupted continuation.
+Deterministic randomness and resume behavior are contract-owned by:
+
+- `docs/randomness-and-seeding-contract.md`
+- `docs/implementation-contracts.md`
+
+Player-facing expectation remains: restart means **a fresh attempt**, not a corrupted continuation.
 
 ---
 

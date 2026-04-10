@@ -588,16 +588,19 @@ The board-generation system should be responsible for:
 ### 16.3 Safety-check rule
 Board generation must use the same validation truth as player casting.
 
-### 16.4 Seed direction
-A seeded generator is strongly preferred even early, because it helps with:
+### 16.4 Randomness contract (required)
+Encounter randomness is mandatory and contract-driven in v1.
 
-- testing
-- debugging
-- reproducibility
-- future async competition or challenge modes
+System-of-record document: `docs/randomness-and-seeding-contract.md`.
 
-The player does not need to see seeds.  
-The architecture benefits from them.
+Architecture requirements:
+
+- encounter sessions must carry an immutable root `encounter_seed`
+- randomness must use isolated deterministic substreams (not one shared stream)
+- substream state must be persisted in active encounter snapshots for exact resume
+- restore must continue from persisted RNG state, not from re-derived fresh streams
+
+This is a gameplay fairness and trust requirement, not an optional optimization.
 
 ---
 
