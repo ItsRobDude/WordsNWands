@@ -1,0 +1,17 @@
+name: docs-consistency
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  damage-model-consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate damage model docs consistency
+        run: ./scripts/check-damage-model-consistency.sh
