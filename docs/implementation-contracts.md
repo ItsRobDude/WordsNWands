@@ -1052,13 +1052,70 @@ Rules:
 
 #### 8.2.a Player assist action gating contract (M1-M2 and later)
 
+Milestone gating:
+
 - M1 and M2 ship with no player-invoked hint/clue runtime contract.
 - Only automatic dead-board Spark Shuffle recovery is allowed during active encounter play in M1-M2.
-- If player-invoked hints/clues are introduced in a later milestone, `docs/implementation-contracts.md` must define all of the following before implementation ships:
-  - trigger source (exact button/surface and availability state)
-  - gameplay effect (for example, one valid path candidate highlight and its lifetime)
-  - pressure impact (exact move/countdown/currency effects)
-  - anti-abuse constraints (cooldown, per-encounter limit, and any disable conditions)
+- Earliest milestone for player-invoked clues is M3.
+- Starter flow remains clue-hidden unless docs are explicitly updated later.
+
+Canonical clue enums:
+
+```ts
+export type ClueActionType =
+  | 'reveal_starter_letter'
+  | 'highlight_legal_path'
+  | 'reroll_local_tiles';
+
+export type ClueUseDenyReason =
+  | 'clues_disabled_for_milestone'
+  | 'starter_flow_locked'
+  | 'no_charges_available'
+  | 'encounter_limit_reached'
+  | 'cooldown_active'
+  | 'encounter_not_in_progress'
+  | 'creature_spell_lock_active'
+  | 'post_terminal_state';
+```
+
+Canonical persisted clue counters in active encounter runtime:
+
+```ts
+export interface EncounterClueRuntimeState {
+  clue_charges_available: number;
+  clue_uses_total: number;
+  clue_uses_reveal_starter_letter: number;
+  clue_uses_highlight_legal_path: number;
+  clue_uses_reroll_local_tiles: number;
+  clue_cooldown_successful_casts_remaining: number;
+  clue_star_cap_from_usage: 0 | 1 | 2 | 3 | null;
+}
+```
+
+Rules:
+
+- `clue_charges_available` is decremented only on successful clue action commit.
+- `clue_uses_*` counters are per-encounter counters and reset on fresh run creation.
+- `clue_cooldown_successful_casts_remaining` tracks cooldown in units of successful valid casts.
+- `clue_star_cap_from_usage` is null before clue use; then records strict cap (`2` after `reveal_starter_letter` or `highlight_legal_path`, `1` after `reroll_local_tiles`) and always resolves to the minimum cap seen so far.
+
+Required persisted profile-level clue economy counters:
+
+```ts
+export interface PlayerClueEconomyState {
+  clue_daily_earned_utc_date: string | null; // YYYY-MM-DD UTC
+  clue_daily_earned_count: number;
+  clue_daily_purchased_utc_date: string | null; // YYYY-MM-DD UTC
+  clue_daily_purchased_count: number;
+  clue_inventory_count: number;
+}
+```
+
+Rules:
+
+- runtime must enforce daily earn cap `3`, daily purchase cap `3`, and inventory cap `9`.
+- cap logic is UTC-date keyed and must not rely on local device timezone interpretation.
+- paid and non-paid clue charges draw from the same encounter runtime budget constraints.
 
 #### 8.2.b Encounter balance metadata and waiver contract
 
@@ -1455,6 +1512,8 @@ export type CanonicalAnalyticsEventName =
   | 'encounter.creature_spell_triggered'
   | 'encounter.dead_board_recovered'
   | 'encounter.spark_shuffle_retry_cap_hit'
+  | 'encounter.clue_used'
+  | 'encounter.clue_denied'
   | 'encounter.won'
   | 'encounter.lost'
   | 'encounter.result_viewed'
@@ -1498,6 +1557,11 @@ export interface CanonicalGameplayAnalyticsFields {
   spark_shuffle_retries_attempted: number | null;
   spark_shuffle_retry_cap: number | null;
   spark_shuffle_fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end' | null;
+  clue_action_type: ClueActionType | null;
+  clue_use_deny_reason: ClueUseDenyReason | null;
+  clue_charges_available: number | null;
+  clue_uses_total: number | null;
+  clue_star_cap_from_usage: 0 | 1 | 2 | 3 | null;
 }
 ```
 
@@ -1519,6 +1583,8 @@ Required behavior:
 - analytics must not send full board snapshots by default
 - event transport failures must be non-blocking for gameplay and persistence
 - `encounter.spark_shuffle_retry_cap_hit` is required whenever Spark Shuffle reaches retry cap (even if deterministic emergency regeneration succeeds)
+- `encounter.clue_used` is required for every successful clue action commit and must include `clue_action_type`, `clue_charges_available`, and `clue_uses_total`.
+- `encounter.clue_denied` is required for clue-use attempts rejected by gating, cooldown, or budget constraints and must include `clue_use_deny_reason`.
 - `encounter_terminal_reason_code = 'spark_shuffle_retry_cap_unrecoverable'` is required on terminal analytics events emitted from a `recoverable_error` encounter end
 
 ---
