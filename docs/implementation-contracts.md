@@ -455,7 +455,7 @@ export type CreatureSpellPrimitive =
 export interface ApplyTileStatePrimitive {
   kind: 'apply_tile_state';
   tile_state: TileStateKind;
-  target_count: number;
+  target_count: number; // upper bound; actual applied count may be lower per eligible-pool rules in section 6.2
   targeting: 'random_eligible' | 'authored_pattern';
 }
 
@@ -475,6 +475,7 @@ export interface ShiftColumnPrimitive {
 
 export interface ChainedSpellPrimitive {
   kind: 'chained';
+  // resolve strictly in authored order; each step recomputes eligibility from prior step output (section 6.2)
   steps: Array<ApplyTileStatePrimitive | ShiftRowPrimitive | ShiftColumnPrimitive>;
 }
 ```
@@ -485,6 +486,119 @@ Rules:
 - `ChainedSpellPrimitive` exists for readable multi-step boss/event behavior, not for content chaos
 - whole-board scramble primitives are intentionally absent from the early contract
 - new primitive families must be added deliberately in this document before wide implementation
+
+### 6.2 `apply_tile_state` deterministic eligibility contract
+
+This section is normative for all `ApplyTileStatePrimitive` resolution and mirrors creature authoring rules.
+
+Eligibility matrix:
+
+| Requested `tile_state` | same state already present | different negative state present | Wand marker present |
+| --- | --- | --- | --- |
+| `frozen` | ineligible | ineligible | eligible |
+| `sooted` | ineligible | ineligible | eligible |
+| `dull` | ineligible | ineligible | eligible |
+| `bubble` | ineligible | ineligible | eligible |
+
+Deterministic resolution requirements:
+
+1. Build eligible set from current board at primitive evaluation time.
+2. `target_count` is an upper bound; if `target_count > eligible.length`, apply to `eligible.length` and stop.
+3. Sampling must be without replacement.
+4. For `targeting: 'random_eligible'`, use seeded deterministic ordering then take first `N`:
+   - primary: ascending hash(`encounter_seed + creature_cast_index + primitive_step_index + tile_id`)
+   - secondary: `row` ascending
+   - tertiary: `col` ascending
+   - quaternary: `tile_id` ascending lexicographic
+5. Never rely on runtime object-key iteration order for authoritative selection.
+
+### 6.3 Chain interaction contract for eligibility-affecting primitives
+
+If one cast contains multiple primitives that affect eligibility (including `chained` with repeated `apply_tile_state` steps), evaluate in authored order and commit each step before computing the next step's eligible set.
+
+Example:
+
+- step 1: `shift_row`
+- step 2: `apply_tile_state(tile_state: 'frozen', target_count: 2)`
+
+Step 2 eligibility uses post-shift coordinates, not pre-shift coordinates.
+
+### 6.4 Authoring examples for `apply_tile_state` variants
+
+Text snapshot legend:
+
+- `X*` means Wand marker on tile letter `X`
+- `[F]`, `[S]`, `[D]`, `[B]` mean frozen/sooted/dull/bubble respectively
+
+All examples assume `targeting: 'random_eligible'` with deterministic seeded ordering from section 6.2.
+
+Frozen (`target_count = 2`):
+
+Pre:
+```
+R0: A   B   C   D
+R1: E*  F   G   H
+R2: I   J   K   L
+R3: M   N   O   P
+```
+Post:
+```
+R0: A[F] B    C    D
+R1: E*[F] F    G    H
+R2: I    J    K    L
+R3: M    N    O    P
+```
+
+Sooted (`target_count = 3`; one same-state tile already present):
+
+Pre:
+```
+R0: A     B[S]  C    D
+R1: E     F     G*   H
+R2: I     J     K    L
+R3: M     N     O    P
+```
+Post:
+```
+R0: A[S]  B[S]  C    D
+R1: E[S]  F     G*[S] H
+R2: I     J     K    L
+R3: M     N     O    P
+```
+
+Dull (`target_count = 2`):
+
+Pre:
+```
+R0: A     B[D]  C    D
+R1: E*    F     G    H
+R2: I     J     K    L
+R3: M     N     O    P
+```
+Post:
+```
+R0: A[D]  B[D]  C    D
+R1: E*[D] F     G    H
+R2: I     J     K    L
+R3: M     N     O    P
+```
+
+Bubble (`target_count = 2`; one same-state tile already present):
+
+Pre:
+```
+R0: A     B     C    D
+R1: E*    F[B]  G    H
+R2: I     J     K    L
+R3: M     N     O    P
+```
+Post:
+```
+R0: A[B]  B     C    D
+R1: E*[B] F[B]  G    H
+R2: I     J     K    L
+R3: M     N     O    P
+```
 
 ---
 

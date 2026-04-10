@@ -539,6 +539,31 @@ Examples:
 - dull 3 tiles
 - bubble 2 tiles
 
+Deterministic eligibility matrix for `apply_tile_state` (v1 lock):
+
+| Requested state | Tiles already carrying same state | Tiles carrying a different negative state | Tiles carrying Wand marker |
+| --- | --- | --- | --- |
+| `frozen` | Not eligible | Not eligible | Eligible |
+| `sooted` | Not eligible | Not eligible | Eligible |
+| `dull` | Not eligible | Not eligible | Eligible |
+| `bubble` | Not eligible | Not eligible | Eligible |
+
+Interpretation rules:
+
+- `same state` exclusion prevents useless re-application and keeps cast outcomes legible.
+- `different negative state` exclusion enforces the single-state rule and avoids hidden overwrite priority.
+- Wand marker does not block targeting; a tile may simultaneously be Wand-marked and carry one negative state.
+- `target_count` is an upper bound, not a guarantee.
+- If `target_count` exceeds the eligible pool size, apply to all eligible tiles and stop (no retries, no fallback pool).
+- Sampling is without replacement: a tile selected once in this primitive cannot be selected again in the same primitive.
+- Tie-break order for deterministic targeting must be:
+  1. primary key: stable ascending hash of `encounter_seed + creature_cast_index + primitive_step_index + tile_id`
+  2. secondary key: `row` ascending
+  3. tertiary key: `col` ascending
+  4. quaternary key: `tile_id` lexicographic ascending
+- For `chained` spells, resolve steps strictly in authored order using the board produced by the previous step.
+- Eligibility for a later step is always re-evaluated from that updated board; no step may pre-reserve targets for later steps.
+
 #### 12.2 Shift one row
 Move or rotate one row by one step.
 
@@ -616,6 +641,120 @@ Avoid hidden logic whose purpose is obviously to ruin the player’s best option
 
 The creature may create pressure.  
 It should not feel omniscient.
+
+### 14.1 Deterministic overflow and tie behavior for `apply_tile_state`
+
+When requested targets exceed eligible tiles:
+
+- behavior is deterministic truncation to eligible size
+- no backfilling from ineligible groups
+- no repeated sampling of already selected tiles
+
+When eligible ordering ties appear:
+
+- use the deterministic tie-break chain defined in section 12.1
+- do not depend on runtime object iteration order
+- do not use non-seeded randomness for authoritative battle resolution
+
+### 14.2 Multi-primitive chain behavior
+
+If a spell cast contains multiple primitives that can change eligibility (for example, `shift_row` followed by `apply_tile_state`, or two consecutive `apply_tile_state` steps), resolve as:
+
+1. execute primitive step `n`
+2. commit board changes
+3. compute eligibility for step `n + 1` from that committed board
+
+This preserves deterministic replay and keeps authored chains understandable.
+
+### 14.3 Authored `apply_tile_state` examples (pre/post board snapshots)
+
+Legend:
+
+- `A..Z` = ordinary tile letter
+- `*` suffix = Wand marker (example: `E*`)
+- `[F]` = Frozen, `[S]` = Sooted, `[D]` = Dull, `[B]` = Bubble
+
+All examples use a 4x4 snapshot for readability.
+
+#### Frozen example (`target_count = 2`)
+
+Pre:
+```
+R0: A   B   C   D
+R1: E*  F   G   H
+R2: I   J   K   L
+R3: M   N   O   P
+```
+
+Selected by deterministic ordering: `E*`, `A`.
+
+Post:
+```
+R0: A[F] B    C    D
+R1: E*[F] F    G    H
+R2: I    J    K    L
+R3: M    N    O    P
+```
+
+#### Soot example (`target_count = 3`)
+
+Pre:
+```
+R0: A     B[S]  C    D
+R1: E     F     G*   H
+R2: I     J     K    L
+R3: M     N     O    P
+```
+
+Eligibility excludes `B[S]` only; Wand tile `G*` remains eligible.
+
+Post (deterministic top-ranked eligible set `A`, `E`, `G*`):
+```
+R0: A[S]  B[S]  C    D
+R1: E[S]  F     G*[S] H
+R2: I     J     K    L
+R3: M     N     O    P
+```
+
+#### Dull example (`target_count = 2`)
+
+Pre:
+```
+R0: A     B[D]  C    D
+R1: E*    F     G    H
+R2: I     J     K    L
+R3: M     N     O    P
+```
+
+Overflow case note: if eligible pool were size 1, only that tile would be updated.
+
+Post (selected `E*`, `A`):
+```
+R0: A[D]  B[D]  C    D
+R1: E*[D] F     G    H
+R2: I     J     K    L
+R3: M     N     O    P
+```
+
+#### Bubble example (`target_count = 2`)
+
+Pre:
+```
+R0: A     B     C    D
+R1: E*    F[B]  G    H
+R2: I     J     K    L
+R3: M     N     O    P
+```
+
+Eligibility excludes `F[B]`; Wand tile `E*` is eligible.
+
+Post (selected `E*`, `A`):
+```
+R0: A[B]  B     C    D
+R1: E*[B] F[B]  G    H
+R2: I     J     K    L
+R3: M     N     O    P
+```
 
 ---
 
