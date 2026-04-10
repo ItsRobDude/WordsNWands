@@ -548,6 +548,45 @@ Concrete example:
 - before Spark Shuffle: `current_countdown = 2`, `moves_remaining = 9`
 - after Spark Shuffle: `current_countdown = 2`, `moves_remaining = 9`
 
+### 5.8 Dead-board detection contract
+
+Dead-board detection is a **system safety contract**, not a player-fault classifier. This subsection must stay aligned with `docs/game-rules.md` section 13 (Dead-board rule + Spark Shuffle pressure rule) so recovery communicates assistance rather than blame.
+
+Canonical predicate shape:
+
+```ts
+export function hasPlayableWord(
+  boardSnapshot: BoardSnapshot,
+  encounterState: Pick<EncounterRuntimeState, 'repeated_words'>,
+  validationLookup: ValidationSnapshotLookup
+): boolean;
+```
+
+Playable-word criteria checklist (all must pass for at least one path):
+
+1. **Path legality:** letters form a continuous adjacency path (horizontal, vertical, or diagonal) with no tile reused in the same candidate word.
+2. **Minimum length:** candidate word length is `>= 3`.
+3. **Tile-state selection constraints:** candidate path excludes tiles currently blocked from selection (for v1, Frozen tiles are unselectable until cleared).
+4. **Lexicon membership:** normalized candidate word exists in the active `ValidationSnapshotLookup` (`hasWord(normalizedWord) = true`).
+5. **Repeated-word rejection:** normalized candidate word is not present in `encounterState.repeated_words` for the current encounter.
+
+Trigger timing and consistency requirements:
+
+- Required timing remains section 5.3 step 17: execute dead-board detection only on the **fully resolved post-cast board** (post-refill, post-Bubble resolution, post-creature-spell resolution when applicable, and post tile-state decrement).
+- Internal spell-primitive safety checks may run earlier, but the step-17 check is canonical for cast-cycle outcome.
+- The dead-board predicate must produce acceptance/rejection parity with cast validation for the same board snapshot and encounter repeat history.
+
+Determinism rule:
+
+- Dead-board checks must use the exact same normalized-word pipeline as cast validation (same normalization function and ordering).
+- Dead-board checks must use the same pinned `validation_snapshot_version_pin` and in-memory lookup instance as cast validation for the active encounter.
+- Implementations must not mix snapshot versions or fallback to alternate lexicon sources during the same encounter.
+
+Examples:
+
+- **Dead due to repeat + blocked constraints:** board contains only one dictionary-valid adjacency path, `GLOW`, but `G` is Frozen and `"glow"` already exists in `repeated_words`; all remaining adjacency paths are either too short or not in lexicon. `hasPlayableWord(...)` returns `false`, so Spark Shuffle recovery is required.
+- **Playable board:** board contains legal path `S-T-O-N-E` with no tile reuse, no blocked tiles, length `5`, `"stone"` in active validation snapshot, and `"stone"` absent from `repeated_words`; `hasPlayableWord(...)` returns `true`, so no dead-board recovery triggers.
+
 ---
 
 ## 6. Spell Primitive Contracts
