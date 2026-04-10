@@ -337,6 +337,168 @@ If areas, habitats, or chapters exist later, they should function as readable gr
 
 ---
 
+### 9.5 Canonical Milestone 2 unlock algorithm
+
+Milestone 2 uses one canonical mainline progression model:
+
+- `chapter_linear_v1`
+
+This means:
+
+- the starter encounter is a special onboarding gate and is not part of the normal chapter list
+- the mainline campaign is composed of ordered chapters
+- each chapter contains an ordered list of mainline encounters
+- chapters and encounter order together define one canonical next encounter
+
+### 9.6 Mainline unlock condition
+
+The mainline unlock condition for Milestone 2 is:
+
+- `win_any_stars`
+
+A win with `1`, `2`, or `3` stars unlocks the next mainline encounter.
+A loss with `0` stars does not unlock the next mainline encounter.
+
+Stars are mastery rewards, not progression gates.
+
+### 9.7 One-next-encounter rule
+
+A mainline encounter win unlocks exactly one next mainline encounter:
+
+- the next encounter in the same chapter, or
+- the first encounter of the next chapter if the current encounter is chapter-final
+
+Milestone 2 does not use branching unlocks for ordinary mainline progression.
+
+### 9.8 Replay and relock rule
+
+Replay exists to improve mastery and star results.
+
+Replay may:
+
+- improve best-star records
+- update completion timestamps
+- increase win/loss counters
+
+Replay must not:
+
+- relock already unlocked encounters
+- create branch unlock ambiguity
+- make weaker later performance remove earlier progress
+
+Unlock state is monotonic for a profile:
+- `locked -> unlocked` is allowed
+- `unlocked -> locked` is not allowed in ordinary progression flow
+
+### 9.9 Loss behavior rule
+
+Losing an already unlocked encounter does not relock it and does not relock any future encounters that were already unlocked.
+
+A loss on an uncleared encounter simply leaves its immediate successor locked.
+
+### 9.10 Starter encounter gate rule
+
+The starter encounter is an onboarding gate, not a normal mainline chapter node.
+
+Starter behavior:
+
+- starter win unlocks the first mainline encounter
+- starter loss unlocks nothing
+- the player remains in starter flow until the starter encounter is won
+- after the starter encounter is won, Home and progression surfaces should treat the first mainline encounter as the next meaningful action
+
+### 9.11 Chapter completion rule
+
+A chapter is considered completed when every encounter in that chapter has been won at least once.
+
+Chapter completion is for presentation and progress summary.
+Chapter completion does not require all encounters to reach 3 stars.
+
+### 9.12 Deterministic examples
+
+**Example 1: starter loss**
+
+Progression definition:
+- starter: `enc_starter_001`
+- chapter 1: `enc_meadow_001`, `enc_meadow_002`, `enc_meadow_003`
+
+Initial state:
+- `has_completed_starter_encounter = 0`
+- `starter_result_outcome = 'unplayed'`
+- `enc_starter_001.is_unlocked = 1`
+- all mainline encounters `is_unlocked = 0`
+
+Player loses starter.
+
+Result:
+- `has_completed_starter_encounter = 0`
+- `starter_result_outcome = 'lost'`
+- `enc_starter_001.loss_count += 1`
+- `enc_meadow_001.is_unlocked` remains `0`
+
+Next app entry returns to starter flow.
+
+**Example 2: starter win**
+
+Starting from Example 1 state, player wins starter with 1 star.
+
+Result:
+- `has_completed_starter_encounter = 1`
+- `starter_result_outcome = 'won'`
+- `enc_starter_001.best_star_rating = 1`
+- `enc_meadow_001.is_unlocked = 1`
+- `enc_meadow_001.first_unlocked_at_utc` is set
+- `enc_meadow_002.is_unlocked = 0`
+
+Home now points to `enc_meadow_001`.
+
+**Example 3: mainline loss does not relock**
+
+Player wins `enc_meadow_001` with 2 stars.
+
+Result:
+- `enc_meadow_001.best_star_rating = 2`
+- `enc_meadow_002.is_unlocked = 1`
+
+Then player loses `enc_meadow_002`.
+
+Result:
+- `enc_meadow_002.loss_count += 1`
+- `enc_meadow_002.is_unlocked` stays `1`
+- `enc_meadow_003.is_unlocked` stays `0`
+
+Home points to retry `enc_meadow_002`.
+
+**Example 4: replay improves stars only**
+
+Player later wins `enc_meadow_002` with 1 star.
+
+Result:
+- `enc_meadow_002.best_star_rating = 1`
+- `enc_meadow_003.is_unlocked = 1`
+
+Later they replay `enc_meadow_002` and win with 3 stars.
+
+Result:
+- `enc_meadow_002.best_star_rating = 3`
+- `enc_meadow_003.is_unlocked` stays `1`
+- no other unlock changes occur
+
+**Example 5: chapter boundary**
+
+`enc_meadow_003` is the final encounter of chapter 1.
+Chapter 2 starts with `enc_brook_001`.
+
+Player wins `enc_meadow_003` with 2 stars.
+
+Result:
+- `enc_meadow_003.best_star_rating = 2`
+- `enc_brook_001.is_unlocked = 1`
+
+That is the only new unlock from that win.
+
+---
+
 ## 10. Journal and Collection Progression Rules
 
 A creature journal or codex is a good fit for this product if it stays light.
