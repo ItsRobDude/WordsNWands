@@ -631,6 +631,9 @@ If the process was killed, the app should still restore the most recent safe enc
 ### Result-state rule
 If the encounter had already resolved before interruption, the player should return to the appropriate result screen rather than a fake in-progress battle.
 
+### Recoverable-error restore rule
+If Spark Shuffle retry-cap unrecoverable failure has already been committed (`session_state = recoverable_error`), restore must route to the recoverable-error result overlay first, not back into the board.
+
 ### No accidental duplication rule
 Resume behavior must not:
 
@@ -692,6 +695,28 @@ The result screen should provide:
 - retry action
 - return or continue path
 
+### Spark Shuffle recoverable-error result overlay
+When a run ends in Spark Shuffle retry-cap unrecoverable failure, show a dedicated recoverable-error result overlay (not the normal loss card) so the player is not blamed for a system recovery failure.
+
+Copy tone requirements:
+- calm, apologetic, and confidence-preserving
+- explicitly frame this as a magical-board recovery failure, not player skill failure
+- no punitive language and no implication of “you played badly”
+
+Required copy intent (exact wording can vary by localization):
+- title intent: “Magic board hiccup”
+- body intent: “We couldn’t recover a playable board this run. Your progress is safe.”
+
+CTA requirements:
+- primary CTA label: `Retry Encounter`
+- secondary CTA label: `Return to Home`
+- optional tertiary text action (non-primary): `Report Issue` (only if issue reporting exists; otherwise omit)
+
+Action behavior:
+- `Retry Encounter` starts a fresh encounter run (new session, fresh seed)
+- `Return to Home` exits to Home with no extra modal stack
+- overlay dismissal/back gesture must not resume into stale in-progress board state
+
 ### Tone rule
 Result screens should feel:
 
@@ -726,7 +751,23 @@ After a loss:
 - primary CTA: `Retry`
 - secondary CTA: `Return to Home`
 
+After Spark Shuffle recoverable-error end:
+- primary CTA: `Retry Encounter`
+- secondary CTA: `Return to Home`
+
 A loss must never imply that future already-unlocked encounters were relocked.
+
+### Deterministic recoverable-error trace example
+The following trace is required to stay deterministic for a fixed `encounter_seed` and identical cast sequence:
+
+1. Valid cast resolves, dead-board detection runs, and Spark Shuffle recovery starts.
+2. Spark Shuffle retries until retry cap is reached (`max_shuffle_retries_per_recovery_cycle = 3`).
+3. Deterministic emergency regeneration branch runs and still yields dead board.
+4. Runtime commits terminal state `session_state = recoverable_error` with reason `spark_shuffle_retry_cap_unrecoverable`.
+5. App is backgrounded/killed before player taps any CTA.
+6. On resume, restore routing opens the recoverable-error result overlay (not battle board).
+7. Player taps `Retry Encounter`.
+8. App creates a new encounter session and launches encounter intro/battle entry as a fresh attempt.
 
 ---
 
