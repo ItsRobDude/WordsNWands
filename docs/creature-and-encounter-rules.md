@@ -395,6 +395,20 @@ Raw HP numbers become misleading when damage tuning changes.
 
 Expected defeat pace is the more stable balancing lens.
 
+### Quantitative balancing framework
+Use `docs/encounter-balance-framework.md` as the normative tuning framework for authored encounter numbers.
+
+That framework defines:
+
+- expected-cast profile assumptions by difficulty tier
+- HP derivation from target casts-to-defeat using the current damage formula
+- move-budget and base-countdown derivation from target fail-rate bands
+- explicit invalid high-pressure combinations
+- playtest acceptance metrics required before an encounter is treated as shippable
+
+When this document and that framework are both applicable, this document owns encounter behavior and constraints while the framework owns numeric tuning procedure and graduation gates.
+
+
 ### Skill expression rule
 Better players should be able to improve encounter outcomes through:
 
