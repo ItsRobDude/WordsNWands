@@ -827,6 +827,150 @@ R2: I     J     K    L
 R3: M     N     O    P
 ```
 
+### 6.5 Canonical spell payload schema contract
+
+This section defines the canonical content-bundle schema for authored creature spell payloads. Runtime loaders and content validators must reject payloads that violate this contract.
+
+#### 6.5.1 Primitive IDs and parameter contracts
+
+Canonical primitive IDs:
+
+- `apply_tile_state`
+- `shift_row`
+- `shift_column`
+- `chained`
+
+Primitive parameter contract:
+
+| Primitive ID | Required params | Optional params | Allowed range / values |
+| --- | --- | --- | --- |
+| `apply_tile_state` | `kind`, `tile_state`, `target_count`, `targeting` | none | `tile_state ∈ {'frozen','sooted','dull','bubble'}`; `targeting ∈ {'random_eligible','authored_pattern'}`; `target_count` integer `>= 1` |
+| `shift_row` | `kind`, `row_index`, `mode`, `distance` | none | `row_index` integer `0-5`; `mode = 'rotate'`; `distance = 1` |
+| `shift_column` | `kind`, `col_index`, `mode`, `distance` | none | `col_index` integer `0-5`; `mode = 'rotate'`; `distance = 1` |
+| `chained` | `kind`, `steps` | none | `steps.length >= 2`; each step must be one of `apply_tile_state`, `shift_row`, `shift_column`; nested `chained` is illegal |
+
+#### 6.5.2 Intensity tiers mapped to numeric constraints
+
+Authoring and validation must enforce these numeric boundaries per encounter type:
+
+| Encounter type | Max affected tiles per cast (`sum(apply_tile_state.target_count)` across resolved steps) | Duration bounds | Chain allowance (`extra_steps = total_steps - 1`) |
+| --- | --- | --- | --- |
+| `standard` | `<= 5` (`warn` at `5`, `error` at `>= 6`) | state durations are fixed by tile-state runtime contract: Frozen/Bubble `1`, Sooted/Dull `2` successful casts | `extra_steps <= 2` (`warn` at `2`, `error` at `>= 3`) |
+| `boss` | `<= 7` (`warn` at `7`, `error` at `>= 8`) | state durations are fixed by tile-state runtime contract: Frozen/Bubble `1`, Sooted/Dull `2` successful casts | `extra_steps <= 4` (`warn` at `4`, `error` at `>= 5`) |
+| `event` | `<= 7` (`warn` at `7`, `error` at `>= 8`) | state durations are fixed by tile-state runtime contract: Frozen/Bubble `1`, Sooted/Dull `2` successful casts | `extra_steps <= 4` (`warn` at `4`, `error` at `>= 5`) |
+
+Notes:
+
+- The fixed duration bounds are normative and cannot be overridden per spell payload.
+- Validators may compute advisory warnings for authored values in `warn` bands, but must hard-fail `error` bands.
+
+#### 6.5.3 Validation error contract for illegal combinations
+
+Canonical content-validator error codes:
+
+| Error code | Trigger | Guardrail mapping |
+| --- | --- | --- |
+| `spell_schema_unknown_primitive` | Primitive `kind` not in canonical primitive IDs | Prevents unsupported runtime behavior |
+| `spell_schema_missing_required_param` | Required parameter absent or null | Prevents ambiguous spell execution |
+| `spell_schema_param_out_of_range` | Numeric or enum parameter violates section 6.5.1 bounds | Prevents illegal board mutation semantics |
+| `spell_schema_nested_chain_forbidden` | A `chained` step contains another `chained` primitive | Enforces readability and deterministic evaluation |
+| `spell_balance_tiles_exceed_error_band` | Affected-tile total exceeds encounter error band | Maps to `CER-STATE-002`/`CER-STATE-004`/`CER-STATE-005` limits |
+| `spell_balance_chain_exceed_error_band` | Chain extra-step count exceeds encounter error band | Maps to `CER-CHAIN-002`/`CER-CHAIN-004`/`CER-CHAIN-005` limits |
+| `spell_balance_duration_override_forbidden` | Payload attempts to author tile-state duration | Preserves canonical tile-state trust contract |
+| `spell_balance_illegal_encounter_combo` | Spell marked `standard` but includes boss/event-only pressure (error-band chain or tile counts) | Prevents ordinary content from silently inheriting boss/event intensity |
+
+#### 6.5.4 Serialization and versioning policy for content bundles
+
+Spell payloads in content bundles must follow these versioning rules:
+
+- Every spell payload must include:
+  - `schema_version` (current: `"spell_payload_v1"`)
+  - `spell_id` (stable identity string)
+  - `encounter_type` (`standard`/`boss`/`event`)
+  - `intensity_tier` (string label; must be compatible with encounter type and numeric constraints)
+  - `primitives` (array of canonical primitive payloads)
+- `schema_version` is the only discriminator for payload-shape breaking changes.
+- Additive fields are allowed only when:
+  - older runtimes can ignore them safely, and
+  - required semantics for existing fields do not change.
+- Any breaking change requires:
+  - new schema version name (for example, `spell_payload_v2`)
+  - migration notes in this document
+  - simultaneous validator/runtime support updates in the same release train.
+- Content bundles must be rejected if `schema_version` is unknown by the active runtime.
+
+#### 6.5.5 Canonical JSON examples
+
+Standard encounter spell (single primitive):
+
+```json
+{
+  "schema_version": "spell_payload_v1",
+  "spell_id": "standard_soot_spritz_v1",
+  "encounter_type": "standard",
+  "intensity_tier": "standard_light_nuisance",
+  "primitives": [
+    {
+      "kind": "apply_tile_state",
+      "tile_state": "sooted",
+      "target_count": 3,
+      "targeting": "random_eligible"
+    }
+  ]
+}
+```
+
+Boss encounter spell (chained, within boss bounds):
+
+```json
+{
+  "schema_version": "spell_payload_v1",
+  "spell_id": "boss_row_hex_v1",
+  "encounter_type": "boss",
+  "intensity_tier": "boss_phase_pressure",
+  "primitives": [
+    {
+      "kind": "chained",
+      "steps": [
+        { "kind": "shift_row", "row_index": 2, "mode": "rotate", "distance": 1 },
+        {
+          "kind": "apply_tile_state",
+          "tile_state": "frozen",
+          "target_count": 3,
+          "targeting": "random_eligible"
+        },
+        {
+          "kind": "apply_tile_state",
+          "tile_state": "dull",
+          "target_count": 2,
+          "targeting": "random_eligible"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Event encounter spell (curated unusual mix, still schema-valid):
+
+```json
+{
+  "schema_version": "spell_payload_v1",
+  "spell_id": "event_tidal_twist_v1",
+  "encounter_type": "event",
+  "intensity_tier": "event_curated_pressure",
+  "primitives": [
+    { "kind": "shift_column", "col_index": 4, "mode": "rotate", "distance": 1 },
+    {
+      "kind": "apply_tile_state",
+      "tile_state": "bubble",
+      "target_count": 4,
+      "targeting": "random_eligible"
+    }
+  ]
+}
+```
+
 ---
 
 ## 7. Persisted SQLite Entity Contracts
