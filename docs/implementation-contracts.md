@@ -210,7 +210,9 @@ export interface BoardSnapshot {
   rows: 6;
   cols: 6;
   tiles: BoardTile[];
-  encounter_seed: string | null;
+  encounter_seed: string;
+  rng_algorithm_id: 'pcg32_xsh_rr_64_32' | 'xoroshiro128ss';
+  rng_stream_states: EncounterRngStreamStates;
 }
 ```
 
@@ -218,8 +220,28 @@ Rules:
 
 - `tiles.length` must always equal `rows * cols` for a valid active board
 - every `row` and `col` pair must be unique
-- `encounter_seed` is optional but strongly preferred for deterministic testing/debugging
+- `encounter_seed` is required and must be immutable for the encounter session
+- `encounter_seed` format is 32 lowercase hex chars (128-bit)
+- `rng_algorithm_id` must match the active RNG contract implementation
+- `rng_stream_states` must include deterministic serialized state for every required encounter substream
 - the board snapshot is canonical gameplay truth, not derived presentation state
+
+`EncounterRngStreamStates` contract:
+
+```ts
+export interface EncounterRngStreamStates {
+  board_init: string;
+  board_refill: string;
+  spell_targeting: string;
+  spark_shuffle: string;
+}
+```
+
+Rules:
+
+- each stream state is a deterministic serialized RNG internal state blob
+- restore must continue from these stored stream states (never regenerate from seed when snapshot state exists)
+- stream labels and behavior must match `docs/randomness-and-seeding-contract.md`
 
 ### 4.3 Creature runtime state contract
 
@@ -603,7 +625,9 @@ export interface ActiveEncounterSnapshotRecord {
   validation_snapshot_version_pin: string;
   battle_rules_version_pin: string;
   board_generator_version_pin: string;
-  encounter_seed: string | null;
+  encounter_seed: string;
+  rng_algorithm_id: 'pcg32_xsh_rr_64_32' | 'xoroshiro128ss';
+  rng_stream_states_json: string;
   move_budget_total: number;
   moves_remaining: number;
   board_json: string;
@@ -619,6 +643,8 @@ export interface ActiveEncounterSnapshotRecord {
 Rules:
 
 - `board_json`, `creature_state_json`, and `repeated_words_json` are canonical serialized restore payloads for early milestones
+- `encounter_seed`, `rng_algorithm_id`, and `rng_stream_states_json` are required restore-critical randomness fields
+- `rng_stream_states_json` must serialize all required substreams (`board_init`, `board_refill`, `spell_targeting`, `spark_shuffle`)
 - this table stores exact restore truth, not a lossy summary
 - a terminal `session_state` may still remain here briefly until the result screen is acknowledged and cleanup rules run
 - restore must prefer this snapshot over guessed screen history
@@ -910,6 +936,9 @@ Required behavior:
 - `packages/game-rules` and `packages/validation` should own these exported contracts where practical
 - `apps/mobile` should consume contracts and avoid redefining parallel shape types
 - tests for transition legality, persistence serialization, analytics payload safety, and runtime content validation should assert against this contract file
+- determinism tests must include:
+  - same `encounter_seed` + same valid-cast sequence => identical board/countdown/outcome
+  - mid-encounter snapshot restore => identical subsequent outcomes vs uninterrupted run
 - if a contract shape becomes annoying to use, fix it here first rather than working around it separately in each package
 
 ### Final rule
