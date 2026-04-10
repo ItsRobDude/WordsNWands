@@ -332,7 +332,50 @@ Damage-calculation rules for `ValidCastResolution`:
 - successful valid casts that reach damage resolution must clamp `final_damage >= 1`
 - runtime and test code must share the same helper implementation: `packages/game-rules/src/damage/roundFinalDamage.ts` (`roundFinalDamage(rawDamage: number): number`)
 
-### 5.3 Rejected cast resolution contract
+### 5.3 Modifier evaluation order contract
+
+The resolution pipeline below is mandatory for every **validated cast** (`submission_kind: 'valid'`) so damage, countdown behavior, and tile-state duration behavior remain deterministic.
+
+1. Confirm validated cast inputs (`normalized_word`, selected tiles, and resolved base element) and snapshot `countdown_before`.
+2. Mark selected tiles as consumed for this cast; consumed tiles are removed from active board occupancy.
+3. Collapse affected columns downward.
+4. Refill empty spaces from the top.
+5. Apply Bubble post-refill motion for **surviving** Bubble tiles (rise to column top, shift others downward), then clear Bubble from those tiles.
+6. Resolve matchup candidate from cast element versus creature weakness/resistance.
+7. Apply Dull override: if one or more selected tiles were Dull and cast element is non-Arcane, force matchup to Arcane/neutral (`matchup_result = 'neutral'`, `matchupMultiplier = 1.0`).
+8. Resolve wand multiplier (`1.25` if any selected Wand tile, else `1.0`).
+9. Resolve soot multiplier (`0.75` if one or more selected tiles were Sooted, else `1.0`; never stacks).
+10. Compute preliminary damage: `round(base_damage * matchupMultiplier * wandMultiplier * sootMultiplier)`.
+11. Apply minimum-damage clamp: if preliminary damage `< 1`, set `final_damage = 1`.
+12. Apply `final_damage` to creature HP.
+13. If HP reaches `0`, end encounter immediately in victory; skip countdown decrement, spell cast, and surviving tile-state duration decrement.
+14. If creature survives, evaluate weakness stall against the **post-Dull** matchup result:
+    - if matchup is `weakness`, keep countdown unchanged (`countdown_after = countdown_before`)
+    - otherwise decrement countdown by `1`
+15. If countdown reaches `0`, resolve creature spell and reset countdown to creature base countdown.
+16. Decrement durations for surviving (non-consumed) negative tile states after cast resolution:
+    - Frozen: decrement after this successful cast; clear when duration reaches `0`
+    - Sooted: decrement after this successful cast; clear when duration reaches `0`
+    - Dull: decrement after this successful cast; clear when duration reaches `0`
+    - Bubble: already cleared in step 5 for surviving Bubble tiles; consumed Bubble tiles cleared at consumption
+17. Finalize post-resolution state (`moves_remaining`, `repeated_words`, board snapshot, countdown_after, did_win/did_lose flags).
+
+Worked example (Dull + Sooted + weakness candidate):
+
+- Creature weakness: `flame`; resistance: `tide`; `countdown_before = 2`
+- Cast element before tile modifiers: `flame` (would be a weakness hit)
+- Selected tiles include: one Dull tile, one Sooted tile, no Wand tile
+- `base_damage = 14`
+
+Resolution:
+
+1. Dull override applies before countdown logic, so matchup is forced to neutral (`matchupMultiplier = 1.0`) instead of weakness.
+2. Soot applies once (`sootMultiplier = 0.75`).
+3. Damage math: `round(14 * 1.0 * 1.0 * 0.75) = round(10.5) = 11`; minimum clamp not needed.
+4. Creature survives, so weakness stall check uses post-Dull matchup (`neutral`), meaning **no stall**; countdown decrements from `2` to `1`.
+5. Surviving Frozen/Sooted/Dull durations decrement once now; consumed state tiles were already cleared when selected.
+
+### 5.4 Rejected cast resolution contract
 
 ```ts
 export interface RejectedCastResolution {
@@ -347,7 +390,7 @@ export interface RejectedCastResolution {
 }
 ```
 
-### 5.4 Unified cast resolution contract
+### 5.5 Unified cast resolution contract
 
 ```ts
 export type CastResolution = ValidCastResolution | RejectedCastResolution;
@@ -361,7 +404,7 @@ Rules:
 - `did_win` and `did_lose` must never both be true
 - the UI should not infer win/loss from HP alone if the gameplay engine already returned a terminal result
 
-### 5.5 Creature spell resolution contract
+### 5.6 Creature spell resolution contract
 
 ```ts
 export interface CreatureSpellResolution {
@@ -372,7 +415,7 @@ export interface CreatureSpellResolution {
 }
 ```
 
-### 5.6 Spark shuffle resolution contract
+### 5.7 Spark shuffle resolution contract
 
 ```ts
 export interface SparkShuffleResolution {
