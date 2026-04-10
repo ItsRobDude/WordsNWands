@@ -325,8 +325,12 @@ Damage-calculation rules for `ValidCastResolution`:
 - matchup multipliers: weakness `1.5`, neutral `1.0`, resistance `0.7`, arcane `1.0`
 - `used_wand_tile = true` applies `wandMultiplier = 1.25`, otherwise `1.0`
 - any cast that includes one or more Sooted tiles applies one `sootMultiplier = 0.75`
-- `final_damage = round(base_damage * matchupMultiplier * wandMultiplier * sootMultiplier)`
+- `raw_damage = base_damage * matchupMultiplier * wandMultiplier * sootMultiplier`
+- `final_damage = roundFinalDamage(raw_damage)`
+- `roundFinalDamage` must use **round-half-up** for non-negative values (same tie behavior as `Math.round`): exact `.5` rounds up
+- explicit tie example: `raw_damage = 16.5` resolves to `final_damage = 17`
 - successful valid casts that reach damage resolution must clamp `final_damage >= 1`
+- runtime and test code must share the same helper implementation: `packages/game-rules/src/damage/roundFinalDamage.ts` (`roundFinalDamage(rawDamage: number): number`)
 
 ### 5.3 Rejected cast resolution contract
 
