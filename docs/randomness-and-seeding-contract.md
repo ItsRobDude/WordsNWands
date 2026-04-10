@@ -130,6 +130,17 @@ Rules:
   - when `allowWandTiles = false`, Wand assignment is skipped and consumes no draw.
 - Collapse movement itself is deterministic and non-random.
 - Refill retries (if required by board safety checks) consume from `board_refill` only.
+- One `board_refill` draw maps to weighted letter selection using `RuntimeBoardConfig.letterWeightEntries` from `docs/implementation-contracts.md` §8.3.
+- Mapping rule for each spawned tile:
+  1. validate and normalize configured weights (`A`..`Z`, unique letters, finite `weight > 0`, deterministic `A`..`Z` ordering),
+  2. compute `totalWeight = Σ(weight)`,
+  3. draw `r = nextUint32()`,
+  4. compute threshold `t = (r / 2^32) * totalWeight`,
+  5. select the first cumulative range in canonical `A`..`Z` order where `cumulativeWeight > t`.
+- Exactly one `nextUint32()` consumption is used per spawned tile letter attempt.
+- If safety validation fails before any draw attempt, refill must reject the active config and switch to deterministic failure handling (no silent fallback profile substitution).
+- If post-refill board-level safety checks fail (for example, dead-board detection under current fairness rules), refill retry attempts are allowed and must consume additional draws from `board_refill` only.
+- Retry behavior must preserve deterministic parity: same seed + same cast sequence + same profile/version must produce identical accepted/rejected refill attempt sequence.
 
 ### 5.3 Creature spell random targeting
 
