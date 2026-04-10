@@ -255,6 +255,29 @@ Do not create a CI-only validation path that differs from contributor-local comm
 
 ---
 
+## 5.2 Pre-Coding Milestone Feature Checklist (Required)
+
+Before implementing milestone feature work, contributors must run this checklist and record outcomes in the PR description or final report.
+
+### Required pre-coding gates
+1. Confirm the doc-precedence path for the touched feature area.
+2. Record unresolved questions as explicit assumptions.
+3. Apply a **"contract exists?"** gate for any persisted or runtime-critical behavior. If no contract exists, stop and define or request one before coding.
+4. Apply a **"milestone scope check"** gate to prevent feature creep beyond the approved milestone slice.
+
+### Required decision-audit template
+Include this section in every milestone-feature PR/final report:
+
+```md
+## Ambiguities resolved this change
+- Ambiguity:
+- Chosen interpretation:
+- Why this is safe for player trust/fairness:
+- Follow-up doc updates needed:
+```
+
+---
+
 ## 6. Architecture Boundary Rules
 
 Words 'n Wands! should enforce strong separation between:
