@@ -222,7 +222,93 @@ Required automated tests:
 
 ---
 
-## 8. Versioning and change control
+
+## 8. Deterministic fixture contract (required)
+
+Determinism tests in §7 must be backed by version-pinned JSON fixtures rather than ad-hoc inline setup.
+
+### 8.1 Canonical fixture schema (required keys)
+
+Every deterministic fixture JSON file must include all of the following top-level keys:
+
+- `fixture_schema_version` (string; current value: `"rng_fixture_v1"`)
+- `fixture_id` (string; stable identifier used by tests/CI)
+- `encounter_id` (string; authored encounter id)
+- `content_bundle_version` (string; exact content bundle/version pin)
+- `rules_version` (string; battle-rules/version pin used by runtime)
+- `rng_contract_version` (string; this contract version pin, currently `"v1"`)
+- `rng_algorithm_id` (string; must match approved v1 algorithm id)
+- `encounter_seed` (string; 32 lowercase hex chars)
+- `cast_sequence` (array of cast-attempt records in execution order)
+- `expected_steps` (array of per-step expected state snapshots)
+
+Each `cast_sequence` record must include:
+
+- `step_index` (integer, 0-based)
+- `attempted_word` (string)
+- `expected_acceptance` (`"accepted" | "rejected"`)
+- `expected_rejection_reason` (nullable string; required when rejected)
+
+Each `expected_steps` record must include:
+
+- `step_index` (integer, 0-based)
+- `creature_hp` (integer)
+- `creature_countdown` (integer)
+- `moves_remaining` (integer)
+- `repeated_words` (array of strings; canonical normalized forms tracked so far)
+- `session_state` (object with at least `status` and `failure_reason` nullable fields)
+
+Rules:
+
+- `cast_sequence.length` must exactly equal `expected_steps.length`.
+- Every `step_index` must be contiguous and match between the two arrays.
+- Fixture loader/validator must reject missing keys, unknown `fixture_schema_version`, and invalid enum values.
+- Encounter/content/rules/version pins are mandatory to prevent hidden fixture drift when authored data changes.
+
+### 8.2 Minimum required fixture set
+
+At minimum, v1 must ship and keep green the following deterministic fixtures:
+
+1. `starter_intended_path`
+   - Starter encounter happy-path sequence leading to intended starter win state.
+2. `repeat_word_rejection`
+   - Demonstrates repeated-word rejection behavior and confirms no illegal state drift.
+3. `mid_encounter_restore_parity`
+   - Includes a documented save step and verifies uninterrupted vs restored parity from that point onward.
+4. `spark_shuffle_retry_cap_determinism`
+   - Crafted dead-board sequence that deterministically reaches retry cap behavior.
+5. `starter_loss_retry_win_gate` *(required only when starter gate is in active milestone scope, e.g., M1/M2 if applicable)*
+   - Verifies starter loss → retry → win gate behavior parity under fixed seed/version pins.
+
+### 8.3 Fixture storage conventions
+
+Fixture files must live under the game-rules fixture path and use deterministic naming:
+
+- Directory root: `fixtures/game-rules/randomness/`
+- File naming: `<fixture_id>.fixture.json`
+- Optional expected-output snapshots (if separated): `<fixture_id>.expected.json`
+
+Conventions:
+
+- One fixture scenario per file.
+- No generated timestamp fields in committed fixtures.
+- Fixture id in filename must match `fixture_id` inside the file.
+
+### 8.4 CI schema validation gate (required)
+
+CI must validate every committed fixture in `fixtures/game-rules/randomness/` against the canonical schema before running determinism tests.
+
+Required CI behavior:
+
+1. Fail fast on schema violations (missing required fields, enum mismatch, invalid pins, or index mismatch).
+2. Fail on unknown fixture ids referenced by deterministic test suites.
+3. Fail on missing required minimum fixture set from §8.2 for the active milestone scope.
+4. Run deterministic runtime validation using the fixture payloads only after schema validation passes.
+
+---
+
+## 9. Versioning and change control
+
 
 Any change to:
 
