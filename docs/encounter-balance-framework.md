@@ -81,6 +81,10 @@ Authors should start with these baseline profile assumptions before creature-spe
 - These are default planning assumptions for first-pass authoring, not immutable player promises.
 - If an encounter intentionally differs (for example, anti-Wand creature or heavy-soot identity), document the overridden assumptions in encounter data review notes.
 - Tooling should record both the tier default profile and the authored profile override for auditability.
+- `wandIncidence` must be declared in one of two explicit modes per encounter:
+  - `planning_only`: used only for balance projection math in this framework; runtime validators do not require a direct authored board-config mapping.
+  - `runtime_mapped`: must map to authored runtime config values (for example `RuntimeBoardConfig.wandSpawnRate` with clamp/override resolution) and is subject to runtime/content validator parity checks.
+- Validator behavior for `wandIncidence` must follow the declared mode; it must not silently switch interpretation.
 
 ---
 
