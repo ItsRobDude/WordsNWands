@@ -81,10 +81,34 @@ Authors should start with these baseline profile assumptions before creature-spe
 - These are default planning assumptions for first-pass authoring, not immutable player promises.
 - If an encounter intentionally differs (for example, anti-Wand creature or heavy-soot identity), document the overridden assumptions in encounter data review notes.
 - Tooling should record both the tier default profile and the authored profile override for auditability.
-- `wandIncidence` must be declared in one of two explicit modes per encounter:
-  - `planning_only`: used only for balance projection math in this framework; runtime validators do not require a direct authored board-config mapping.
-  - `runtime_mapped`: must map to authored runtime config values (for example `RuntimeBoardConfig.wandSpawnRate` with clamp/override resolution) and is subject to runtime/content validator parity checks.
-- Validator behavior for `wandIncidence` must follow the declared mode; it must not silently switch interpretation.
+- `wandIncidence` is canonicalized as a runtime-authored value mapped directly from `RuntimeBoardConfig.wandSpawnRate` (see `docs/implementation-contracts.md` section 8.3).
+- Authoring tools may still present tier defaults and local overrides for planning, but content shippability validators must compare the final assumed `wandIncidence` against `RuntimeBoardConfig.wandSpawnRate` for parity.
+- Validator parity rule:
+  - `abs(balanceProfile.wandIncidence - runtimeBoardConfig.wandSpawnRate) <= 0.001` passes.
+  - Difference above `0.001` must emit a validation error and block shippable status.
+
+### 2.2 Worked mapping example (authoring → runtime + validator parity)
+Given a Standard encounter authored with:
+
+- `avgWordLength = 4.3`
+- `weaknessHitRate = 0.34`
+- `wandIncidence = 0.20` (authoring assumption)
+- `sootExposure = 0.15`
+
+Runtime encounter config must include:
+
+- `RuntimeBoardConfig.allowWandTiles = true`
+- `RuntimeBoardConfig.wandSpawnRate = 0.20`
+
+Validator parity check:
+
+- `|0.20 - 0.20| = 0.00` → parity passes.
+
+Mismatch example:
+
+- authored `wandIncidence = 0.22`
+- runtime `wandSpawnRate = 0.20`
+- `|0.22 - 0.20| = 0.02 > 0.001` → emit validation error (non-shippable until corrected or re-authored).
 
 ---
 

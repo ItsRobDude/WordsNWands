@@ -66,6 +66,13 @@ export type MatchupResult = 'weakness' | 'neutral' | 'resistance';
 
 export type EncounterOutcome = 'won' | 'lost';
 
+export type EncounterTerminalReasonCode =
+  | 'none'
+  | 'normal_win'
+  | 'moves_exhausted'
+  | 'manual_abandon'
+  | 'spark_shuffle_retry_cap_unrecoverable';
+
 export type CastSubmissionKind = 'valid' | 'invalid' | 'repeated';
 
 export type CastRejectionReason =
@@ -85,6 +92,7 @@ export type EncounterSessionState =
   | 'in_progress'
   | 'won'
   | 'lost'
+  | 'recoverable_error'
   | 'abandoned';
 
 export type EncounterSessionTransition =
@@ -95,6 +103,7 @@ export type EncounterSessionTransition =
   | 'submit_repeated_cast'
   | 'resolve_creature_spell'
   | 'trigger_spark_shuffle'
+  | 'spark_shuffle_unrecoverable_failure'
   | 'win'
   | 'lose'
   | 'restart'
@@ -123,7 +132,7 @@ export type StarterTutorialBlockState = 'none' | 'blocked' | 'non_blocking';
 
 Rules:
 
-- `won`, `lost`, and `abandoned` are terminal encounter states.
+- `won`, `lost`, `recoverable_error`, and `abandoned` are terminal encounter states.
 - Invalid and repeated casts do **not** leave `in_progress`.
 - Result acknowledgement is UI-local and must not rewrite canonical outcome state.
 - Restart creates a new encounter run; it does not mutate a completed result into an unfinished state.
@@ -141,9 +150,10 @@ These contracts describe canonical encounter state and transition legality.
 export type EncounterStateTransitionMap = {
   unopened: 'intro_presented' | 'in_progress' | 'abandoned';
   intro_presented: 'in_progress' | 'abandoned';
-  in_progress: 'in_progress' | 'won' | 'lost' | 'abandoned';
+  in_progress: 'in_progress' | 'won' | 'lost' | 'recoverable_error' | 'abandoned';
   won: never;
   lost: never;
+  recoverable_error: never;
   abandoned: never;
 };
 ```
@@ -153,7 +163,8 @@ Rules:
 - `unopened` is allowed only before a run truly starts.
 - `intro_presented` exists so the encounter-intro surface can be restored or skipped cleanly without hiding that state inside UI code.
 - `in_progress` is the only active playable state.
-- `won`, `lost`, and `abandoned` are terminal canonical states for a specific encounter session.
+- `won`, `lost`, `recoverable_error`, and `abandoned` are terminal canonical states for a specific encounter session.
+- `recoverable_error` is required for Spark Shuffle retry-cap fallback where deterministic emergency regeneration also fails.
 - Restarting an encounter means creating a new session record rather than mutating a terminal session back to `in_progress`.
 
 ### 3.2 Encounter route restoration contract
@@ -170,8 +181,9 @@ export interface EncounterRestoreTarget {
 Rules:
 
 - restore routing should be derived from persisted encounter/session truth, not guessed from the last visible screen alone
-- a resolved encounter should restore to `result`, not fake `in_progress`
+- a resolved encounter (including `recoverable_error`) should restore to `result`, not fake `in_progress`
 - if an unresolved active encounter exists, restore should prefer `encounter`
+- restore priority order should be: terminal encounter result (`won` / `lost` / `recoverable_error`) -> unresolved active encounter (`unopened` / `intro_presented` / `in_progress`) -> `starter_flow` gate -> `home`
 - if no active encounter exists and the player has not completed starter flow, restore should prefer `starter_flow`
 - otherwise restore should prefer `home`
 
@@ -293,9 +305,13 @@ export interface EncounterRuntimeState {
   creature_state: CreatureRuntimeState;
   board: BoardSnapshot;
   session_state: EncounterSessionState;
+  terminal_reason_code: EncounterTerminalReasonCode | null;
   move_budget_total: number;
   moves_remaining: number;
   repeated_words: string[]; // normalized lowercase words
+  spark_shuffle_retry_cap: number;
+  spark_shuffle_retries_attempted: number;
+  spark_shuffle_fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end';
   content_version_pin: string;
   validation_snapshot_version_pin: string;
   battle_rules_version_pin: string;
@@ -308,6 +324,9 @@ Rules:
 
 - `repeated_words` stores normalized cast history for repeat rejection
 - `moves_remaining` must never exceed `move_budget_total`
+- `terminal_reason_code` is required whenever `session_state` is terminal, and must be `spark_shuffle_retry_cap_unrecoverable` when `session_state = 'recoverable_error'`
+- `spark_shuffle_retry_cap` must mirror the canonical v1 value (`3`) so restore/debug payloads do not infer hidden constants
+- `spark_shuffle_retries_attempted` and `spark_shuffle_fallback_outcome` must persist the last Spark Shuffle recovery cycle outcome even when encounter terminates
 - the four version pins above are required for restore/debug trust
 - any change to locked milestone constants in `docs/milestone-locked-constants.md` requires corresponding version-pin updates in this contract file within the same change
 - `damage_model_version` is required for deterministic restore/debug replay and must match the active canonical damage model contract version
@@ -521,6 +540,7 @@ Rules:
 - if retry cap is reached without a playable board, fallback sequence is:
   1. deterministic emergency board regeneration branch (seeded from encounter seed lineage)
   2. if still dead board, terminate encounter into recoverable error state with retry CTA
+- retry-cap unrecoverable termination must set `session_state = 'recoverable_error'` and `terminal_reason_code = 'spark_shuffle_retry_cap_unrecoverable'`
 - retry-cap fallback must preserve fairness: no additional move consumption and no countdown decrement/reset
 
 Concrete example:
@@ -790,8 +810,13 @@ export interface EncounterResultRecord {
   encounter_type: EncounterType;
   difficulty_tier: DifficultyTier;
   outcome: EncounterOutcome;
+  terminal_session_state: 'won' | 'lost' | 'recoverable_error' | 'abandoned';
+  terminal_reason_code: EncounterTerminalReasonCode;
   moves_remaining: number;
   star_rating: 0 | 1 | 2 | 3;
+  spark_shuffle_retry_cap: number | null;
+  spark_shuffle_retries_attempted: number | null;
+  spark_shuffle_fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end' | null;
   content_version_pin: string;
   validation_snapshot_version_pin: string;
   battle_rules_version_pin: string;
@@ -809,6 +834,9 @@ Rules:
 - `star_rating = 0` is allowed for a loss
 - one encounter session should produce at most one terminal result row
 - result history must not be re-derived from transient UI state
+- `terminal_session_state` is required so terminal restore/routing and analytics do not collapse `recoverable_error` into ordinary loss
+- `outcome` remains a coarse two-state summary (`won` or `lost`) for progression compatibility; `recoverable_error` must map to `outcome = 'lost'` with `terminal_reason_code = 'spark_shuffle_retry_cap_unrecoverable'`
+- `spark_shuffle_*` fields are required (nullable) for every row and must be non-null when `terminal_reason_code = 'spark_shuffle_retry_cap_unrecoverable'`
 
 ### 7.5 `active_encounter_snapshots`
 
@@ -821,6 +849,7 @@ export interface ActiveEncounterSnapshotRecord {
   encounter_type: EncounterType;
   difficulty_tier: DifficultyTier;
   session_state: EncounterSessionState;
+  terminal_reason_code: EncounterTerminalReasonCode | null;
   content_version_pin: string;
   validation_snapshot_version_pin: string;
   battle_rules_version_pin: string;
@@ -833,9 +862,9 @@ export interface ActiveEncounterSnapshotRecord {
   board_json: string;
   creature_state_json: string;
   repeated_words_json: string;
-  starter_tutorial_current_stage: StarterTutorialCueStage;
-  starter_tutorial_block_state: StarterTutorialBlockState;
-  starter_tutorial_last_interrupted_stage: StarterTutorialCueStage;
+  spark_shuffle_retry_cap: number;
+  spark_shuffle_retries_attempted: number;
+  spark_shuffle_fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end';
   last_surface: AppPrimarySurface;
   created_at_utc: string;
   updated_at_utc: string;
@@ -848,6 +877,8 @@ Rules:
 - `board_json`, `creature_state_json`, and `repeated_words_json` are canonical serialized restore payloads for early milestones
 - `encounter_seed`, `rng_algorithm_id`, and `rng_stream_states_json` are required restore-critical randomness fields
 - `rng_stream_states_json` must serialize all required substreams (`board_init`, `board_refill`, `spell_targeting`, `spark_shuffle`)
+- `terminal_reason_code` is required whenever `session_state` is terminal and must preserve recoverable-error reason across warm/cold resume
+- `spark_shuffle_retry_cap`, `spark_shuffle_retries_attempted`, and `spark_shuffle_fallback_outcome` are required restore/debug fields for Spark Shuffle retry-cap traces
 - this table stores exact restore truth, not a lossy summary
 - a terminal `session_state` may still remain here briefly until the result screen is acknowledged and cleanup rules run
 - restore must prefer this snapshot over guessed screen history
@@ -944,6 +975,7 @@ export interface RuntimeBoardConfig {
   seedMode: 'generated' | 'fixed_seed';
   fixedSeed: string | null;
   allowWandTiles: boolean;
+  wandSpawnRate: number; // finite rate in [0, 1], canonical runtime wand incidence source
   letterDistributionProfileId: string; // e.g. `letter_distribution_v1`
   letterWeightEntries: RuntimeLetterWeightEntry[]; // canonical weighted A-Z entries for this runtime config
   namedLetterPoolId: string | null; // optional named pool alias, e.g. `v1_default_pool`
@@ -959,12 +991,19 @@ Rules:
 
 - `letterDistributionProfileId` is required and versioned so balancing can evolve additively (for example, `letter_distribution_v1`) without changing RNG semantics.
 - `namedLetterPoolId` is optional metadata for authored presets and does not change draw algorithm behavior by itself.
+- `wandSpawnRate` is required and is the canonical runtime-authored wand incidence representation used by encounter balance parity validators.
+- `wandSpawnRate` must be finite and clamped to inclusive range `[0, 1]`; runtime/content validators must fail values outside this range (no silent coercion).
+- if `allowWandTiles = false`, `wandSpawnRate` must be exactly `0`; any non-zero value is invalid.
 - `letterWeightEntries` is the canonical runtime source for weighted refill and initial-board letter selection.
 - `letterWeightEntries` must contain exactly one entry per letter `A` through `Z`.
 - normalization must canonicalize letters to uppercase ASCII and reject non-`A`-`Z` values.
 - every `weight` must be finite, non-zero, and strictly greater than `0`.
 - deterministic ordering is mandatory: runtime consumers must process `letterWeightEntries` in ascending letter order (`A`..`Z`) before building cumulative weighted ranges.
 - duplicate letters are invalid after normalization and must fail runtime validation.
+- deterministic RNG consumption rule for Wand assignment:
+  - board generation/refill resolves each tile in a fixed row-major order.
+  - when `allowWandTiles = true`, runtime must consume exactly one Bernoulli roll per generated tile using `wandSpawnRate` from the same board RNG stream used for tile generation; consumption is mandatory even if the tile ultimately is not marked as Wand.
+  - when `allowWandTiles = false`, runtime must consume zero Wand rolls and assign no Wand markers.
 
 ### 8.4 Reward contract
 
@@ -1285,6 +1324,8 @@ export interface CanonicalGameplayAnalyticsFields {
   encounter_session_id: string | null;
   encounter_type: EncounterType | null;
   difficulty_tier: DifficultyTier | null;
+  encounter_session_state: EncounterSessionState | null;
+  encounter_terminal_reason_code: EncounterTerminalReasonCode | null;
   content_version_pin: string | null;
   validation_snapshot_version_pin: string | null;
   battle_rules_version_pin: string | null;
@@ -1317,6 +1358,7 @@ Required behavior:
 - analytics must not send full board snapshots by default
 - event transport failures must be non-blocking for gameplay and persistence
 - `encounter.spark_shuffle_retry_cap_hit` is required whenever Spark Shuffle reaches retry cap (even if deterministic emergency regeneration succeeds)
+- `encounter_terminal_reason_code = 'spark_shuffle_retry_cap_unrecoverable'` is required on terminal analytics events emitted from a `recoverable_error` encounter end
 
 ---
 
