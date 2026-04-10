@@ -1,0 +1,675 @@
+# Words 'n Wands! Content Pipeline and LiveOps
+
+This document defines how Words 'n Wands! should create, review, package, publish, correct, and evolve game content over time.
+
+Its purpose is to keep content operations:
+
+- fair
+- reviewable
+- maintainable
+- realistic for a mostly AI-assisted solo project
+- aligned with the game’s local-first architecture
+- aligned with the product’s warm, family-friendly identity
+
+This is the product-level source of truth for:
+
+- content unit types
+- content review and approval expectations
+- content versioning and package boundaries
+- challenge content delivery rules
+- correction and rollback rules
+- the boundaries of LiveOps and what should not be built too early
+
+If future tools, pipelines, or publishing habits disagree with this document, this document should be treated as the content-pipeline and LiveOps rulebook until intentionally updated.
+
+---
+
+## 1. Core Philosophy
+
+Words 'n Wands! should treat content as product truth, not decoration.
+
+The game’s content includes:
+
+- creatures
+- encounters
+- starter flow content
+- progression content
+- optional challenge content
+- validation snapshots
+- element-tag data
+- reward definitions
+- creature journal metadata later
+
+A word game with creature battles can become untrustworthy very quickly if content is:
+
+- ambiguous
+- unreviewed
+- internally inconsistent
+- pushed live without validation
+- changed silently after players have already interacted with it
+
+### Practical content rule
+The content pipeline must fit the real shape of this project:
+
+- one primary human owner
+- heavy AI assistance
+- limited production bandwidth
+- local-first gameplay
+- conservative scope
+
+That means Words 'n Wands! should prefer:
+
+1. bundled local content first
+2. typed reviewable content files
+3. small clear release units
+4. human-reviewed AI-assisted drafts
+5. optional LiveOps later
+
+over:
+
+- giant custom CMS work
+- constant live-event pressure
+- backend-dependent content truth
+- unreviewed generated content
+- aggressive content cadence that the project cannot sustain
+
+---
+
+## 2. Scope of This Document
+
+This document owns:
+
+- what kinds of content exist
+- how content should be authored and reviewed
+- how content should be versioned and packaged
+- how optional challenge content may be delivered later
+- how content corrections and rollbacks should work
+- what LiveOps should and should not mean for this product
+
+This document does **not** own:
+
+- battle mechanics themselves
+- word-validation policy details
+- implementation contracts for every runtime type
+- engineering command contracts
+- analytics taxonomy details
+- monetization policy details
+
+Those belong in other focused docs.
+
+---
+
+## 3. Content Principles
+
+All Words 'n Wands! content should satisfy these principles.
+
+### 3.1 Readability
+The content must be understandable by ordinary players.
+
+### 3.2 Fairness
+The content must not depend on hidden tricks, obscure vocabulary abuse, or surprising matchup logic.
+
+### 3.3 Family-friendly fit
+The content must stay aligned with the game’s warm magical tone.
+
+### 3.4 Replayable clarity
+Creatures and encounters should feel distinct without becoming convoluted.
+
+### 3.5 Stable identity
+Creature IDs, encounter IDs, and validation snapshot versions should remain stable once introduced.
+
+### 3.6 Reviewability
+A human reviewer must be able to inspect what is being shipped.
+
+### 3.7 Operational realism
+Do not design a content cadence that assumes a full live-service team when the project does not have one.
+
+---
+
+## 4. Content Unit Types
+
+Words 'n Wands! content should be divided into clear unit types.
+
+### 4.1 Creature definitions
+Creature definitions include things such as:
+
+- creature ID
+- name
+- encounter type
+- difficulty tier
+- HP
+- weakness
+- resistance
+- countdown
+- spell identity
+- spell primitives
+- phase rules if any
+- content version metadata
+
+### 4.2 Encounter definitions
+Encounter definitions include things such as:
+
+- encounter ID
+- referenced creature
+- move budget
+- starter flag if applicable
+- intro flavor text if applicable
+- reward definition
+- board config
+- progression placement metadata later if needed
+
+### 4.3 Validation snapshots
+Validation snapshots include:
+
+- castable words
+- element tags
+- snapshot metadata
+- version identity
+
+Validation snapshots are content, not just code data.
+
+### 4.4 Starter flow content
+Starter flow content includes:
+
+- first encounter definition
+- any tutorial-specific creature or flavor wrappers
+- first result flow framing
+
+### 4.5 Progression content
+Progression content may later include:
+
+- encounter ordering
+- chapter or habitat grouping
+- unlock relationships
+- progression reward metadata
+
+### 4.6 Optional challenge content
+Optional challenge content may later include:
+
+- daily challenge sets
+- weekly challenge sets
+- event encounter packs
+- seasonal challenge packs
+
+### 4.7 Journal or codex metadata later
+Creature journal data may later include:
+
+- creature lore snippets
+- visual unlock states
+- flavor tags
+- collection progress metadata
+
+This should remain secondary to battle content.
+
+---
+
+## 5. Content Source of Truth
+
+### 5.1 Typed, repo-owned content rule
+Content should live in typed, reviewable repo-owned files.
+
+Do not make core content depend on:
+
+- screenshots
+- spreadsheets as the canonical runtime truth
+- untyped blobs hidden in app code
+- one-off hand-edited screen components
+
+### 5.2 Bundled-first rule
+For early milestones, content should be bundled with the app.
+
+Bundled-first means:
+
+- content ships with the build
+- content can be versioned with code
+- content can be reviewed in diffs
+- content does not require a live backend to make the game work
+
+### 5.3 Shared-truth rule
+Creature definitions, encounter definitions, and validation snapshots must remain aligned.
+
+A shipped encounter must not point at:
+
+- a creature definition that no longer exists
+- a validation snapshot the app does not have
+- a reward definition with unclear semantics
+- a spell primitive the runtime does not support
+
+---
+
+## 6. Content Lifecycle States
+
+All major content units should move through clear lifecycle states.
+
+### Standard lifecycle states
+Content should generally use a lifecycle such as:
+
+- `draft`
+- `review_ready`
+- `fairness_reviewed`
+- `approved`
+- `bundled`
+- `published`
+- `archived`
+- `corrected_exception`
+
+### Meaning of states
+
+#### Draft
+The content exists, but is not ready for serious gameplay sign-off.
+
+#### Review Ready
+The content is coherent enough for real human review.
+
+#### Fairness Reviewed
+The content has been checked for:
+
+- readability
+- family-friendly fit
+- obvious fairness issues
+- obvious product-tone drift
+
+#### Approved
+The content is approved for bundling or publishing under the current milestone rules.
+
+#### Bundled
+The content has been included in a shipped app build or packaged bundle.
+
+#### Published
+The content is considered live/official for whatever delivery model applies.
+
+#### Archived
+The content is no longer active but remains part of history or package lineage.
+
+#### Corrected Exception
+The content required a player-trust-protecting correction after approval/publish.
+
+### Practical rule
+AI-generated content may help produce `draft` or `review_ready` content.  
+It must not be treated as `approved` without human review.
+
+---
+
+## 7. Review and Approval Rules
+
+### 7.1 Human review is mandatory
+Content that affects gameplay truth must receive human review before approval.
+
+This includes:
+
+- creature definitions
+- encounter definitions
+- validation snapshot changes
+- element-tag changes
+- challenge reward definitions
+- boss/event special rules
+
+### 7.2 Fairness review checklist
+Before approval, a content reviewer should be able to answer:
+
+- Is this encounter readable?
+- Is the creature identity clear?
+- Is the weakness/resistance pairing understandable?
+- Is the move budget fair for the intended tier?
+- Is the spell intensity appropriate?
+- Does the encounter rely on ordinary-player vocabulary?
+- Does this content fit the family-friendly tone?
+- Does this content depend on hidden special cases?
+
+### 7.3 AI-content guardrail
+AI may assist with:
+
+- first-pass drafts
+- naming suggestions
+- flavor text drafts
+- schema scaffolding
+- review checklists
+
+AI must not be the final authority for:
+
+- fairness sign-off
+- tone sign-off
+- live challenge approval
+- validation snapshot approval
+
+---
+
+## 8. Versioning and Package Rules
+
+Words 'n Wands! should use explicit versioning for core content.
+
+### 8.1 Required version pins
+Runtime content should be pinned by at least:
+
+- content version
+- validation snapshot version
+- battle rules version
+- board generator version where relevant
+
+### 8.2 Why this matters
+Version pins protect trust in:
+
+- restore behavior
+- debugging
+- test reproducibility
+- fairness review
+- future correction workflows
+
+### 8.3 Stable release rule
+Once a build is shipped, its bundled content must remain stable for that build.
+
+Do not treat “main moved” as permission for the app to silently reinterpret older encounter sessions.
+
+### 8.4 Additive change preference
+When possible, prefer additive content change over destructive content churn.
+
+---
+
+## 9. Packaging Rules by Milestone
+
+The content pipeline should change only when the product truly needs it.
+
+### 9.1 Milestones 0–2
+Content should be:
+
+- bundled locally
+- versioned in the repo
+- available offline
+- playable without remote fetches
+
+This applies to:
+
+- starter encounter content
+- ordinary progression encounters
+- validation snapshots
+- creature content
+
+### 9.2 Milestone 3
+Optional challenge flavor may be introduced.
+
+At this stage, the safest first version is still:
+
+- bundled challenge content
+- or locally cached optional content with strong fallbacks
+
+Do not force a remote-content platform too early.
+
+### 9.3 Milestone 4+
+Only when justified, content operations may expand to include:
+
+- remote challenge pack delivery
+- content hotfix bundles
+- limited-time optional content windows
+- more formal review/publish flows
+
+### 9.4 Core product rule
+Main solo progression must not become unplayable just because remote content is unavailable.
+
+---
+
+## 10. Optional LiveOps Rules
+
+Words 'n Wands! may have LiveOps later, but it should be a restrained form of LiveOps.
+
+### 10.1 What LiveOps means here
+For this product, LiveOps may later include:
+
+- optional daily challenges
+- optional weekly challenges
+- occasional event encounter packs
+- seasonal or themed challenge rotations
+- challenge reward tuning
+
+### 10.2 What LiveOps does **not** mean here
+LiveOps should not become:
+
+- an obligation machine
+- the main identity of the game
+- a reason to spam the player constantly
+- a justification for backend-required solo play
+- a schedule the project cannot realistically maintain
+
+### 10.3 Optionality rule
+Challenge flavor must remain optional.
+
+Missing a daily or weekly challenge must not make the player feel punished or left behind in the main game.
+
+### 10.4 Reward rule
+Optional challenge rewards should stay modest.
+
+Examples of acceptable reward types later:
+
+- small cosmetic currency
+- journal progress
+- profile flair
+- side-collection progress
+- bonus stars or side-grade recognition
+
+Rewards should not become mandatory power gates.
+
+---
+
+## 11. Content Delivery Rules
+
+### 11.1 Local-first delivery rule
+The base game must work from bundled local content.
+
+### 11.2 Remote-content rule later
+If optional remote content is introduced later, it must obey these rules:
+
+- remote content is additive, not required for ordinary solo play
+- remote content must be validated before activation
+- remote content should be cached locally once acquired
+- active sessions must not be silently reinterpreted by newly fetched content
+- the app must tolerate remote unavailability gracefully
+
+### 11.3 Last-known-good rule
+If remote content loading fails, the app should prefer:
+
+- last-known-good content
+- or a clean unavailable state for the optional content area
+
+It should not invent replacement challenge truth on the fly.
+
+---
+
+## 12. Content Correction and Rollback Rules
+
+Because Words 'n Wands! depends on trust, correction rules must be explicit.
+
+### 12.1 Correction trigger examples
+A correction may be justified if content is:
+
+- broken
+- unfair
+- ambiguous beyond tolerance
+- internally inconsistent
+- tonally wrong for the product
+- technically invalid relative to current runtime contracts
+
+### 12.2 Player-protection rule
+If content is flawed, players should not be punished for the product’s mistake.
+
+### 12.3 Correction rule
+A correction should be:
+
+- deliberate
+- documented
+- versioned
+- reviewable
+- as player-friendly as reasonable
+
+### 12.4 Active-session stability rule
+A correction must not silently corrupt or mutate already active local encounter sessions.
+
+### 12.5 Rollback rule
+If a content package is bad, rollback should prefer:
+
+- previous approved package
+- or cleanly disabling the optional content entry
+
+not silently producing mismatched runtime truth.
+
+---
+
+## 13. Content IDs and Naming Rules
+
+### 13.1 Stable ID rule
+Content identifiers must stay stable once introduced.
+
+This includes:
+
+- creature IDs
+- encounter IDs
+- validation snapshot versions
+- optional challenge IDs later
+
+### 13.2 Naming rule
+Human-readable names should be:
+
+- descriptive
+- boring where needed
+- easy to audit
+
+### 13.3 Avoid fragile naming
+Do not build the runtime around unstable filenames, ad hoc naming jokes, or content references that only make sense in someone’s head.
+
+---
+
+## 14. Content Tooling Rules
+
+### 14.1 Do not build a giant content CMS early
+A giant content management system is out of scope early.
+
+### 14.2 Early tool direction
+Early tooling should focus on:
+
+- schema validation
+- content linting
+- broken-reference checks
+- fairness checklist support
+- build-time validation
+
+### 14.3 Tooling realism rule
+Content tools should be small and boring unless the content volume proves that stronger tooling is necessary.
+
+### 14.4 Spreadsheet rule
+Spreadsheets may be used temporarily for planning, but they should not become the canonical runtime truth.
+
+---
+
+## 15. Starter Content Rules
+
+### 15.1 Starter flow priority
+Starter content is special because it teaches the product.
+
+### 15.2 Starter quality rule
+Starter content should be:
+
+- especially readable
+- especially fair
+- strongly aligned with the tutorial goals
+- protected from accidental drift
+
+### 15.3 Starter content should not be treated casually
+Because the first encounter shapes trust, starter content should receive extra scrutiny.
+
+---
+
+## 16. Challenge Content Rules Later
+
+### 16.1 Challenge content identity
+Optional challenge content should feel like side flavor, not homework.
+
+### 16.2 Challenge content types later
+Reasonable future challenge content may include:
+
+- one curated encounter of the day
+- a small weekly challenge set
+- a seasonal event creature
+- a limited encounter remix pack
+
+### 16.3 Challenge clarity rule
+If challenge content uses special rules, that must be readable and obvious to the player.
+
+### 16.4 No manipulative cadence rule
+Do not use challenge schedules to create guilt, spam, or fake urgency beyond what the game’s tone can support.
+
+---
+
+## 17. Content and Asset Coordination Rules
+
+### 17.1 Content should not outrun assets
+Do not author giant content surfaces that assume complex art production before the asset workflow can support them.
+
+### 17.2 Asset-reference rule
+Content packages should reference exported runtime-ready assets, not Adobe source files.
+
+### 17.3 Graceful-missing-asset rule
+If a non-critical asset is missing, the product should fail gracefully where possible.
+
+The runtime should not depend on fragile design-tool output assumptions.
+
+---
+
+## 18. Analytics and Live Content Boundaries
+
+### 18.1 Analytics does not define content truth
+Analytics may observe content usage later. It must not define whether a content package is valid.
+
+### 18.2 Content should remain review-driven
+Do not let “good metrics” excuse content that is unfair or tonally wrong.
+
+### 18.3 Experiment caution rule
+If experiments are added later, they must not create hidden rule differences that make the battle system feel inconsistent or unfair.
+
+---
+
+## 19. Operational Load Rules
+
+This project should not commit to an operations burden it cannot realistically sustain.
+
+### 19.1 Sustainable cadence rule
+If optional challenge or event content exists later, the cadence should be something the project can actually maintain.
+
+### 19.2 Better smaller than fake-big
+It is better to have:
+
+- one good weekly challenge
+- or occasional event packs
+
+than to promise a giant live calendar that becomes stale or low quality.
+
+### 19.3 Solo-owner realism rule
+LiveOps should serve the product, not become a second full-time job that breaks the project.
+
+---
+
+## 20. Out of Scope for Early Pipeline Work
+
+The following are out of scope for early pipeline work unless intentionally documented later:
+
+- giant custom CMS infrastructure
+- mandatory online content fetches for main progression
+- daily/weekly pressure as the main identity of the game
+- server-authoritative solo battle truth
+- real-time seasonal economy operations
+- heavy community-content systems
+- live unreviewed generated content publication
+
+---
+
+## 21. Summary Rule
+
+Words 'n Wands! should run its content pipeline in a way that is:
+
+- bundled-first
+- typed
+- reviewable
+- fair
+- human-approved
+- realistic for a mostly AI-assisted solo project
+- friendly to local-first play
+- careful about LiveOps rather than obsessed with it
+
+If a future content-pipeline or LiveOps idea makes the game harder to trust, harder to maintain, more mandatory-feeling, or more operationally fragile than the project can realistically support, it should not be treated as an improvement.
