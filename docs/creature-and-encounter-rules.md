@@ -362,6 +362,47 @@ Ordinary content should feel:
 
 The player should have a reason to try, but not feel bullied for being imperfect.
 
+### Repeated-loss assistance contract (encounter layer)
+To preserve fairness and readability during difficult retries, encounters use a **bounded fail-soft assist system** on the same uncleared encounter.
+
+Trigger thresholds (same encounter, consecutive losses):
+
+- loss #2: optional encouragement + one-time strategy tip
+- loss #3: optional gentle board bias for the next attempt only
+- loss #4: optional easier variant for the next attempt only
+
+Allowed assist forms in encounter logic:
+
+- one-time strategy tip (non-mechanical by itself)
+- gentle board bias that improves opening solvability without guaranteeing victory
+- optional easier variant that applies explicit, readable pressure reduction (such as +1 move or reduced spell pressure)
+
+Forbidden assist forms in encounter logic:
+
+- hidden creature-HP nerfs or hidden player damage buffs that are not disclosed
+- undisclosed countdown tampering
+- paid revive/continue mechanics
+- any monetized assist that changes core battle odds
+
+Star/progression implications:
+
+- tip-only: no star cap
+- gentle board bias active: clear capped at 2 stars
+- easier variant active: clear capped at 1 star
+- assisted wins still count as wins for unlock flow
+
+UI tone and messaging requirements:
+
+- assist prompts must be optional, calm, and non-judgmental
+- messaging must avoid blame language (“struggling”, “failing badly”, etc.)
+- messaging should preserve agency (“Try a gentler version” / “Keep standard challenge”)
+
+Reset rules:
+
+- same-encounter consecutive-loss counter resets on a win
+- counter resets after a win on another encounter, or 24 hours without attempting this encounter
+- mechanical assists expire after one assisted attempt and require meeting threshold again
+
 ---
 
 ## 9. Expected Defeat Pace
