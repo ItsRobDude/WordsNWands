@@ -106,14 +106,28 @@ Rules:
 
 - RNG stream: `board_init`
 - Seed label: `board_init`
-- Consumption rule: consume only for initial board tile selection and any internal retries needed to satisfy “playable board” requirements.
+- Consumption rule: consume only for initial board tile selection, Wand assignment checks, and any internal retries needed to satisfy “playable board” requirements.
+- Per-tile execution order is fixed:
+  1. select base letter for tile slot,
+  2. evaluate Wand marker assignment for that same slot.
+- Wand assignment draw semantics:
+  - letter selection and Wand assignment must not share a single draw.
+  - Wand assignment consumes one additional `nextUint32()` draw per generated tile slot when `allowWandTiles = true`.
+  - when `allowWandTiles = false`, Wand assignment is skipped and consumes no draw.
 - `board_init` state is persisted after initial generation.
 
 ### 5.2 Refill generation after cast
 
 - RNG stream: `board_refill`
 - Seed label: `board_refill`
-- Consumption rule: consume only for selecting newly spawned letters during refill.
+- Consumption rule: consume only for selecting newly spawned letters during refill, Wand assignment checks for those spawned tiles, and refill retries (if required by board safety checks).
+- Per-spawned-tile execution order is fixed:
+  1. select base letter for spawned slot,
+  2. evaluate Wand marker assignment for that same slot.
+- Wand assignment draw semantics:
+  - letter selection and Wand assignment must not share a single draw.
+  - Wand assignment consumes one additional `nextUint32()` draw per spawned tile slot when `allowWandTiles = true`.
+  - when `allowWandTiles = false`, Wand assignment is skipped and consumes no draw.
 - Collapse movement itself is deterministic and non-random.
 - Refill retries (if required by board safety checks) consume from `board_refill` only.
 

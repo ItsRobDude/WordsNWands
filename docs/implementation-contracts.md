@@ -919,8 +919,30 @@ export interface RuntimeBoardConfig {
   seedMode: 'generated' | 'fixed_seed';
   fixedSeed: string | null;
   allowWandTiles: boolean;
+  wandSpawnRate: number; // normalized probability in [0, 1]
+  wandSpawnSourceOverride:
+    | { kind: 'encounter_default' }
+    | { kind: 'tier_profile'; tier: DifficultyTier }
+    | { kind: 'encounter_override'; profileId: string };
+  wandSpawnRateClamp: {
+    min: number; // inclusive clamp floor, normalized [0, 1]
+    max: number; // inclusive clamp ceiling, normalized [0, 1]
+  };
 }
 ```
+
+Rules:
+
+- `wandSpawnRate` is the pre-clamp authored value used for runtime Wand marker assignment checks.
+- `wandSpawnSourceOverride` defines which authored profile produced `wandSpawnRate`; runtime validators must reject unknown `kind` values.
+- `wandSpawnRateClamp.min` and `.max` are both required and must satisfy `0 <= min <= max <= 1`.
+- effective Wand spawn rate is `clamp(wandSpawnRate, wandSpawnRateClamp.min, wandSpawnRateClamp.max)`.
+- when `allowWandTiles = false`, runtime must skip Wand assignment and treat effective Wand spawn rate as `0` for generation.
+- tile generation order is deterministic and fixed for both initial board fill and refill:
+  1. draw/select base letter,
+  2. then evaluate Wand marker assignment for that same tile slot.
+- Wand marker assignment always occurs after base letter selection and does not change the already selected base letter.
+- RNG stream consumption order for these steps must match `docs/randomness-and-seeding-contract.md`.
 
 ### 8.4 Reward contract
 
