@@ -919,6 +919,7 @@ export interface RuntimeBoardConfig {
   seedMode: 'generated' | 'fixed_seed';
   fixedSeed: string | null;
   allowWandTiles: boolean;
+  wandSpawnRate: number; // finite rate in [0, 1], canonical runtime wand incidence source
   letterDistributionProfileId: string; // e.g. `letter_distribution_v1`
   letterWeightEntries: RuntimeLetterWeightEntry[]; // canonical weighted A-Z entries for this runtime config
   namedLetterPoolId: string | null; // optional named pool alias, e.g. `v1_default_pool`
@@ -934,12 +935,19 @@ Rules:
 
 - `letterDistributionProfileId` is required and versioned so balancing can evolve additively (for example, `letter_distribution_v1`) without changing RNG semantics.
 - `namedLetterPoolId` is optional metadata for authored presets and does not change draw algorithm behavior by itself.
+- `wandSpawnRate` is required and is the canonical runtime-authored wand incidence representation used by encounter balance parity validators.
+- `wandSpawnRate` must be finite and clamped to inclusive range `[0, 1]`; runtime/content validators must fail values outside this range (no silent coercion).
+- if `allowWandTiles = false`, `wandSpawnRate` must be exactly `0`; any non-zero value is invalid.
 - `letterWeightEntries` is the canonical runtime source for weighted refill and initial-board letter selection.
 - `letterWeightEntries` must contain exactly one entry per letter `A` through `Z`.
 - normalization must canonicalize letters to uppercase ASCII and reject non-`A`-`Z` values.
 - every `weight` must be finite, non-zero, and strictly greater than `0`.
 - deterministic ordering is mandatory: runtime consumers must process `letterWeightEntries` in ascending letter order (`A`..`Z`) before building cumulative weighted ranges.
 - duplicate letters are invalid after normalization and must fail runtime validation.
+- deterministic RNG consumption rule for Wand assignment:
+  - board generation/refill resolves each tile in a fixed row-major order.
+  - when `allowWandTiles = true`, runtime must consume exactly one Bernoulli roll per generated tile using `wandSpawnRate` from the same board RNG stream used for tile generation; consumption is mandatory even if the tile ultimately is not marked as Wand.
+  - when `allowWandTiles = false`, runtime must consume zero Wand rolls and assign no Wand markers.
 
 ### 8.4 Reward contract
 
