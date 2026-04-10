@@ -297,7 +297,6 @@ Implementation/testing tools that validate authored encounters should execute th
 
 Tool output should include explicit reasons when an encounter fails, not only a pass/fail boolean.
 
-<<<<<<< codex/define-severity-rules-and-update-metadata
 ### 7.1 Required finding payload fields
 
 For each failed or flagged rule, tooling output must include:
@@ -307,7 +306,6 @@ For each failed or flagged rule, tooling output must include:
 - `measured_value`
 - `threshold`
 - `remediation_hint`
-=======
 Minimum failure reasons include:
 
 - missing/invalid `damage_model_version`
