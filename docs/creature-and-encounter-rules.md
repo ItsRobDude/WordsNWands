@@ -393,6 +393,18 @@ Should usually take about:
 
 - **8–11** solid casts to defeat
 
+#### Concrete pacing thresholds and severity
+
+| Rule ID | Tier | In-band (usually) | `warn` band (waiver required) | `error` band |
+| :--- | :--- | :--- | :--- | :--- |
+| `CER-PACE-001` | Gentle | `5-7` | `4` or `8` | `<= 3` or `>= 9` |
+| `CER-PACE-002` | Standard | `6-8` | `5` or `9` | `<= 4` or `>= 10` |
+| `CER-PACE-003` | Challenging | `7-9` | `6` or `10` | `<= 5` or `>= 11` |
+| `CER-PACE-004` | Boss | `8-11` | `7` or `12` | `<= 6` or `>= 13` |
+| `CER-PACE-005` | Event default | `7-10` | `6` or `11` | `<= 5` or `>= 12` |
+
+Event encounters that intentionally exceed `CER-PACE-005` must carry explicit waiver metadata and framing as special content.
+
 ### Why this rule exists
 Raw HP numbers become misleading when damage tuning changes.
 
@@ -452,6 +464,16 @@ Current internal guidance:
 - usually **3–4**
 
 These are guidance bands, not absolute universal rules.
+
+#### Concrete countdown thresholds and severity
+
+| Rule ID | Tier | In-band (usually) | `warn` band (waiver required) | `error` band |
+| :--- | :--- | :--- | :--- | :--- |
+| `CER-CD-001` | Gentle | `5` | `4` or `6` | `<= 3` or `>= 7` |
+| `CER-CD-002` | Standard | `4-5` | `3` or `6` | `<= 2` or `>= 7` |
+| `CER-CD-003` | Challenging | `4` | `3` or `5` | `<= 2` or `>= 6` |
+| `CER-CD-004` | Boss | `3-4` | `2` or `5` | `<= 1` or `>= 6` |
+| `CER-CD-005` | Event default | `3-4` | `2` or `5` | `<= 1` or `>= 6` |
 
 ### Countdown readability rule
 Countdown behavior must be easy to follow.
@@ -619,6 +641,16 @@ For ordinary content, a single creature cast should usually affect:
 - **3–4 tiles** for Challenging
 
 Bosses or curated event encounters may go beyond that, but only if readability remains strong.
+
+#### Concrete tile-impact thresholds and severity
+
+| Rule ID | Tier | In-band (usually) | `warn` band (waiver required) | `error` band |
+| :--- | :--- | :--- | :--- | :--- |
+| `CER-STATE-001` | Gentle | `1-3` affected tiles per cast | `4` | `>= 5` |
+| `CER-STATE-002` | Standard | `2-4` affected tiles per cast | `5` | `>= 6` |
+| `CER-STATE-003` | Challenging | `3-4` affected tiles per cast | `5` | `>= 6` |
+| `CER-STATE-004` | Boss | `3-6` affected tiles per cast | `7` | `>= 8` |
+| `CER-STATE-005` | Event default | `3-6` affected tiles per cast | `7` | `>= 8` |
 
 ### State-readability rule
 Each tile state must be easy to identify and understand during active play.
@@ -804,6 +836,16 @@ Challenging encounters may use:
 - stronger board-shaping pressure
 
 They still should not feel like chaos.
+
+#### Concrete chained-effect thresholds and severity
+
+| Rule ID | Tier | In-band (usually) | `warn` band (waiver required) | `error` band |
+| :--- | :--- | :--- | :--- | :--- |
+| `CER-CHAIN-001` | Gentle | `0` chained primitive steps beyond first (single primitive only) | `1` extra step | `>= 2` extra steps |
+| `CER-CHAIN-002` | Standard | `0-1` extra chained steps | `2` extra steps | `>= 3` extra steps |
+| `CER-CHAIN-003` | Challenging | `1-2` extra chained steps | `3` extra steps | `>= 4` extra steps |
+| `CER-CHAIN-004` | Boss | `1-3` extra chained steps | `4` extra steps | `>= 5` extra steps |
+| `CER-CHAIN-005` | Event default | `1-3` extra chained steps | `4` extra steps | `>= 5` extra steps |
 
 ### 15.4 Boss intensity
 Bosses may use:

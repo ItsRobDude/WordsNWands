@@ -17,6 +17,18 @@ This framework should be used together with:
 
 ---
 
+## Severity model for balance rules
+
+Every balance rule in this document must declare one of the following severities:
+
+- `error`: block ship until fixed or waived by approved exception policy
+- `warn`: may ship only with an authored waiver
+- `info`: advisory only; does not block ship
+
+Tooling must emit rule-level findings using this severity model so encounter status is machine-derivable (Section 8).
+
+---
+
 ## 1. Inputs and constants
 
 ### 1.1 Damage constants (canonical source + version pin)
@@ -121,6 +133,13 @@ Use the midpoints of current pacing bands unless explicitly overridden:
 Standard progression encounters should usually stay in Low or Medium.
 High pressure is generally for boss/event or explicitly marked challenge nodes.
 
+#### 4.1.a Concrete thresholds and severity
+
+| Rule ID | Condition | In-band requirement | Out-of-band result |
+| :--- | :--- | :--- | :--- |
+| `BF-FAIL-001` | Standard encounter fail-rate band selection | band must be `Low` or `Medium` | `warn` if `High` and waiver present; `error` if `High` without waiver |
+| `BF-FAIL-002` | Non-standard encounter fail-rate band selection | Boss/Event may use `Low`, `Medium`, or `High` | `info` when `High` is used (for audit visibility) |
+
 ### 4.2 Derive move budget
 Let:
 
@@ -144,6 +163,18 @@ Choose target spells-triggered-on-path-to-victory (`targetSpellCountOnWin`) by f
 - Low: `1-2`
 - Medium: `2-3`
 - High: `3-4`
+
+Concrete midpoint defaults remain:
+
+- Low: `1.5`
+- Medium: `2.5`
+- High: `3.5`
+
+| Rule ID | Condition | In-band requirement | Out-of-band result |
+| :--- | :--- | :--- | :--- |
+| `BF-SPELL-001` | Authored `targetSpellCountOnWin` for Low | `1.0-2.0` inclusive | `warn` |
+| `BF-SPELL-002` | Authored `targetSpellCountOnWin` for Medium | `2.0-3.0` inclusive | `warn` |
+| `BF-SPELL-003` | Authored `targetSpellCountOnWin` for High | `3.0-4.0` inclusive | `warn` |
 
 Use midpoint for first pass (`1.5`, `2.5`, `3.5` respectively).
 
@@ -170,6 +201,11 @@ Any encounter matching one of these rows must be rejected or explicitly escalate
 | G3 | HP at or above tier median | Move budget at or below tier `p25` | Base countdown at tier minimum | High soot/freeze persistence | Invalid |
 | G4 | HP at or above tier `p90` | Any | Base countdown `<= 3` | High disruption and weakness dependence `>= 0.45` | Invalid |
 | G5 | Any | Move budget at or below tier `p20` | Any | Any moderate+ disruption | Invalid for non-boss/event |
+
+All `G*` guardrails are `error` severity:
+
+- Rule IDs `BF-GUARD-G1` through `BF-GUARD-G5` emit `error`.
+- For Boss/Event content, explicit documented exception may downgrade to `warn` only with approved waiver metadata.
 
 ### 5.1 Operational definition of disruption pressure
 Classify encounter disruption pressure as:
@@ -214,6 +250,20 @@ Unless explicitly documented as boss/event challenge content, shippable requires
 - “felt unfair” rate `< 12%`
 - no guardrail violation from Section 5
 
+### 6.2.a Concrete thresholds and severity
+
+| Rule ID | Metric | Pass threshold | Out-of-band result |
+| :--- | :--- | :--- | :--- |
+| `BF-METRIC-001` | valid run sample size (`n`) | `>= 200` | `error` |
+| `BF-METRIC-002` | fail rate | within authored band ± `5` percentage points | `warn` (waiver required) |
+| `BF-METRIC-003` | median casts-to-defeat | within target ± `1.0` cast | `warn` (waiver required) |
+| `BF-METRIC-004` | median moves remaining on win | `>= 1` | `error` |
+| `BF-METRIC-005` | observed weakness hit rate delta | `<= 0.08` absolute delta | `warn` (waiver required) |
+| `BF-METRIC-006` | observed Wand incidence delta | `<= 0.06` absolute delta | `warn` (waiver required) |
+| `BF-METRIC-007` | observed soot exposure delta | `<= 0.06` absolute delta | `warn` (waiver required) |
+| `BF-METRIC-008` | felt unfair rate | `< 12%` | `error` |
+| `BF-METRIC-009` | guardrail status | no Section 5 violation | `error` |
+
 If any threshold fails, encounter status remains **tune-required**.
 
 ### 6.3 Graduation labels
@@ -221,6 +271,15 @@ If any threshold fails, encounter status remains **tune-required**.
 - `tune-required`: metrics captured but one or more thresholds failed
 - `candidate-shippable`: thresholds pass in one full playtest cycle
 - `shippable`: thresholds pass in two consecutive cycles after latest gameplay-affecting change
+
+### 6.4 Machine-derivable status mapping
+
+Tooling must derive status from severity outcomes, not manual label selection:
+
+- `prototype`: required metrics set is incomplete (`BF-METRIC-001` cannot be evaluated yet, or required metric fields missing).
+- `tune-required`: one or more `error` findings, or one or more `warn` findings without valid waiver.
+- `candidate-shippable`: current cycle has zero `error`; all `warn` findings have valid waivers; and this is the first passing cycle after latest gameplay-affecting change.
+- `shippable`: same as `candidate-shippable`, plus two consecutive passing cycles after latest gameplay-affecting change.
 
 ---
 
@@ -238,10 +297,22 @@ Implementation/testing tools that validate authored encounters should execute th
 
 Tool output should include explicit reasons when an encounter fails, not only a pass/fail boolean.
 
+<<<<<<< codex/define-severity-rules-and-update-metadata
+### 7.1 Required finding payload fields
+
+For each failed or flagged rule, tooling output must include:
+
+- `rule_id`
+- `severity` (`error` | `warn` | `info`)
+- `measured_value`
+- `threshold`
+- `remediation_hint`
+=======
 Minimum failure reasons include:
 
 - missing/invalid `damage_model_version`
 - divergence from canonical Damage Model v1 fingerprint/constants
+>>>>>>> main
 
 ---
 
