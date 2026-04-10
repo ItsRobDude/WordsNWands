@@ -287,6 +287,7 @@ export interface EncounterRuntimeState {
   validation_snapshot_version_pin: string;
   battle_rules_version_pin: string;
   board_generator_version_pin: string;
+  damage_model_version: 'damage_model_v1';
 }
 ```
 
@@ -295,6 +296,7 @@ Rules:
 - `repeated_words` stores normalized cast history for repeat rejection
 - `moves_remaining` must never exceed `move_budget_total`
 - the four version pins above are required for restore/debug trust
+- `damage_model_version` is required for deterministic restore/debug replay and must match the active canonical damage model contract version
 - runtime state should be complete enough that battle resolution does not depend on hidden UI state
 
 ---
@@ -341,10 +343,34 @@ export interface ValidCastResolution {
 }
 ```
 
+### 5.2.1 Damage Model v1 (canonical)
+
+Damage model version identifier:
+
+- `damage_model_version = 'damage_model_v1'`
+
+Canonical damage constants and formula contract for `damage_model_v1`:
+
+- `base_damage = 8 + 3 * (word_length - 3) + max(0, word_length - 5)`
+- matchup multipliers: weakness `1.5`, neutral `1.0`, resistance `0.7`, arcane `1.0`
+- Wand multiplier: `1.25` when one or more selected Wand tiles are used, else `1.0`
+- Soot multiplier: `0.75` when one or more selected Sooted tiles are used, else `1.0` (non-stacking)
+- `raw_damage = base_damage * matchup_multiplier * wand_multiplier * soot_multiplier`
+- rounding mode: round-half-up for non-negative values (same tie behavior as `Math.round`)
+- minimum-damage floor: `final_damage = max(1, round_half_up(raw_damage))`
+
+Damage Model v1 fingerprint string (must match docs consistency lint):
+
+- `DMV1|base=8+3*(L-3)+max(0,L-5)|matchup=1.5,1.0,0.7,1.0|wand=1.25|soot=0.75|round=half_up|min=1`
+
+Implementation/testing contract:
+
+- runtime and tests that compute expected damage must import shared constants and helper from one canonical module (recommended path: `packages/game-rules/src/damage/damageModelV1.ts`)
+- the canonical module must export the version identifier, constants, and `roundFinalDamage(rawDamage: number): number`
+
 Damage-calculation rules for `ValidCastResolution`:
 
-- `base_damage = 8 + 3 * (wordLength - 3) + max(0, wordLength - 5)`
-- matchup multipliers: weakness `1.5`, neutral `1.0`, resistance `0.7`, arcane `1.0`
+- use the canonical `Damage Model v1` constants/formula above; do not fork constants inline in runtime or tests
 - `used_wand_tile = true` applies `wandMultiplier = 1.25`, otherwise `1.0`
 - any cast that includes one or more Sooted tiles applies one `sootMultiplier = 0.75`
 - `raw_damage = base_damage * matchupMultiplier * wandMultiplier * sootMultiplier`
@@ -352,7 +378,6 @@ Damage-calculation rules for `ValidCastResolution`:
 - `roundFinalDamage` must use **round-half-up** for non-negative values (same tie behavior as `Math.round`): exact `.5` rounds up
 - explicit tie example: `raw_damage = 16.5` resolves to `final_damage = 17`
 - successful valid casts that reach damage resolution must clamp `final_damage >= 1`
-- runtime and test code must share the same helper implementation: `packages/game-rules/src/damage/roundFinalDamage.ts` (`roundFinalDamage(rawDamage: number): number`)
 
 ### 5.3 Modifier evaluation order contract
 
@@ -547,7 +572,7 @@ Deterministic resolution requirements:
 1. Build eligible set from current board at primitive evaluation time.
 2. `target_count` is an upper bound; if `target_count > eligible.length`, apply to `eligible.length` and stop.
 3. Sampling must be without replacement.
-4. For `targeting: 'random_eligible'`, use seeded deterministic ordering then take first `N`:
+4. For `targeting: 'random_eligible'`, use seeded deterministic pseudo-random selection in authoritative runtime, implemented as seeded deterministic ordering then take first `N` (replay-stable):
    - primary: ascending hash(`encounter_seed + creature_cast_index + primitive_step_index + tile_id`)
    - secondary: `row` ascending
    - tertiary: `col` ascending
@@ -572,7 +597,7 @@ Text snapshot legend:
 - `X*` means Wand marker on tile letter `X`
 - `[F]`, `[S]`, `[D]`, `[B]` mean frozen/sooted/dull/bubble respectively
 
-All examples assume `targeting: 'random_eligible'` with deterministic seeded ordering from section 6.2.
+All examples assume `targeting: 'random_eligible'` with seeded deterministic pseudo-random selection in authoritative runtime from section 6.2.
 
 Frozen (`target_count = 2`):
 
@@ -817,6 +842,7 @@ export interface RuntimeEncounterDefinition {
   moveBudget: number;
   isStarterEncounter: boolean;
   introFlavorText: string | null;
+  damageModelVersion: 'damage_model_v1';
   rewardDefinition: RuntimeRewardDefinition | null;
   boardConfig: RuntimeBoardConfig;
   balanceMetadata: RuntimeEncounterBalanceMetadata;
@@ -826,6 +852,7 @@ export interface RuntimeEncounterDefinition {
 
 Rules:
 
+- `damageModelVersion` is required encounter authoring metadata for every balance-derived encounter and must currently be `'damage_model_v1'`
 - `RuntimeEncounterDefinition` intentionally has no Spark Shuffle countdown/move override field in v1; runtime must apply the global Spark Shuffle pressure rule from section 5.6 without per-encounter guessing
 - `balanceMetadata.waivers` is required and must be present even when empty (`[]`)
 - any authored out-of-band balance value with `warn` severity requires an active waiver entry
@@ -979,6 +1006,7 @@ export interface RuntimeValidationResult {
       | 'enum_invalid'
       | 'countdown_invalid'
       | 'matchup_invalid'
+      | 'damage_model_version_invalid'
       | 'board_config_invalid'
       | 'phase_rule_invalid'
       | 'version_pin_mismatch'

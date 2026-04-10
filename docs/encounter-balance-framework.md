@@ -31,18 +31,23 @@ Tooling must emit rule-level findings using this severity model so encounter sta
 
 ## 1. Inputs and constants
 
-### 1.1 Damage constants (must match gameplay rules)
-Use the current v1 damage model constants:
+### 1.1 Damage constants (canonical source + version pin)
+Encounter balance calculations must use the canonical damage contract:
 
-- `baseDamage = floor((wordLength^2) / 5)`
-- matchup multiplier: weakness `1.5`, neutral `1.0`, resistance `0.7`
-- Wand multiplier: `1.25` when a Wand tile is used, else `1.0`
-- Soot multiplier: `0.75` when one or more Sooted tiles are used, else `1.0`
-- final damage: `max(1, roundHalfUp(rawDamage))`
+- `docs/implementation-contracts.md` → **Section 5.2.1, “Damage Model v1 (canonical)”**
 
-With these rules:
+Required model version for this framework:
 
-`rawDamage = baseDamage * matchupMultiplier * wandMultiplier * sootMultiplier`
+- `damage_model_version = damage_model_v1`
+
+Damage Model v1 fingerprint string (must match canonical and gameplay docs exactly):
+
+- `DMV1|base=8+3*(L-3)+max(0,L-5)|matchup=1.5,1.0,0.7,1.0|wand=1.25|soot=0.75|round=half_up|min=1`
+
+Authoring/validation tools must fail balance computation if:
+
+- `damage_model_version` is missing, or
+- `damage_model_version !== 'damage_model_v1'`
 
 ### 1.2 Countdown behavior assumption
 Use the current countdown stall rule while projecting spell cadence:
@@ -87,7 +92,7 @@ For each tier/profile, compute expected multipliers:
 - `expectedMatchupMultiplier = weaknessHitRate * 1.5 + (1 - weaknessHitRate) * 1.0`
 - `expectedWandMultiplier = 1 + (wandIncidence * 0.25)`
 - `expectedSootMultiplier = 1 - (sootExposure * 0.25)`
-- `expectedBaseDamage = floor((avgWordLength^2) / 5)`
+- `expectedBaseDamage = 8 + 3 * (avgWordLength - 3) + max(0, avgWordLength - 5)`
 
 Then:
 
@@ -282,15 +287,17 @@ Tooling must derive status from severity outcomes, not manual label selection:
 
 Implementation/testing tools that validate authored encounters should execute this sequence:
 
-1. load tier profile defaults from Section 2
-2. apply documented per-encounter profile overrides (if any)
-3. derive expected damage, HP recommendation, move budget recommendation, and countdown recommendation
-4. run invalid-combination guardrails from Section 5
-5. compare observed playtest metrics against Section 6 thresholds
-6. emit machine-readable status: `prototype`, `tune-required`, `candidate-shippable`, or `shippable`
+1. validate required encounter authoring metadata, including `damage_model_version`
+2. load tier profile defaults from Section 2
+3. apply documented per-encounter profile overrides (if any)
+4. derive expected damage, HP recommendation, move budget recommendation, and countdown recommendation using canonical `damage_model_v1` constants
+5. run invalid-combination guardrails from Section 5
+6. compare observed playtest metrics against Section 6 thresholds
+7. emit machine-readable status: `prototype`, `tune-required`, `candidate-shippable`, or `shippable`
 
 Tool output should include explicit reasons when an encounter fails, not only a pass/fail boolean.
 
+<<<<<<< codex/define-severity-rules-and-update-metadata
 ### 7.1 Required finding payload fields
 
 For each failed or flagged rule, tooling output must include:
@@ -300,6 +307,12 @@ For each failed or flagged rule, tooling output must include:
 - `measured_value`
 - `threshold`
 - `remediation_hint`
+=======
+Minimum failure reasons include:
+
+- missing/invalid `damage_model_version`
+- divergence from canonical Damage Model v1 fingerprint/constants
+>>>>>>> main
 
 ---
 
