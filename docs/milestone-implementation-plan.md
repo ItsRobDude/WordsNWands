@@ -78,6 +78,7 @@ Before serious feature work begins, Words 'n Wands! should have a usable source-
 - `docs/game-rules.md`
 - `docs/word-validation-and-element-rules.md`
 - `docs/creature-and-encounter-rules.md`
+- `docs/encounter-balance-framework.md`
 - `docs/screens-and-session-flow.md`
 - `docs/milestone-implementation-plan.md`
 
@@ -471,6 +472,7 @@ Make content expansion and tuning safer before the game broadens further.
 - all Milestone 3 docs
 - `docs/content-pipeline-and-liveops.md` expanded enough to support repeatable content authoring/review
 - `docs/implementation-contracts.md` updated for content definitions and versioning where needed
+- `docs/encounter-balance-framework.md` finalized so authoring and validation tools can auto-check encounter balance and shippability
 
 ### Definition of done
 Milestone 4 is done when:
@@ -478,6 +480,7 @@ Milestone 4 is done when:
 - content addition is safer and less error-prone
 - balance changes are easier to make deliberately
 - battle fairness checks are stronger
+- authored encounters can be automatically validated against documented balance guardrails and shippability thresholds
 - the game can expand its creature roster without becoming fragile
 - content operations still fit solo-builder reality
 
@@ -579,6 +582,7 @@ At minimum:
 - `docs/game-rules.md`
 - `docs/word-validation-and-element-rules.md`
 - `docs/creature-and-encounter-rules.md`
+- `docs/encounter-balance-framework.md`
 - `docs/screens-and-session-flow.md`
 - `docs/technical-architecture.md`
 - `docs/engineering-standards.md`
