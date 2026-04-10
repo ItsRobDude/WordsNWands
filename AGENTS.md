@@ -22,6 +22,13 @@ Document those assumptions clearly.
 
 ---
 
+## Current readiness snapshot
+
+- **Docs-first phase status:** Active. The repository is intentionally in a docs-first, pre-vertical-slice planning phase.
+- **Runnable workspace/scripts present?:** Not yet. Do not assume runnable app/workspace scripts exist in this repo today.
+- **Authoritative validation command contract:** `docs/engineering-standards.md` section **5.1 Operational Validation Commands (Contributor Contract)**.
+- **If commands are not yet scaffolded:** Do docs-consistency checks and link validation only (when those checks are available), and avoid inventing extra setup or replacement command flows.
+
 ## 1. Words 'n Wands! in One Minute
 
 Words 'n Wands! is:
