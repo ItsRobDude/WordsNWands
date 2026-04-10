@@ -325,6 +325,19 @@ Economy and fairness implications:
 - If hint/clue assists are introduced after M2, they must remain non-pay-to-win: no purchase path may provide unlimited in-encounter pressure bypass versus non-paying players.
 - Any future hint economy must define strict usage limits, pressure tradeoffs, and parity safeguards before monetization surfaces go live.
 
+### 8.7 Canonical clue economy guardrails (M3+)
+If clues are enabled in Milestone 3 or later, use `docs/hint-and-clue-mechanics.md` as canonical clue-economy truth.
+
+Required guardrails:
+
+- Only canonical clue actions are allowed: `reveal_starter_letter`, `highlight_legal_path`, `reroll_local_tiles`.
+- Earned clue charges are capped at `3` per UTC day.
+- Purchased clue charges are capped at `3` per UTC day.
+- Total stored clue inventory is capped at `9`.
+- Per-encounter usage caps and star-impact penalties apply equally to earned and purchased clue charges.
+- Purchase paths must not remove countdown penalties, move costs, cooldowns, or per-encounter clue limits.
+- Starter flow remains clue-hidden unless explicitly unlocked by later milestone docs.
+
 ---
 
 ## 9. Main Progression Reward Rules

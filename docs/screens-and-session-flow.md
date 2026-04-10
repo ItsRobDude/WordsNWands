@@ -614,6 +614,16 @@ Screen and interaction implications:
 - Dead-board recovery remains automatic system behavior and should be communicated as board recovery, not a player-invoked tool.
 - Any future hint/clue surface must be added as a deliberate milestone change with updated contracts and economy boundaries.
 
+### Player Assist Actions (M3+)
+If clues are enabled in Milestone 3 or later, they must follow `docs/hint-and-clue-mechanics.md` exactly.
+
+Screen/flow requirements when enabled:
+
+- Use only the canonical clue actions: `reveal_starter_letter`, `highlight_legal_path`, and `reroll_local_tiles`.
+- Respect the per-encounter limits, cooldown rules, countdown/move pressure interactions, and star-impact rules from the clue doc.
+- Keep starter flow clue-hidden unless milestone docs explicitly remove that lock.
+- Keep automatic Spark Shuffle behavior separate from clue UI and economy messaging.
+
 ### Recovery-tone rule
 The recovery should feel like the game helping the player, not punishing them for something outside their control.
 
