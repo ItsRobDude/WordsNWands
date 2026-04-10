@@ -1110,6 +1110,51 @@ The canonical onboarding timeline is:
    - clear starter gate
    - route to `home` and point primary progression CTA to first unlocked, uncleared mainline encounter
 
+### 9.1.b Deterministic Star Rating v1 contract
+
+Star-rating computation for persisted encounter results is locked to:
+
+- `star_rating_model_v1`
+
+This must align with `docs/game-rules.md` ("Current star-rating direction") and `docs/progression-economy-and-monetization.md` section 9 (`win_any_stars`, no relock).
+
+TypeScript-facing pure contract:
+
+```ts
+export type StarRating = 0 | 1 | 2 | 3;
+
+export function deriveStarRating(
+  outcome: EncounterOutcome,
+  moves_remaining: number,
+): StarRating;
+```
+
+Deterministic threshold mapping:
+
+- if `outcome = 'lost'`, return `0` (ignore `moves_remaining` for rating)
+- if `outcome = 'won'` and `moves_remaining >= 4`, return `3`
+- if `outcome = 'won'` and `moves_remaining` is `2` or `3`, return `2`
+- if `outcome = 'won'` and `moves_remaining` is `0` or `1`, return `1`
+
+Boundary examples:
+
+- `deriveStarRating('won', 0) = 1`
+- `deriveStarRating('won', 1) = 1`
+- `deriveStarRating('won', 2) = 2`
+- `deriveStarRating('won', 3) = 2`
+- `deriveStarRating('won', 4) = 3`
+- `deriveStarRating('won', 7) = 3` (same `4+` bucket)
+- `deriveStarRating('lost', 0) = 0`
+- `deriveStarRating('lost', 5) = 0` (loss always maps to `0`)
+
+Persistence and progression application rules:
+
+- compute `encounter_result_records.star_rating` exactly once, at terminal result commit time, using `deriveStarRating(outcome, moves_remaining)` and persist with the result row
+- do not derive or rewrite `star_rating` later from UI state or replay screens
+- on outcome `won`, update `encounter_progress_records.best_star_rating = max(existing_best_star_rating, result.star_rating)`
+- on outcome `lost`, do not change `encounter_progress_records.best_star_rating`
+- progression unlock semantics remain `win_any_stars` (`1|2|3` on win unlocks next canonical encounter); losses (`0` stars) do not unlock and replays must not relock
+
 ### 9.2 Mainline win transition rules
 
 When a mainline encounter resolves with outcome `won`:
