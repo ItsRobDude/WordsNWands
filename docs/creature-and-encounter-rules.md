@@ -134,6 +134,9 @@ A deliberate, documented boss or event behavior change triggered by a clear cond
 ### Encounter Budget
 The combined authored pressure created by HP, move budget, countdown speed, spell intensity, and elemental matchup.
 
+### Random (authoring term)
+Seeded deterministic pseudo-random selection in authoritative runtime.
+
 ---
 
 ## 4. Standard Creature Information
@@ -635,7 +638,7 @@ When creature spells choose tiles or board sections, the targeting behavior must
 ### Allowed targeting styles
 Targeting may be:
 
-- random among eligible targets
+- random among eligible targets (seeded deterministic pseudo-random selection in authoritative runtime; replay-stable per [Randomness and Seeding Contract §5.3](./randomness-and-seeding-contract.md#53-creature-spell-random-targeting) and [Implementation Contracts §6.2](./implementation-contracts.md#62-apply_tile_state-deterministic-eligibility-contract))
 - based on a simple visible rule
 - based on a consistent authored pattern
 
@@ -645,7 +648,7 @@ The player does not need to know the exact random seed, but the targeting should
 ### Readable-pattern preference
 Whenever possible, prefer targeting patterns the player can intuit over time, such as:
 
-- a small number of random eligible tiles
+- a small number of random eligible tiles (seeded deterministic pseudo-random selection in authoritative runtime)
 - the leftmost valid row chosen by a simple rule
 - the topmost or bottommost eligible tile group
 - a visible phase-based rule in a boss fight
