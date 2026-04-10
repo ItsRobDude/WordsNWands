@@ -390,12 +390,19 @@ Damage must be understandable and consistent.
 ### Base damage rule
 Longer words deal more base damage.
 
-Current recommended v1 direction:
+Current v1 formula:
 
-- 3 letters: modest damage
-- 4 letters: meaningful upgrade
-- 5+ letters: clearly stronger
-- 6+ letters: noticeably rewarding, but not so dominant that elemental choice becomes irrelevant
+- `baseDamage = 8 + 3 × (wordLength - 3) + max(0, wordLength - 5)`
+
+Reference values:
+
+- 3 letters: `8`
+- 4 letters: `11`
+- 5 letters: `14`
+- 6 letters: `18`
+- 7 letters: `22`
+- 8 letters: `26`
+- 9 letters: `30`
 
 ### Strategic balance rule
 The damage system should support real tension between:
@@ -413,17 +420,31 @@ The word’s element modifies its damage based on the creature’s current match
 
 Current standard direction:
 
-- weakness hit: bonus damage
-- neutral hit: normal damage
-- resistance hit: reduced damage
-- Arcane hit: normal damage unless a mode explicitly changes that rule
+- weakness hit: `1.5x`
+- neutral hit: `1.0x`
+- resistance hit: `0.7x`
+- Arcane hit: `1.0x` unless a mode explicitly changes that rule
 
 ### Wand bonus rule
 If a valid cast includes a Wand tile:
 
-- the final damage receives a modest bonus
+- the final damage receives a `1.25x` bonus
 - the Wand tile is consumed like a normal tile
 - the Wand tile should feel helpful, not mandatory
+
+### Soot penalty rule
+If a valid cast includes one or more Sooted tiles, apply one total soot penalty:
+
+- `sootMultiplier = 0.75`
+- multiple Sooted tiles in one cast do not stack extra penalties
+
+### Final damage formula rule
+For successful valid casts:
+
+- `finalDamage = round(baseDamage × matchupMultiplier × wandMultiplier × sootMultiplier)`
+- if no Wand tile is used, `wandMultiplier = 1.0`
+- if no Sooted tile is used, `sootMultiplier = 1.0`
+- any successful valid cast that reaches damage resolution must deal at least `1` final damage
 
 Wand bonuses should support exciting tactical moments without turning the board into a power-up circus.
 
@@ -513,9 +534,12 @@ The creature has a visible countdown showing how many successful player casts re
 The countdown is evaluated after each successful player cast unless a more specific documented rule modifies it.
 
 ### Weakness-interaction direction
-In the current direction, successful weakness play may delay, stall, or otherwise improve the player’s countdown relationship.
+In the current direction, successful weakness play uses this exact stall rule:
 
-That rule should remain simple and readable.
+- if a successful valid cast hits creature weakness, countdown does **not** decrement on that cast
+- the countdown does not reset or gain extra time from stall alone
+- if countdown is already `1`, it remains `1` for that cast
+- on the next non-stalled successful cast, normal decrement behavior resumes
 
 ### Spell reset rule
 After the creature casts its spell:
@@ -558,23 +582,33 @@ A tile may have at most one negative state at a time unless a future mode explic
 The current design direction supports negative board effects such as:
 
 #### Frozen
-- the tile cannot be used for the next player turn
-- it thaws automatically afterward if still present
+- the tile cannot be selected in the player’s next successful cast
+- Frozen does not clear on invalid or repeated submissions
+- after the next successful cast resolves, surviving Frozen tiles thaw automatically
+- duration: 1 successful player turn
 
 #### Sooted
 - the tile is still usable
-- words using it deal reduced final damage or lose some efficiency
-- the soot clears when the tile is used
+- if one or more Sooted tiles are used in a cast, apply one total `0.75x` final-damage multiplier
+- multiple Sooted tiles in one cast do not stack penalties
+- consumed Sooted tiles clear immediately
+- surviving Sooted tiles tick down after each successful cast resolution
+- duration: 2 successful player turns
 
 #### Dull
 - the tile is still usable
-- it does not contribute its usual element value while dulled
-- the dull effect clears when the tile is used
+- if a cast uses one or more Dull tiles and the word's element is non-Arcane, treat matchup as Arcane/neutral for that cast
+- base damage and Wand bonus do not change
+- consumed Dull tiles clear immediately
+- surviving Dull tiles tick down after each successful cast resolution
+- duration: 2 successful player turns
 
 #### Bubble
 - the tile is still usable
-- it moves upward during refill behavior according to its documented effect
-- the effect clears when the tile is used
+- after the next successful cast refill step, each surviving Bubble tile rises to the top of its column
+- other tiles in that column shift downward
+- Bubble then clears
+- duration: 1 successful player turn
 
 ### Row/column movement effects
 Creatures may also use effects like:
@@ -585,6 +619,12 @@ Creatures may also use effects like:
 - rotating a column
 
 These effects should remain readable and animated clearly enough that the player can follow what happened.
+
+Current standard movement direction:
+
+- shift/rotate effects move by exactly 1 position with wraparound
+- tile states and Wand markers move with the tile
+- creature row/column movement resolves before player control returns
 
 ### Board-noise rule
 The game should avoid stacking so many simultaneous board effects that the player stops feeling in control.
@@ -624,10 +664,19 @@ A new encounter should begin with a board that contains valid playable words.
 
 The player should not open a battle into an unusable board.
 
+Current v1 target:
+
+- starting board should contain at least `8` valid castable words of length 3+
+
 ### Refill fairness rule
 Standard refill behavior should strongly prefer producing continuing playability.
 
 The game should reduce the chance of no-move states as much as practical.
+
+Current v1 target:
+
+- post-refill boards should usually provide at least `4` valid castable words of length 3+
+- if post-refill yields fewer than `1` valid castable word, dead-board recovery triggers immediately
 
 ### Dead-board rule
 A **dead board** is a board state with no valid playable words under the current rules.
@@ -714,9 +763,10 @@ The encounter may award stars based on efficiency.
 
 Current standard direction:
 
-- 3 stars: strong efficiency
-- 2 stars: solid completion
-- 1 star: narrow completion
+- 3 stars: win with `4+` moves remaining
+- 2 stars: win with `2-3` moves remaining
+- 1 star: win with `0-1` moves remaining
+- 0 stars: loss
 
 This gives players a gentle reason to replay without making failure feel cruel.
 
