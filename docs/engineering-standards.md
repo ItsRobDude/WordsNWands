@@ -798,6 +798,33 @@ When a conflict is discovered, include this checklist verbatim and complete each
 
 This checklist is mandatory whenever battle-critical docs disagree, even if no code changes are included in the PR.
 
+### A.4 Source-of-truth conflict decision governance (all blocking spec conflicts)
+
+When a blocking source-of-truth conflict is identified, this governance flow is mandatory.
+
+#### Decision owner (single accountable approver)
+- Exactly one decision owner must be assigned per conflict.
+- The decision owner is the single accountable approver for the resolution outcome.
+- The decision owner must be named in the conflict-tracking entry and in the PR/final report.
+
+#### Turnaround SLA
+- Blocking spec conflicts require a resolution decision within **48 hours** of conflict identification.
+- If the 48-hour window is at risk, escalation must be recorded in the same conflict-tracking entry.
+
+#### Temporary implementation rule while blocked
+- While a blocking source-of-truth conflict remains unresolved, contributors must **freeze the affected feature branch scope**.
+- No merge is allowed for changes that depend on the disputed rule until the conflict is formally resolved.
+
+#### Required closure artifacts
+Every resolved conflict must include all of the following artifacts:
+- updated canonical doc section reflecting the approved interpretation
+- explicit version/date stamp in the updated canonical section
+- linked completed conflict-template entry (from Appendix A.3 checklist) documenting the decision
+
+#### Merge gate
+- **No merge is allowed with an unresolved source-of-truth conflict.**
+- A conflict is considered unresolved until the decision owner approves and all required closure artifacts are present in the PR.
+
 ---
 
 ## 21. Practical Summary
