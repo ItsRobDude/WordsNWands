@@ -129,6 +129,22 @@ The validation dataset must be:
 - reviewable
 - stable once shipped in a release or content package
 
+### v1 dataset shape rule
+For v1, validation truth should ship as two bundled, versioned datasets:
+
+1. `castable_words` list (all valid castable words)
+2. `element_tags` overlay (only words with non-Arcane element tags)
+
+All castable words that do not appear in `element_tags` resolve to Arcane.
+
+### v1 curation-size targets
+Current target ranges for content planning:
+
+- castable lexicon: `12,000-18,000` words
+- tagged non-Arcane overlay: `1,500-2,500` words
+
+These are authoring targets, not a runtime permission to auto-tag by inference.
+
 ### No split-brain rule
 The following systems must use the same pinned validation truth:
 
@@ -140,6 +156,11 @@ The following systems must use the same pinned validation truth:
 - encounter balancing tools
 
 A word should not be considered playable by board logic but rejected by player-cast logic, or vice versa.
+
+### Runtime lookup rule
+Milestone 1 runtime validation should use pre-hydrated in-memory lookups from bundled snapshots for hot-path cast resolution.
+
+SQLite is appropriate for persistence (settings, session snapshots, progression, history), but should not be queried per cast for ordinary lexicon/element lookups.
 
 ### Safer-default rule
 When there is uncertainty during content preparation, the safer default is:

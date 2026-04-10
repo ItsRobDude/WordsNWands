@@ -448,9 +448,43 @@ The player should always be able to answer:
 ### Weakness-interaction rule
 Weakness-related countdown benefits are allowed because they create meaningful strategy.
 
-However, they must stay simple and readable.
+Current standard v1 stall behavior is exact:
+
+- if a successful valid cast hits creature weakness, countdown does **not** decrement on that cast
+- this stall does not reset countdown and does not add +1
+- if countdown is already `1`, it remains `1` for that cast
+- stall applies only when the cast resolves as weakness after all matchup modifiers (for example, Dull can neutralize this)
 
 The game should avoid a giant web of special countdown exceptions per creature unless intentionally documented later.
+
+---
+
+### Milestone 1 encounter tuning locks
+
+To avoid implementation drift, Milestone 1 uses these concrete baseline values.
+
+#### Starter encounter baseline
+
+- creature HP: `56`
+- move budget: `12`
+- base countdown: `5`
+- spell intensity: very light
+- spell target impact: up to `2` tiles
+
+#### First standard encounter baseline
+
+- creature HP: `72`
+- move budget: `10`
+- base countdown: `5`
+- spell intensity: light nuisance
+- spell target impact: `2-3` tiles
+
+#### Star thresholds
+
+- 3 stars: win with `4+` moves remaining
+- 2 stars: win with `2-3` moves remaining
+- 1 star: win with `0-1` moves remaining
+- 0 stars: loss
 
 ---
 

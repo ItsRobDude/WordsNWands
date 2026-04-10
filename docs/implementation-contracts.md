@@ -194,6 +194,15 @@ Rules:
 - a tile may have at most one `special_marker`
 - runtime board storage should use normalized uppercase letters for stability and cheap comparisons
 
+Tile-state runtime behavior locks:
+
+- negative tile states tick down only after successful valid cast resolution
+- invalid or repeated submissions must not tick down tile-state duration
+- Frozen duration: 1 successful cast; blocked from selection during that cast window
+- Sooted duration: 2 successful casts; applies one non-stacking `0.75` damage multiplier if used
+- Dull duration: 2 successful casts; if used with non-Arcane word, matchup resolves as Arcane/neutral
+- Bubble duration: 1 successful cast; after next refill step, surviving Bubble tiles rise to top of column and clear
+
 ### 4.2 Board snapshot contract
 
 ```ts
@@ -309,6 +318,15 @@ export interface ValidCastResolution {
   did_lose: boolean;
 }
 ```
+
+Damage-calculation rules for `ValidCastResolution`:
+
+- `base_damage = 8 + 3 * (wordLength - 3) + max(0, wordLength - 5)`
+- matchup multipliers: weakness `1.5`, neutral `1.0`, resistance `0.7`, arcane `1.0`
+- `used_wand_tile = true` applies `wandMultiplier = 1.25`, otherwise `1.0`
+- any cast that includes one or more Sooted tiles applies one `sootMultiplier = 0.75`
+- `final_damage = round(base_damage * matchupMultiplier * wandMultiplier * sootMultiplier)`
+- successful valid casts that reach damage resolution must clamp `final_damage >= 1`
 
 ### 5.3 Rejected cast resolution contract
 
@@ -661,6 +679,7 @@ export interface ValidationSnapshotMetadata {
   snapshot_version: string;
   language: 'en';
   word_count: number;
+  tagged_word_count: number;
   generated_at_utc: string;
 }
 ```
@@ -670,6 +689,7 @@ export interface ValidationSnapshotMetadata {
 ```ts
 export interface ValidationSnapshotLookup {
   snapshot_version: string;
+  metadata: ValidationSnapshotMetadata;
   hasWord(normalizedWord: string): boolean;
   getEntry(normalizedWord: string): RuntimeValidationWord | null;
 }
