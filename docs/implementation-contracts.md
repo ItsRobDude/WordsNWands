@@ -1542,6 +1542,11 @@ Rules:
   - `null` means legacy uncapped behavior (no board-level Wand cap enforced).
   - non-null values must be finite integers in inclusive range `[0, rows * cols]` (`[0, 36]` for current 6x6 board).
   - values outside the allowed range, non-integers, and non-finite values must fail runtime/content validation (no silent coercion).
+  - cap accounting counts every tile currently carrying the Wand marker, including tiles that also carry a negative tile state overlay (Frozen, Sooted, Dull, Bubble).
+  - negative tile states do not remove, suspend, or otherwise pause Wand-marker membership for cap accounting.
+  - when checking whether new Wand assignment is suppressed due to cap, runtime must reference only this total active-board Wand count.
+  - composition semantics must remain aligned with `docs/game-rules.md` section 5 "Board composition" (a tile may simultaneously carry letter + marker + negative state).
+  - example capped snapshot (`maxConcurrentWands = 3`): board contains `Wand`, `Wand+Frozen`, and `Wand+Bubble` tiles; active-board Wand count is `3`, so additional generated tiles cannot be assigned Wand until the count drops below cap.
 - `letterWeightEntries` is the canonical runtime source for weighted refill and initial-board letter selection.
 - `letterWeightEntries` must contain exactly one entry per letter `A` through `Z`.
 - normalization must canonicalize letters to uppercase ASCII and reject non-`A`-`Z` values.
