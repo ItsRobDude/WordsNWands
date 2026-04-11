@@ -385,6 +385,7 @@ Canonical packaged artifact location for this model:
 
 - `content/packages/<content_version>/progression/progression.progression_m2_chapter_linear_v1.json`
 - M1-M2 concrete example path: `content/packages/content_m2_launch_v1/progression/progression.progression_m2_chapter_linear_v1.json`
+- This progression example is anchored to the canonical manifest example in `docs/content-pipeline-and-liveops.md` section 8.5.1 (`#851-normative-minimum-valid-m1m2-package-example`).
 
 Concrete JSON artifact example (`progression_m2_chapter_linear_v1`):
 

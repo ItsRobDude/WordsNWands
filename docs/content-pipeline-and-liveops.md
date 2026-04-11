@@ -424,6 +424,173 @@ content/packages/content_m2_launch_v1/progression/progression.progression_m2_cha
 content/packages/content_m2_launch_v1/validation/snapshot.val_snapshot_m2_launch_v1.json
 ```
 
+Canonical `manifest.json` example (complete JSON, including explicit package-local payload references required by this section):
+
+```json
+{
+  "package_id": "content_pack_m2_launch",
+  "content_version": "content_m2_launch_v1",
+  "validation_snapshot_version": "val_snapshot_m2_launch_v1",
+  "battle_rules_version": "battle_rules_m2_launch_v1",
+  "board_generator_version": "board_generator_m2_launch_v1",
+  "min_supported_app_version": "0.1.0",
+  "schema_versions": {
+    "manifest_schema": "content-package-manifest.schema.v1",
+    "creature_schema": "creature.schema.v1",
+    "encounter_schema": "encounter.schema.v1",
+    "validation_snapshot_schema": "validation-snapshot.schema.v1"
+  },
+  "asset_pack_version": null,
+  "created_at_utc": "2026-01-15T00:00:00Z",
+  "created_by": "content_authoring_pipeline",
+  "status": "approved",
+  "payload_files": {
+    "creatures": {
+      "starter_friend_v1": "creatures/creature.starter_friend_v1.json"
+    },
+    "encounters": {
+      "enc_starter_001": "encounters/enc_starter_001.json",
+      "enc_meadow_001": "encounters/enc_meadow_001.json",
+      "enc_meadow_002": "encounters/enc_meadow_002.json",
+      "enc_meadow_003": "encounters/enc_meadow_003.json"
+    },
+    "progression": {
+      "progression_m2_chapter_linear_v1": "progression/progression.progression_m2_chapter_linear_v1.json"
+    },
+    "validation": {
+      "val_snapshot_m2_launch_v1": "validation/snapshot.val_snapshot_m2_launch_v1.json"
+    }
+  }
+}
+```
+
+Canonical starter creature file example (`content/packages/content_m2_launch_v1/creatures/creature.starter_friend_v1.json`):
+
+```json
+{
+  "id": "starter_friend_v1",
+  "displayName": "Starter Friend",
+  "encounterType": "standard",
+  "difficultyTier": "gentle",
+  "maxHp": 24,
+  "weakness": "flame",
+  "resistance": "tide",
+  "baseCountdown": 4,
+  "spellIdentity": "starter_arc_burst_v1",
+  "spellPrimitives": [
+    {
+      "kind": "apply_tile_state",
+      "tile_state": "bubble",
+      "target_count": 1,
+      "targeting": "random_eligible"
+    }
+  ],
+  "phaseRules": [],
+  "contentVersion": "content_m2_launch_v1"
+}
+```
+
+Canonical starter encounter file example (`content/packages/content_m2_launch_v1/encounters/enc_starter_001.json`):
+
+```json
+{
+  "id": "enc_starter_001",
+  "creatureId": "starter_friend_v1",
+  "moveBudget": 12,
+  "starPolicyVersion": "star_policy_v1_absolute",
+  "isStarterEncounter": true,
+  "starterTutorialScript": {
+    "guidedFirstCast": {
+      "normalizedWord": "SPARK",
+      "selectedPositions": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        }
+      ],
+      "expectedElement": "flame"
+    },
+    "weaknessTeachingWord": "SPARK",
+    "mustShowCreatureSpellBeforeWin": true
+  },
+  "introFlavorText": "Let us practice one brave first spell.",
+  "damageModelVersion": "damage_model_v1",
+  "rewardDefinition": {
+    "grantsProgressUnlock": 1,
+    "grantsJournalProgress": 1,
+    "grantsCosmeticCurrency": 20
+  },
+  "hiddenBonusWordPolicy": null,
+  "boardConfig": {
+    "rows": 6,
+    "cols": 6,
+    "seedMode": "generated",
+    "fixedSeed": null,
+    "allowWandTiles": true,
+    "wandSpawnRate": 0.1,
+    "maxConcurrentWands": 3,
+    "letterDistributionProfileId": "letter_distribution_v1",
+    "letterWeightEntries": [
+      { "letter": "A", "weight": 8 },
+      { "letter": "B", "weight": 2 },
+      { "letter": "C", "weight": 3 },
+      { "letter": "D", "weight": 4 },
+      { "letter": "E", "weight": 12 },
+      { "letter": "F", "weight": 2 },
+      { "letter": "G", "weight": 3 },
+      { "letter": "H", "weight": 3 },
+      { "letter": "I", "weight": 7 },
+      { "letter": "J", "weight": 1 },
+      { "letter": "K", "weight": 1 },
+      { "letter": "L", "weight": 4 },
+      { "letter": "M", "weight": 3 },
+      { "letter": "N", "weight": 7 },
+      { "letter": "O", "weight": 8 },
+      { "letter": "P", "weight": 3 },
+      { "letter": "Q", "weight": 1 },
+      { "letter": "R", "weight": 6 },
+      { "letter": "S", "weight": 6 },
+      { "letter": "T", "weight": 9 },
+      { "letter": "U", "weight": 3 },
+      { "letter": "V", "weight": 1 },
+      { "letter": "W", "weight": 2 },
+      { "letter": "X", "weight": 1 },
+      { "letter": "Y", "weight": 2 },
+      { "letter": "Z", "weight": 1 }
+    ],
+    "namedLetterPoolId": "v1_default_pool",
+    "vowelClassProfileVersion": "vowel_class_v1",
+    "vowelClassIncludesY": false,
+    "boardQualityPolicy": {
+      "qualityPolicyVersion": "board_quality_v1",
+      "minVowelClassCount": 8
+    }
+  },
+  "balanceMetadata": {
+    "authoredFailRateBand": "low",
+    "shippabilityStatus": "candidate-shippable",
+    "waivers": []
+  },
+  "contentVersion": "content_m2_launch_v1"
+}
+```
+
 Normative determinism rules for this minimum package:
 
 - `manifest.json` `content_version` must be exactly `content_m2_launch_v1` and must match the package directory name.
