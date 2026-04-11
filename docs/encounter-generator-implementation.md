@@ -23,6 +23,17 @@ This document is the source of truth for:
 - validator and simulation responsibilities
 - test and CLI expectations
 
+## Normative precedence
+
+Product-policy authority for what generation is or is not allowed lives in:
+
+- `docs/structured-encounter-generation.md`
+- `docs/encounter-balance-framework.md`
+
+This document defines implementation mechanics (file layout, contracts, pipeline, validation/test tooling, CLI behavior, and failure handling) that must enforce those policy documents.
+
+---
+
 Use this together with:
 
 - `docs/technical-architecture.md`
@@ -463,11 +474,18 @@ Write:
 
 ---
 
-## 9. Flavor generation rules
+## 9. Flavor generation implementation notes
 
-Flavor generation must remain bounded.
+Normative limits for generated names/flavor and allowed sources are defined in:
 
-### 9.1 Approved-source-only rule
+- `docs/structured-encounter-generation.md`:
+  - Section 5, **What the generator is allowed to create**
+  - Section 6, **What the generator may not create**
+  - Section 4.5, **Tone**
+
+This section defines only implementation mechanics for satisfying those rules.
+
+### 9.1 Source wiring
 
 Creature names and intro flavor lines must come from curated banks.
 
@@ -476,12 +494,6 @@ The generator may:
 - choose
 - combine approved fragments if specifically allowed
 - fill stable placeholders
-
-The generator may not:
-
-- use runtime AI
-- scrape external sources
-- free-write lore on the fly
 
 ### 9.2 First implementation recommendation
 
@@ -596,11 +608,15 @@ Generated content becomes real content only after explicit promotion.
 The shipped runtime should not care whether the encounter started life as generated or hand-authored.
 Once approved, it is just content.
 
+Normative promotion/review policy is defined in `docs/structured-encounter-generation.md`, Section 3 (**Two allowed generator modes**).
+
 ---
 
 ## 14. Runtime seeded-trial implementation rules (deferred)
 
 If `runtime_seeded_trial_v1` is implemented later, it must still use the same generator core.
+
+Product gating and intended usage for this mode are defined in `docs/structured-encounter-generation.md`, Section 3.2 (**Mode B — `runtime_seeded_trial_v1`**). Numeric tuning/guardrail policy remains in `docs/encounter-balance-framework.md`.
 
 ### Required architecture
 
