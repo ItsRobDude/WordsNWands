@@ -13,14 +13,18 @@ All M1–M2 authored content, runtime loading, restore snapshots, and determinis
 - `battle_rules_version`: `battle_rules_m2_launch_v1`
 - `board_generator_version`: `board_generator_m2_launch_v1`
 - `progression_version`: `progression_m2_chapter_linear_v1`
-- `starter_board_profile_id`: `board_profile_starter_onboarding_v1`
-- `core_board_profile_id`: `board_profile_core_mainline_v1`
+- M1–M2 canonical board truth lock: encounter-authored inline `boardConfig` values are the only runtime source of truth for board behavior in this lock window.
+
+Editorial labels retained for human review only (non-runtime):
+- starter editorial board label: `board_profile_starter_onboarding_v1`
+- core editorial board label: `board_profile_core_mainline_v1`
 
 Rules:
 
 - Do not ship mixed M1–M2 bundles where any of these pins differ by encounter.
 - Do not advance any one pin without intentional lock update in this file.
 - Runtime records that carry content/version pins must match this lock exactly for M1–M2 content slices.
+- Runtime board loading for M1–M2 must not resolve board behavior through external profile IDs unless `docs/implementation-contracts.md` introduces a formal runtime board-profile artifact contract in a later lock update.
 
 Payload must look like this (manifest pin block example):
 
