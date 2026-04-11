@@ -1475,6 +1475,93 @@ Load-time requirements:
 - `schema_versions.*` identifiers must match known runtime-supported schema IDs (`schema_invalid` on failure)
 - loaders must validate manifest first, then creature/encounter/snapshot payloads; do not partially activate package content on manifest failure
 
+### 8.0.a AssetManifest contract (required for bundled runtime assets)
+
+Runtime bundles that ship creature/spell/UI/audio references must provide a deterministic `AssetManifest`.
+This contract defines stable asset IDs, variant dimensions, static module binding ownership, and fallback behavior.
+
+```ts
+export type AssetNamespace =
+  | 'creature'
+  | 'spell'
+  | 'ui_icon'
+  | 'ui_illustration'
+  | 'audio_sfx'
+  | 'audio_music'
+  | 'vfx';
+
+export interface AssetVariantSelector {
+  theme: 'default' | 'starter' | 'event' | 'boss';
+  density: 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
+  locale: string | null; // BCP-47 (for locale-authored variants only)
+}
+
+export interface AssetManifestEntry {
+  namespace: AssetNamespace;
+  id: string; // slug-like ID, never filesystem path
+  variants: Partial<Record<string, string>>; // variant key -> app-owned static module key
+  fallback_keys: {
+    required_default: string;
+    theme_default: string;
+    density_default: string;
+    locale_default: string;
+  };
+}
+
+export interface RuntimeAssetManifest {
+  manifest_id: string;
+  asset_pack_version: string;
+  entries: AssetManifestEntry[];
+}
+```
+
+ID and namespace requirements:
+
+- `namespace` is mandatory and must be one of the allowed `AssetNamespace` values
+- `id` must be lowercase `snake_case` or `kebab-case` and must not contain `/`, `\\`, `:`, `.`, or URL-like prefixes
+- path-like or file-like identifiers are forbidden (for example `icons/fire.png`, `../spell.wav`, `https://...`)
+- registry key identity is `namespace + ':' + id`
+- `entries` must not contain duplicate registry keys
+
+Variant and fallback requirements:
+
+- variant dimensions are `theme`, `density`, and optional `locale`
+- runtime variant lookup key format is deterministic and app-owned (for example `theme=boss|density=xxhdpi|locale=en-US`)
+- each entry must declare all `fallback_keys` values listed above
+- fallback precedence is strict and must be applied in order:
+  1. exact match (`theme + density + locale` when locale is requested)
+  2. `theme + density + locale_default`
+  3. `theme + density_default + locale_default`
+  4. `theme_default + density_default + locale_default`
+  5. `required_default` (terminal fallback; must always resolve)
+- failure to resolve `required_default` is a hard load failure
+
+Static module binding rule (source map ownership):
+
+- runtime content/docs may define only logical asset registry keys; they must never define bundler import paths
+- `registry key -> require(...)` mapping is owned by app code in a static source map module checked into the client app
+- content packages are not allowed to inject dynamic path resolution
+- app code must validate that every referenced registry key resolves to a statically-bound module key
+
+Validation failure codes (asset manifest + reference integrity):
+
+- `asset_manifest_schema_invalid`: malformed manifest shape, unknown namespace, or illegal ID format
+- `asset_manifest_id_path_forbidden`: ID contains path-like or URL-like segments
+- `asset_manifest_duplicate_registry_key`: duplicate `namespace:id` entries
+- `asset_manifest_variant_missing_required_fallback`: missing one or more required fallback keys
+- `asset_manifest_required_fallback_unresolvable`: `required_default` does not resolve to a static module binding
+- `asset_manifest_reference_missing`: content references registry key absent from `entries`
+- `asset_manifest_binding_missing`: registry key exists in manifest but no app static `require(...)` binding exists
+- `asset_manifest_binding_unused`: static app binding exists but no manifest/content reference uses it
+- `asset_manifest_namespace_mismatch`: content ID mapped to wrong namespace (for example spell content pointing at `creature:*`)
+
+Content ID mapping guidance:
+
+- `RuntimeCreatureDefinition.id` (content `creature_id`) maps to asset registry keys under `creature:<creature_id>`
+- `RuntimeCreatureDefinition.spellIdentity` maps to asset registry keys under `spell:<spellIdentity>`
+- auxiliary UI or audio associations should follow explicit namespace prefixes (`ui_icon:*`, `audio_sfx:*`, etc.)
+- content IDs and asset IDs must stay logical identifiers, never file paths
+
 ### 8.1 Creature definition contract
 
 ```ts
