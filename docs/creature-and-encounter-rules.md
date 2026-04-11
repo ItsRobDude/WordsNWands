@@ -651,10 +651,10 @@ Interpretation rules:
 - Eligibility for a later step is always re-evaluated from that updated board; no step may pre-reserve targets for later steps.
 
 #### 12.2 Shift one row
-Move or rotate one row by one step.
+Move or rotate one row by one step. Direction is required in payloads: `direction: 1` means right, `direction: -1` means left.
 
 #### 12.3 Shift one column
-Move or rotate one column by one step.
+Move or rotate one column by one step. Direction is required in payloads: `direction: 1` means down, `direction: -1` means up.
 
 #### 12.4 Small chained effect
 A creature may combine two small effects if the result remains readable.
