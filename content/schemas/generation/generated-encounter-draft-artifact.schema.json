@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wordsnwands/content/schemas/generation/generated-encounter-draft-artifact.schema.json",
+  "title": "GeneratedEncounterDraftArtifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "draft_id",
+    "request_id",
+    "generator_version",
+    "generator_mode",
+    "generation_seed",
+    "blueprint_id",
+    "target_tier",
+    "content_version_target",
+    "validation_snapshot_version_target",
+    "battle_rules_version_target",
+    "board_generator_version_target",
+    "encounter_definition",
+    "creature_definition",
+    "review_summary",
+    "balance_report"
+  ],
+  "properties": {
+    "draft_id": { "type": "string", "minLength": 1 },
+    "request_id": { "type": "string", "minLength": 1 },
+    "generator_version": { "const": "structured_generation_v1" },
+    "generator_mode": {
+      "type": "string",
+      "enum": ["draft_generate_freeze_v1", "runtime_seeded_trial_v1"]
+    },
+    "generation_seed": { "type": "string", "pattern": "^[a-f0-9]{32}$" },
+    "blueprint_id": { "type": "string", "minLength": 1 },
+    "target_tier": {
+      "type": "string",
+      "enum": ["gentle", "standard", "challenging", "boss", "event"]
+    },
+    "content_version_target": { "type": "string", "minLength": 1 },
+    "validation_snapshot_version_target": { "type": "string", "minLength": 1 },
+    "battle_rules_version_target": { "type": "string", "minLength": 1 },
+    "board_generator_version_target": { "type": "string", "minLength": 1 },
+    "encounter_definition": { "type": "object" },
+    "creature_definition": {
+      "anyOf": [
+        { "type": "object" },
+        { "type": "null" }
+      ]
+    },
+    "review_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "habitat_theme_id",
+        "habitat_display_name",
+        "creature_display_name",
+        "weakness",
+        "resistance",
+        "move_budget",
+        "base_countdown",
+        "max_hp",
+        "spell_identity",
+        "why_it_should_feel_fair",
+        "why_it_matches_wordsnwands"
+      ],
+      "properties": {
+        "habitat_theme_id": { "type": "string", "minLength": 1 },
+        "habitat_display_name": { "type": "string", "minLength": 1 },
+        "creature_display_name": { "type": "string", "minLength": 1 },
+        "weakness": { "type": "string", "minLength": 1 },
+        "resistance": { "type": "string", "minLength": 1 },
+        "move_budget": { "type": "number" },
+        "base_countdown": { "type": "number" },
+        "max_hp": { "type": "number" },
+        "spell_identity": { "type": "string", "minLength": 1 },
+        "why_it_should_feel_fair": { "type": "string", "minLength": 1 },
+        "why_it_matches_wordsnwands": { "type": "string", "minLength": 1 }
+      }
+    },
+    "balance_report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_profile", "derived_values", "validator_findings", "guardrail_status"],
+      "properties": {
+        "expected_profile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["avg_word_length", "weakness_hit_rate", "wand_incidence", "soot_exposure"],
+          "properties": {
+            "avg_word_length": { "type": "number" },
+            "weakness_hit_rate": { "type": "number" },
+            "wand_incidence": { "type": "number" },
+            "soot_exposure": { "type": "number" }
+          }
+        },
+        "derived_values": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "expected_damage_per_cast",
+            "target_casts_to_defeat",
+            "target_spell_count_on_win",
+            "derived_hp",
+            "derived_move_budget",
+            "derived_base_countdown"
+          ],
+          "properties": {
+            "expected_damage_per_cast": { "type": "number" },
+            "target_casts_to_defeat": { "type": "number" },
+            "target_spell_count_on_win": { "type": "number" },
+            "derived_hp": { "type": "number" },
+            "derived_move_budget": { "type": "number" },
+            "derived_base_countdown": { "type": "number" }
+          }
+        },
+        "validator_findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "message", "severity"],
+            "properties": {
+              "code": { "type": "string", "minLength": 1 },
+              "message": { "type": "string", "minLength": 1 },
+              "severity": { "type": "string", "enum": ["info", "warn", "error"] },
+              "json_path": { "type": "string" }
+            }
+          }
+        },
+        "guardrail_status": { "type": "string", "enum": ["pass", "warn", "error"] }
+      }
+    }
+  }
+}

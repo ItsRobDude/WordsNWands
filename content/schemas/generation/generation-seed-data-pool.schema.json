@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wordsnwands/content/schemas/generation/generation-seed-data-pool.schema.json",
+  "title": "GenerationSeedDataPool",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "habitat_pools",
+    "matchup_pair_pools",
+    "name_banks",
+    "flavor_banks",
+    "spell_payload_templates"
+  ],
+  "properties": {
+    "schema_version": { "const": "generation_seed_data_v1" },
+    "habitat_pools": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["habitat_pool_id", "habitats"],
+        "properties": {
+          "habitat_pool_id": { "type": "string", "minLength": 1 },
+          "habitats": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["habitat_theme_id", "display_name", "tags", "allowed_board_profile_ids"],
+              "properties": {
+                "habitat_theme_id": { "type": "string", "minLength": 1 },
+                "display_name": { "type": "string", "minLength": 1 },
+                "tags": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string", "minLength": 1 }
+                },
+                "allowed_board_profile_ids": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "matchup_pair_pools": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pair_pool_id", "pairs"],
+        "properties": {
+          "pair_pool_id": { "type": "string", "minLength": 1 },
+          "pairs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["weakness", "resistance"],
+              "properties": {
+                "weakness": { "type": "string", "minLength": 1 },
+                "resistance": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "name_banks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["bank_id", "associated_blueprint_ids", "names"],
+        "properties": {
+          "bank_id": { "type": "string", "minLength": 1 },
+          "associated_blueprint_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "names": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "flavor_banks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["bank_id", "associated_blueprint_ids", "lines"],
+        "properties": {
+          "bank_id": { "type": "string", "minLength": 1 },
+          "associated_blueprint_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "spell_payload_templates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["template_id", "primitive_kind", "encounter_type", "parameter_policy"],
+        "properties": {
+          "template_id": { "type": "string", "minLength": 1 },
+          "primitive_kind": {
+            "type": "string",
+            "enum": ["apply_tile_state", "shift_row", "shift_column", "chained"]
+          },
+          "encounter_type": { "type": "string", "enum": ["standard", "boss", "event"] },
+          "parameter_policy": { "type": "object" }
+        }
+      }
+    }
+  }
+}
