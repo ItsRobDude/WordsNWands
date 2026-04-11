@@ -17,3 +17,9 @@ export type ElementType =
   | "arcane";
 
 export type NonNeutralElementType = Exclude<ElementType, "arcane">;
+
+export type TileStateKind = "frozen" | "sooted" | "dull" | "bubble";
+
+export type StarPolicyVersion =
+  | "star_policy_v1_absolute"
+  | "star_policy_v2_percentage";
