@@ -90,6 +90,7 @@ const runSingleCast = (
           ),
         },
       }),
+      apply_bubble_rise: ({ board }) => board,
       compute_damage: ({ cast_resolution, encounter_state }) => ({
         cast_resolution,
         creature: encounter_state.creature,
@@ -128,14 +129,25 @@ const runSingleCast = (
       }),
       tick_surviving_tile_states: ({ board }) => board,
       detect_dead_board: () => ({ is_dead_board: false }),
-      run_spark_shuffle_recovery: ({ board, rng_stream_states }) => ({
+      run_spark_shuffle_recovery: ({
+        encounter_state,
         board,
-        rng_stream_states: {
-          ...rng_stream_states,
-          spark_shuffle_stream_state: advanceStream(
-            rng_stream_states.spark_shuffle_stream_state,
-            "shuffle",
-          ),
+        creature,
+        rng_stream_states,
+      }) => ({
+        encounter_state: {
+          ...encounter_state,
+          creature,
+          board: {
+            ...board,
+            rng_stream_states: {
+              ...rng_stream_states,
+              spark_shuffle_stream_state: advanceStream(
+                rng_stream_states.spark_shuffle_stream_state,
+                "shuffle",
+              ),
+            },
+          },
         },
       }),
     },

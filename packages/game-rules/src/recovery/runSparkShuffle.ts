@@ -136,11 +136,17 @@ export const runSparkShuffle = ({
   }
 
   return {
-    encounter_state: {
-      ...encounter_state,
-      board,
-      spark_shuffle_retry_count: retry_count_after,
-    },
+    encounter_state: did_hit_retry_cap
+      ? setRecoverableErrorState({
+          encounter_state,
+          board,
+          retry_count_after,
+        })
+      : {
+          ...encounter_state,
+          board,
+          spark_shuffle_retry_count: retry_count_after,
+        },
     metadata: {
       trigger_reason: "dead_board",
       retries_attempted,

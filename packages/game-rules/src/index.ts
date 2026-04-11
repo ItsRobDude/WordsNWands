@@ -16,6 +16,7 @@ export * from "./board/consumeTiles.js";
 export * from "./board/refillBoard.js";
 export * from "./board/applyBubbleRise.js";
 export * from "./board/hasPlayableWord.js";
+export * from "./board/tickSurvivingTileStates.js";
 
 export * from "./encounter/createEncounterRuntimeState.js";
 export * from "./encounter/validateCastSubmission.js";

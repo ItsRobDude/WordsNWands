@@ -97,10 +97,17 @@ test("applyCreatureSpell returns a new encounter object without mutating input",
 
   assert.deepEqual(encounter_state, original);
   assert.notEqual(result, encounter_state);
-  assert.equal(
-    result.board.tiles.find(
-      (tile) => tile.position.row === 0 && tile.position.col === 0,
-    )?.state,
-    null,
+  const top_row = result.board.tiles
+    .filter((tile) => tile.position.row === 0)
+    .sort((left, right) => left.position.col - right.position.col);
+  const frozen_tiles = result.board.tiles.filter(
+    (tile) => tile.state === "frozen",
   );
+
+  assert.deepEqual(
+    top_row.map((tile) => tile.id),
+    ["b", "a"],
+  );
+  assert.equal(frozen_tiles.length, 1);
+  assert.equal(frozen_tiles[0]?.state_turns_remaining, 2);
 });

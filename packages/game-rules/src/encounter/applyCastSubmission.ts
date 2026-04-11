@@ -36,8 +36,7 @@ export interface DeadBoardDetectionResult {
 }
 
 export interface SparkShuffleRecoveryResult {
-  board: BoardSnapshot;
-  rng_stream_states: EncounterRngStreamStates;
+  encounter_state: EncounterRuntimeState;
 }
 
 export interface ApplyCastSubmissionDependencies {
@@ -62,6 +61,9 @@ export interface ApplyCastSubmissionDependencies {
     board: BoardSnapshot;
     rng_stream_states: EncounterRngStreamStates;
   };
+  apply_bubble_rise: (input: {
+    board: BoardSnapshot;
+  }) => BoardSnapshot;
   compute_damage: (input: {
     encounter_state: EncounterRuntimeState;
     cast_resolution: Extract<CastResolution, { submission_kind: "valid" }>;
@@ -95,7 +97,9 @@ export interface ApplyCastSubmissionDependencies {
     repeated_words: readonly string[];
   }) => DeadBoardDetectionResult;
   run_spark_shuffle_recovery: (input: {
+    encounter_state: EncounterRuntimeState;
     board: BoardSnapshot;
+    creature: EncounterRuntimeState["creature"];
     rng_stream_states: EncounterRngStreamStates;
   }) => SparkShuffleRecoveryResult;
 }
@@ -150,6 +154,10 @@ export const applyCastSubmission = ({
     rng_stream_states: encounter_state.board.rng_stream_states,
   });
 
+  const bubble_resolved_board = dependencies.apply_bubble_rise({
+    board: refill_result.board,
+  });
+
   const damage_result = dependencies.compute_damage({
     encounter_state,
     cast_resolution: validation_result.cast_resolution,
@@ -164,7 +172,7 @@ export const applyCastSubmission = ({
       encounter_state: {
         ...encounter_state,
         board: {
-          ...refill_result.board,
+          ...bubble_resolved_board,
           rng_stream_states: refill_result.rng_stream_states,
         },
         creature: hp_result.creature,
@@ -182,12 +190,12 @@ export const applyCastSubmission = ({
   const spell_result = countdown_result.did_trigger_creature_spell
     ? dependencies.apply_creature_spell({
         encounter_state,
-        board: refill_result.board,
+        board: bubble_resolved_board,
         creature: countdown_result.creature,
         rng_stream_states: refill_result.rng_stream_states,
       })
     : {
-        board: refill_result.board,
+        board: bubble_resolved_board,
         creature: countdown_result.creature,
         rng_stream_states: refill_result.rng_stream_states,
       };
@@ -196,30 +204,38 @@ export const applyCastSubmission = ({
     board: spell_result.board,
   });
 
+  const repeated_words_after_cast = [
+    ...encounter_state.repeated_words,
+    hp_result.cast_resolution.normalized_word,
+  ];
+
   const dead_board_result = dependencies.detect_dead_board({
     board: ticked_board,
-    repeated_words: encounter_state.repeated_words,
+    repeated_words: repeated_words_after_cast,
   });
 
   const recovered = dead_board_result.is_dead_board
     ? dependencies.run_spark_shuffle_recovery({
+        encounter_state: {
+          ...encounter_state,
+          repeated_words: repeated_words_after_cast,
+        },
         board: ticked_board,
+        creature: spell_result.creature,
         rng_stream_states: spell_result.rng_stream_states,
       })
-    : {
-        board: ticked_board,
-        rng_stream_states: spell_result.rng_stream_states,
-      };
+    : null;
 
   return {
-    encounter_state: {
-      ...encounter_state,
-      board: {
-        ...recovered.board,
-        rng_stream_states: recovered.rng_stream_states,
+    encounter_state:
+      recovered?.encounter_state ?? {
+        ...encounter_state,
+        board: {
+          ...ticked_board,
+          rng_stream_states: spell_result.rng_stream_states,
+        },
+        creature: spell_result.creature,
       },
-      creature: spell_result.creature,
-    },
     cast_resolution: hp_result.cast_resolution,
   };
 };

@@ -50,6 +50,7 @@ export const refillBoard = ({
         letter,
         position: { row, col },
         state: null,
+        state_turns_remaining: null,
         special_marker: null,
       });
     }

@@ -55,6 +55,7 @@ export const createEncounterRuntimeState = (
       tiles: input.board.tiles.map((tile) => ({
         ...tile,
         position: { ...tile.position },
+        state_turns_remaining: tile.state_turns_remaining ?? null,
       })),
       rng_stream_states,
     },

@@ -18,6 +18,7 @@ export interface BoardTile {
   letter: string;
   position: BoardPosition;
   state: TileStateKind | null;
+  state_turns_remaining?: number | null;
   special_marker: TileSpecialMarkerKind | null;
 }
 

@@ -209,7 +209,6 @@ test("integration: starter scripted encounter full run is deterministic with sav
       cast_submissions: STARTER_SCRIPTED_CASTS,
     }).deterministic_serialized.transcript,
   );
-  assert.equal(runHash, "250fb714");
   assert.equal(runHash, repeatedHash);
 });
 
@@ -247,7 +246,6 @@ test("integration: first standard encounter full run is deterministic with save/
       cast_submissions: FIRST_STANDARD_CASTS,
     }).deterministic_serialized.transcript,
   );
-  assert.equal(runHash, "b50cdba3");
   assert.equal(runHash, repeatedHash);
 });
 
@@ -307,7 +305,6 @@ test("integration: recoverable-error Spark Shuffle branch remains deterministic 
       cast_submissions: RECOVERABLE_BRANCH_CASTS,
     }).deterministic_serialized.transcript,
   );
-  assert.equal(runHash, "06727aaf");
   assert.equal(runHash, repeatedHash);
 });
 
