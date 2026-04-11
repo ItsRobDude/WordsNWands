@@ -7,3 +7,25 @@
  *   gameplay truth directly in screen/view components.
  */
 export * from "./contracts/index.js";
+
+export * from "./damage/damageModelV1.js";
+
+export * from "./board/createInitialBoard.js";
+export * from "./board/collapseColumns.js";
+export * from "./board/refillBoard.js";
+export * from "./board/applyBubbleRise.js";
+export * from "./board/hasPlayableWord.js";
+
+export * from "./encounter/createEncounterRuntimeState.js";
+export * from "./encounter/validateCastSubmission.js";
+export * from "./encounter/applyCastSubmission.js";
+export * from "./encounter/applyCountdownStep.js";
+
+export * from "./spells/applyTileStatePrimitive.js";
+export * from "./spells/shiftRowPrimitive.js";
+export * from "./spells/shiftColumnPrimitive.js";
+export * from "./spells/applyCreatureSpell.js";
+
+export * from "./recovery/runSparkShuffle.js";
+
+export * from "./results/deriveEncounterOutcome.js";
