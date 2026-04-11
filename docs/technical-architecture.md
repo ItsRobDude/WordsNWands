@@ -30,9 +30,9 @@ This document describes the intended architecture, not a claim that every layer 
 Current repo status as of 2026-04-11:
 
 - `packages/game-rules`, `packages/validation`, and `packages/content` contain the main implemented shared logic
-- `apps/mobile` now contains a first playable vertical slice that routes through starter flow, active encounter, result, and a minimal Home continuation surface using the shared gameplay and validation packages
-- the current mobile slice does not yet realize the full Expo Router, Zustand, SQLite, or persistence architecture described later in this document
-- current implementation note: board input is tap-chained rather than the canonical final swipe gesture, and bundled content is loaded through an app-local adapter because the existing shared file-system loader is Node-only
+- `apps/mobile` now contains a first playable local encounter slice covering starter flow, active encounter, result routing, and a minimal Home continuation surface using the shared gameplay and validation packages
+- the current mobile slice still relies on tap-chained board input rather than the canonical final swipe gesture, and bundled content is loaded through an app-local adapter because the existing shared file-system loader is Node-only
+- the current mobile slice does not yet realize the full Expo Router, Zustand, SQLite-backed restore, or broader persistence architecture described later in this document
 - when current code and target architecture differ, contributors must either align the code or mark the target-only architecture explicitly instead of treating future structure as already shipped
 
 ---

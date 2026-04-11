@@ -13,13 +13,13 @@ If the contracts are vague, the code will drift.
 
 ## Status Note
 
-This file contains both active shared-package contracts and future fuller app/runtime targets.
+This file contains active shared-package contracts, early mobile-slice-facing contracts, and future fuller app/runtime targets.
 
 Rules for keeping it trustworthy:
 
 - when a section defines a currently exported type from `packages/game-rules` or `packages/validation`, that section must match the shipped code exactly
 - future richer shapes are allowed only when they are explicitly called out as target-state rather than written as already-live runtime truth
-- `apps/mobile` now has an early vertical slice, but app-store, restore, and SQLite sections must still distinguish active contracts from fuller target-state architecture that is not yet fully implemented
+- `apps/mobile` now has a first playable local encounter slice, but app-store, restore, and SQLite sections must still distinguish active contracts from fuller target-state architecture that is not yet fully implemented
 
 ---
 

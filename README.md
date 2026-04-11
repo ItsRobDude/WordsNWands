@@ -4,7 +4,8 @@
 
 Words 'n Wands! is an Android-first, portrait-first magical word battle game where players swipe valid words to cast spells.
 This repository is still docs-first, but it is no longer docs-only: shared packages contain working battle, validation, and content-loading pieces, and `apps/mobile` now ships a first playable vertical slice wired into those shared packages.
-The current app slice covers starter flow, an active encounter board, result routing, and a simple Home continuation surface. It still uses tap-chained board input and app-local bundled-content wiring while swipe-native gestures, SQLite restore, and fuller app architecture are still in progress.
+The current app slice is a first playable local encounter loop covering starter flow, an active encounter board, result routing, and a minimal Home continuation surface.
+Current implementation note: it still uses tap-chained board input and app-local bundled-content wiring while canonical swipe input, SQLite-backed save/restore, and the fuller mobile app architecture are still in progress.
 The main goal right now is to keep gameplay rules, UX flow, and implementation contracts aligned.
 Treat focused docs in `docs/` as product truth; this file is a fast entry point.
 For contributor execution rules and scope discipline, read `AGENTS.md`.
