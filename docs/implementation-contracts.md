@@ -1234,6 +1234,68 @@ Milestone gating:
 - Earliest milestone for player-invoked clues is M3.
 - Starter flow remains clue-hidden unless docs are explicitly updated later.
 
+Milestone-gated repeated-loss fail-soft runtime config (required):
+
+```ts
+export type EncounterAssistLevel = 'tip_only' | 'gentle_board_bias' | 'easier_variant';
+
+export interface AssistStarCapBehavior {
+  tip_only: 3; // no star cap reduction
+  gentle_board_bias: 2;
+  easier_variant: 1;
+}
+
+export interface EncounterAssistRuntimePolicyConfig {
+  assist_policy_version: 'assist_policy_v1';
+  enabled_assist_levels: EncounterAssistLevel[];
+  assist_star_cap_behavior: AssistStarCapBehavior;
+}
+
+export interface MilestoneAssistRuntimeConfigMap {
+  M1: EncounterAssistRuntimePolicyConfig;
+  M2: EncounterAssistRuntimePolicyConfig;
+  M3_PLUS: EncounterAssistRuntimePolicyConfig;
+}
+
+export const MILESTONE_ASSIST_RUNTIME_CONFIG: MilestoneAssistRuntimeConfigMap = {
+  M1: {
+    assist_policy_version: 'assist_policy_v1',
+    enabled_assist_levels: ['tip_only'],
+    assist_star_cap_behavior: {
+      tip_only: 3,
+      gentle_board_bias: 2,
+      easier_variant: 1,
+    },
+  },
+  M2: {
+    assist_policy_version: 'assist_policy_v1',
+    enabled_assist_levels: ['tip_only', 'gentle_board_bias'],
+    assist_star_cap_behavior: {
+      tip_only: 3,
+      gentle_board_bias: 2,
+      easier_variant: 1,
+    },
+  },
+  M3_PLUS: {
+    assist_policy_version: 'assist_policy_v1',
+    enabled_assist_levels: ['tip_only', 'gentle_board_bias', 'easier_variant'],
+    assist_star_cap_behavior: {
+      tip_only: 3,
+      gentle_board_bias: 2,
+      easier_variant: 1,
+    },
+  },
+};
+```
+
+Rules:
+
+- Runtime assist behavior must be selected from `MILESTONE_ASSIST_RUNTIME_CONFIG` and must not be hardcoded ad hoc in UI or encounter logic.
+- `assist_policy_version` must be persisted with encounter session snapshots once assist state is present so restores replay the same policy contract.
+- Star-cap resolution for an encounter must apply the minimum cap implied by all assists used in that run.
+- If a level is missing from `enabled_assist_levels`, runtime must treat that level as unavailable even if UI copy exists.
+- `M3_PLUS` is the canonical config for Milestone 3 and every later milestone unless this contract is intentionally revised.
+
 Canonical clue enums:
 
 ```ts

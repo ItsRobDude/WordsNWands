@@ -371,6 +371,12 @@ Trigger thresholds (same encounter, consecutive losses):
 - loss #3: optional gentle board bias for the next attempt only
 - loss #4: optional easier variant for the next attempt only
 
+Milestone enablement (authoritative):
+
+- **M1:** tip-only enabled; no mechanical assist tiers are enabled.
+- **M2:** tip-only and gentle board bias enabled; easier variant disabled.
+- **M3+:** full fail-soft contract enabled (tip-only, gentle board bias, easier variant).
+
 Allowed assist forms in encounter logic:
 
 - one-time strategy tip (non-mechanical by itself)
