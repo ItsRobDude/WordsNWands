@@ -150,8 +150,12 @@ For `mirror_competition_v1`, ranking order is:
 4. fewer successful casts used
 5. tie
 
+`completion_time_ms` must not be used as a ranking dimension or tie-break dimension for `mirror_competition_v1`.
+It is analytics telemetry only and may be used for difficulty/flow analysis, not competitive ordering.
+
 ### Tie rule
 If all ranking criteria match, the result is a tie.
+Exact ties remain ties for `mirror_competition_v1`; no additional hidden or derived tie-break dimension is allowed.
 
 The game should not invent a hidden tie-breaker beyond the canonical list above unless this document is intentionally updated.
 
