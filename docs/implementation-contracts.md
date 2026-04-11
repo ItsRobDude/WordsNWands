@@ -628,6 +628,12 @@ Rules:
   2. if still dead board, terminate encounter into recoverable error state with retry CTA
 - retry-cap unrecoverable termination must set `session_state = 'recoverable_error'` and `terminal_reason_code = 'spark_shuffle_retry_cap_unrecoverable'`
 - retry-cap fallback must preserve fairness: no additional move consumption and no countdown decrement/reset
+- deterministic emergency regeneration must consume randomness from the same deterministic lineage as Spark Shuffle recovery: use the active `spark_shuffle` substream state at retry-cap hit as branch input, derive emergency-attempt states deterministically from that branch input, and persist resulting state transitions in encounter snapshot/runtime traces.
+- deterministic emergency regeneration must construct candidate boards in canonical row-major slot order (`row 0 col 0` → `row 5 col 5`) with deterministic per-slot letter then Wand assignment ordering matching section 5.3/board generation semantics.
+- emergency-regeneration acceptance predicate is strict: a candidate board is accepted only if `hasPlayableWord(...)` returns `true` using the encounter’s active `validation_snapshot_version_pin` lookup instance.
+- emergency regeneration retries are bounded by canonical config and must terminate deterministically: once retry budget is exhausted without acceptance, transition encounter to `recoverable_error` with `terminal_reason_code = 'spark_shuffle_retry_cap_unrecoverable'`.
+- telemetry for this branch must capture deterministic debug/fairness fields at minimum: `spark_shuffle_retries_attempted`, `spark_shuffle_retry_cap_hit`, `spark_shuffle_fallback_outcome`, `emergency_regen_attempt_count`, `emergency_regen_acceptance_result`, and active `validation_snapshot_version_pin`.
+- if product introduces “guaranteed anchor words,” the anchor lexicon must be a versioned runtime content artifact explicitly pinned to `validation_snapshot_version_pin`; runtime must not source anchors from an implicit/external “top-1000” list.
 
 Concrete example:
 
