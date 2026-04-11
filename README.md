@@ -45,6 +45,21 @@ When docs conflict, resolve deliberately and document the decision with the conf
 - **Deep reference** (read only the area you are changing): `docs/game-rules.md`, `docs/word-validation-and-element-rules.md`, `docs/screens-and-session-flow.md`, `docs/implementation-contracts.md`, `docs/randomness-and-seeding-contract.md`, `docs/technical-architecture.md`, `docs/milestone-implementation-plan.md`, `docs/first-shippable-content-pack.md`, `docs/challenge-and-boss-layer.md`, `docs/async-competition-rules.md`.
 
 
+## Clean-room implementation path
+
+This is the recommended order for implementing the first working slice from zero.
+
+1. [identity](docs/project-identity.md)
+2. [game rules](docs/game-rules.md)
+3. [screen/session flow](docs/screens-and-session-flow.md)
+4. [word validation](docs/word-validation-and-element-rules.md)
+5. [creature/encounter rules](docs/creature-and-encounter-rules.md)
+6. [technical architecture](docs/technical-architecture.md)
+7. [implementation contracts](docs/implementation-contracts.md)
+8. [milestone locks](docs/milestone-locked-constants.md)
+9. [first shippable content pack](docs/first-shippable-content-pack.md)
+
+
 
 ## Contribution flow
 1. Read `AGENTS.md` and `docs/engineering-standards.md`.
