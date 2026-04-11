@@ -643,6 +643,7 @@ These effects should remain readable and animated clearly enough that the player
 Current standard movement direction:
 
 - shift/rotate effects move by exactly 1 position with wraparound
+- direction is explicit in spell payloads: `shift_row` uses `direction: 1` for right and `-1` for left; `shift_column` uses `direction: 1` for down and `-1` for up
 - tile states and Wand markers move with the tile
 - creature row/column movement resolves before player control returns
 

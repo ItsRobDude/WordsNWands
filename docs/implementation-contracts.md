@@ -750,6 +750,7 @@ export interface ShiftRowPrimitive {
   row_index: number;
   mode: 'rotate';
   distance: 1;
+  direction: 1 | -1; // canonical: 1 = right, -1 = left
 }
 
 export interface ShiftColumnPrimitive {
@@ -757,6 +758,7 @@ export interface ShiftColumnPrimitive {
   col_index: number;
   mode: 'rotate';
   distance: 1;
+  direction: 1 | -1; // canonical: 1 = down, -1 = up
 }
 
 export interface ChainedSpellPrimitive {
@@ -904,8 +906,8 @@ Primitive parameter contract:
 | Primitive ID | Required params | Optional params | Allowed range / values |
 | --- | --- | --- | --- |
 | `apply_tile_state` | `kind`, `tile_state`, `target_count`, `targeting` | none | `tile_state ∈ {'frozen','sooted','dull','bubble'}`; `targeting ∈ {'random_eligible','authored_pattern'}`; `target_count` integer `>= 1` |
-| `shift_row` | `kind`, `row_index`, `mode`, `distance` | none | `row_index` integer `0-5`; `mode = 'rotate'`; `distance = 1` |
-| `shift_column` | `kind`, `col_index`, `mode`, `distance` | none | `col_index` integer `0-5`; `mode = 'rotate'`; `distance = 1` |
+| `shift_row` | `kind`, `row_index`, `mode`, `distance`, `direction` | none | `row_index` integer `0-5`; `mode = 'rotate'`; `distance = 1`; `direction ∈ {1, -1}` where `1 = right`, `-1 = left` |
+| `shift_column` | `kind`, `col_index`, `mode`, `distance`, `direction` | none | `col_index` integer `0-5`; `mode = 'rotate'`; `distance = 1`; `direction ∈ {1, -1}` where `1 = down`, `-1 = up` |
 | `chained` | `kind`, `steps` | none | `steps.length >= 2`; each step must be one of `apply_tile_state`, `shift_row`, `shift_column`; nested `chained` is illegal |
 
 #### 6.5.2 Intensity tiers mapped to numeric constraints
@@ -932,6 +934,7 @@ Canonical content-validator error codes:
 | `spell_schema_unknown_primitive` | Primitive `kind` not in canonical primitive IDs | Prevents unsupported runtime behavior |
 | `spell_schema_missing_required_param` | Required parameter absent or null | Prevents ambiguous spell execution |
 | `spell_schema_param_out_of_range` | Numeric or enum parameter violates section 6.5.1 bounds | Prevents illegal board mutation semantics |
+| `spell_schema_shift_direction_missing_or_invalid` | `shift_row`/`shift_column` missing `direction` or `direction ∉ {1,-1}` | Prevents ambiguous horizontal/vertical movement semantics |
 | `spell_schema_nested_chain_forbidden` | A `chained` step contains another `chained` primitive | Enforces readability and deterministic evaluation |
 | `spell_balance_tiles_exceed_error_band` | Affected-tile total exceeds encounter error band | Maps to `CER-STATE-002`/`CER-STATE-004`/`CER-STATE-005` limits |
 | `spell_balance_chain_exceed_error_band` | Chain extra-step count exceeds encounter error band | Maps to `CER-CHAIN-002`/`CER-CHAIN-004`/`CER-CHAIN-005` limits |
@@ -991,7 +994,7 @@ Boss encounter spell (chained, within boss bounds):
     {
       "kind": "chained",
       "steps": [
-        { "kind": "shift_row", "row_index": 2, "mode": "rotate", "distance": 1 },
+        { "kind": "shift_row", "row_index": 2, "mode": "rotate", "distance": 1, "direction": 1 },
         {
           "kind": "apply_tile_state",
           "tile_state": "frozen",
@@ -1019,7 +1022,7 @@ Event encounter spell (curated unusual mix, still schema-valid):
   "encounter_type": "event",
   "intensity_tier": "event_curated_pressure",
   "primitives": [
-    { "kind": "shift_column", "col_index": 4, "mode": "rotate", "distance": 1 },
+    { "kind": "shift_column", "col_index": 4, "mode": "rotate", "distance": 1, "direction": -1 },
     {
       "kind": "apply_tile_state",
       "tile_state": "bubble",
