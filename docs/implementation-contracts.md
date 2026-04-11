@@ -2337,6 +2337,25 @@ Persistence and progression application rules:
 - on outcome `lost`, do not change `encounter_progress_records.best_star_rating`
 - progression unlock semantics remain `win_any_stars` (`1|2|3` on win unlocks next canonical encounter) regardless of `star_policy_version`; losses (`0` stars) do not unlock and replays must not relock
 
+### 9.1.c Terminal result commit transaction order
+
+Terminal encounter commit is a single atomic write transaction. Implementations must execute the following steps in strict order:
+
+1. Derive terminal outcome and `terminal_reason_code`.
+2. Derive `star_rating` using the active `star_policy_version`.
+3. Insert `encounter_result_records`.
+4. Update `encounter_progress_records`.
+5. Apply reward/currency/journal/first-clear and star-improvement deltas atomically.
+6. Update or clear `active_encounter_snapshots` according to terminal state policy.
+7. Set restore target behavior to `result` for terminal sessions.
+
+Transaction/rollback contract:
+
+- Steps 1-7 must occur inside one database write transaction boundary for the terminal commit unit.
+- If any step fails, the entire transaction must roll back; partial writes are forbidden.
+- No side table (`encounter_result_records`, `encounter_progress_records`, profile rewards/currency/journal, first-clear flags, star-improvement updates, `active_encounter_snapshots`) may remain mutated after rollback.
+- Replay/retry behavior must be idempotent at the commit boundary: rerunning a failed terminal commit attempt must either produce one fully committed result set or no persisted changes.
+
 ### 9.2 Mainline win transition rules
 
 When a mainline encounter resolves with outcome `won`:
