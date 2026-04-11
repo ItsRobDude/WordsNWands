@@ -1336,6 +1336,64 @@ Rules:
 - `clue_cooldown_successful_casts_remaining` tracks cooldown in units of successful valid casts.
 - `clue_star_cap_from_usage` is null before clue use; then records strict cap (`2` after `reveal_starter_letter` or `highlight_legal_path`, `1` after `reroll_local_tiles`) and always resolves to the minimum cap seen so far.
 
+Canonical deterministic candidate-selection contract for:
+- `reveal_starter_letter`
+- `highlight_legal_path`
+
+```ts
+export interface ClueWordCandidate {
+  normalized_word: string;
+  path: BoardPosition[]; // ordered cast path
+  length: number;
+}
+```
+
+Selection pipeline rules:
+
+1. Candidate enumeration order:
+   - enumerate start positions in row-major order (`row` asc, `col` asc)
+   - enumerate neighbor expansion using this fixed order:
+     1) `(-1, -1)` 2) `(-1, 0)` 3) `(-1, +1)` 4) `(0, -1)` 5) `(0, +1)` 6) `(+1, -1)` 7) `(+1, 0)` 8) `(+1, +1)`
+   - paths must be non-reusing and length `>= 3`
+2. Candidate filtering precedence (required order):
+   - tile-state eligibility filter (reject path containing unselectable tile states; v1 includes Frozen)
+   - lexicon-validity filter (`ValidationSnapshotLookup.hasWord(normalized_word)`)
+   - repeated-word filter (`normalized_word` must be absent from `EncounterRuntimeState.repeated_words`)
+3. Priority sort (on surviving candidates):
+   - length descending
+   - normalized word lexical ascending (`a`..`z`)
+   - path board-position tuple ascending by first differing `(row, col)`
+4. Canonical selection:
+   - selected candidate is sorted `index 0`
+   - `reveal_starter_letter` reveals `selected.path[0]`
+   - `highlight_legal_path` highlights `selected.path`
+5. RNG usage:
+   - both actions consume zero RNG draws
+   - no RNG stream label is used for this pipeline in v1
+   - encounter RNG stream state must remain unchanged after candidate resolution for these actions
+
+Worked example fixture (QA lock):
+
+- board rows:
+  - row 0: `S T O N E .`
+  - row 1: `G L O W . .`
+  - row 2: `. . . . . .`
+  - row 3: `. . . . . .`
+  - row 4: `. . . . . .`
+  - row 5: `. . . . . .`
+- active castable words include `stone`, `glow`
+- `repeated_words = []`
+- no blocking tile state on any candidate tile
+
+Candidate set after filtering:
+- `stone` path `[(0,0),(0,1),(0,2),(0,3),(0,4)]` length `5`
+- `glow` path `[(1,0),(1,1),(1,2),(1,3)]` length `4`
+
+Canonical chosen result:
+- selected candidate: `stone`
+- `reveal_starter_letter` output tile: `(0,0)` (`S`)
+- `highlight_legal_path` output path: `[(0,0),(0,1),(0,2),(0,3),(0,4)]`
+
 Required persisted profile-level clue economy counters:
 
 ```ts

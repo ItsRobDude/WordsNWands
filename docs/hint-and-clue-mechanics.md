@@ -86,6 +86,76 @@ All clue actions share these global constraints:
 - Clue use cannot bypass terminal encounter commit; denied after win/loss/recoverable_error state commit.
 - Clue effects must be derived from current legal-board truth (no stale precomputed hints from earlier board snapshots).
 
+### 3.5 Canonical candidate selection order (`reveal_starter_letter`, `highlight_legal_path`)
+
+To lock deterministic clue behavior across runtime, persistence, analytics, and QA, both clue actions use the exact same candidate-selection pipeline.
+
+#### 3.5.1 Candidate enumeration order
+- Enumerate candidate words by scanning board start positions in **row-major** order (`row` ascending, then `col` ascending).
+- For each start position, enumerate legal adjacency paths using deterministic neighbor iteration order:
+  1. up-left `(-1, -1)`
+  2. up `(-1, 0)`
+  3. up-right `(-1, +1)`
+  4. left `(0, -1)`
+  5. right `(0, +1)`
+  6. down-left `(+1, -1)`
+  7. down `(+1, 0)`
+  8. down-right `(+1, +1)`
+- Paths cannot reuse tiles, must satisfy minimum length (`>= 3`), and must produce a normalized dictionary-valid word for the active validation snapshot.
+
+#### 3.5.2 Filtering precedence (tile-state then repeated-word)
+For each enumerated candidate path, apply filters in this strict order:
+1. **Tile-state selection eligibility filter:** reject paths containing any currently unselectable tile state (v1: Frozen).
+2. **Lexicon validity filter:** reject paths whose normalized word is not castable in the active snapshot.
+3. **Repeated-word filter:** reject paths whose normalized word exists in encounter `repeated_words`.
+
+Filter ordering is mandatory and must not be reordered by optimization shortcuts.
+
+#### 3.5.3 Priority sort (for remaining candidates)
+Sort surviving candidates by this comparator chain:
+1. **Word length:** descending (longer first).
+2. **Normalized lexical order:** ascending (`a`..`z`).
+3. **Board-position order:** path tuple order ascending by first differing `(row, col)` pair.
+
+After sorting, the first candidate (`index 0`) is canonical.
+
+#### 3.5.4 Action-specific chosen output
+- `reveal_starter_letter`: reveal the first tile (`path[0]`) of canonical candidate `index 0`.
+- `highlight_legal_path`: highlight the full path of canonical candidate `index 0`.
+
+#### 3.5.5 RNG usage and stream label
+- `reveal_starter_letter` and `highlight_legal_path` consume **zero RNG draws**.
+- No RNG stream label is used for candidate selection in v1.
+- Implementations must not advance any encounter RNG stream state while resolving these two clue actions.
+
+#### 3.5.6 Worked example (QA lock)
+
+Board (`.` means irrelevant filler for this example):
+
+| r\c | 0 | 1 | 2 | 3 | 4 | 5 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 0 | S | T | O | N | E | . |
+| 1 | G | L | O | W | . | . |
+| 2 | . | . | . | . | . | . |
+| 3 | . | . | . | . | . | . |
+| 4 | . | . | . | . | . | . |
+| 5 | . | . | . | . | . | . |
+
+Assumptions for this locked example:
+- Legal words in active snapshot include `stone` and `glow`.
+- `repeated_words = []`.
+- No tile has a blocking state (no Frozen tiles).
+
+Valid candidate set after filtering:
+- `STONE`, path `[(0,0),(0,1),(0,2),(0,3),(0,4)]`, length `5`
+- `GLOW`, path `[(1,0),(1,1),(1,2),(1,3)]`, length `4`
+
+Sorted winner is `STONE` (longer word).
+
+Canonical action outputs:
+- `reveal_starter_letter` reveals tile `(0,0)` letter `S`.
+- `highlight_legal_path` highlights `[(0,0),(0,1),(0,2),(0,3),(0,4)]`.
+
 ---
 
 ## 4. Economy Guardrails
