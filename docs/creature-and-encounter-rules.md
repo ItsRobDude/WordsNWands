@@ -402,6 +402,10 @@ UI tone and messaging requirements:
 - assist prompts must be optional, calm, and non-judgmental
 - messaging must avoid blame language (“struggling”, “failing badly”, etc.)
 - messaging should preserve agency (“Try a gentler version” / “Keep standard challenge”)
+- approved loss-#2 (`tip_only`) strategy message id: `assist.tip.arcane_refresh_when_weakness_unclear`
+  - use when weakness words are not obvious: encourage longer Arcane casts to refresh board state and surface new options
+  - keep wording neutral and supportive (no blame framing)
+  - selection point: assign this copy id when the loss-#2 assist payload is created for the next attempt so UI and content resolution stay consistent across restore/replay
 
 Reset rules:
 
