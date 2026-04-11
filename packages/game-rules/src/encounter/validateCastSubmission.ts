@@ -1,3 +1,9 @@
+import {
+  normalizeWord,
+  resolveElementForWord,
+  type ValidationSnapshotLookup,
+} from "../../../validation/src/index.ts";
+
 import type { EncounterRuntimeState } from "../contracts/board.js";
 import type { CastResolution, CastSubmission } from "../contracts/cast.js";
 import type {
@@ -11,8 +17,7 @@ import { applyCountdownStep } from "./applyCountdownStep.ts";
 export interface ValidateCastSubmissionInput {
   encounter_state: EncounterRuntimeState;
   submission: CastSubmission;
-  has_word: (normalized_word: string) => boolean;
-  resolve_element?: (normalized_word: string) => ElementType;
+  validation_lookup: ValidationSnapshotLookup;
   compute_damage?: (input: {
     normalized_word: string;
     word_length: number;
@@ -31,8 +36,7 @@ const DEFAULT_MINIMUM_WORD_LENGTH = 3;
 export const validateCastSubmission = ({
   encounter_state,
   submission,
-  has_word,
-  resolve_element,
+  validation_lookup,
   compute_damage,
   minimum_word_length = DEFAULT_MINIMUM_WORD_LENGTH,
 }: ValidateCastSubmissionInput): ValidateCastSubmissionResult => {
@@ -74,7 +78,7 @@ export const validateCastSubmission = ({
     };
   }
 
-  if (!has_word(normalized_word)) {
+  if (!validation_lookup.hasWord(normalized_word)) {
     return {
       cast_resolution: {
         submission_kind: "invalid",
@@ -94,7 +98,8 @@ export const validateCastSubmission = ({
     };
   }
 
-  const element = resolve_element?.(normalized_word) ?? "arcane";
+  const element =
+    resolveElementForWord(normalized_word, validation_lookup) ?? "arcane";
   const matchup_result = resolveMatchupResult({
     element,
     encounter_state,
@@ -132,12 +137,6 @@ export const validateCastSubmission = ({
     normalized_word,
   };
 };
-
-const normalizeWord = (value: string): string =>
-  value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z]/g, "");
 
 const validatePath = (
   positions: readonly BoardPosition[],

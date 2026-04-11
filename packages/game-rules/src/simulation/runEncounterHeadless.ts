@@ -1,7 +1,11 @@
+import {
+  resolveElementForWord,
+  type ValidationSnapshotLookup,
+} from "../../../validation/src/index.ts";
+
 import type { EncounterRuntimeState } from "../contracts/board.ts";
 import type { CastResolution, CastSubmission } from "../contracts/cast.ts";
 import type {
-  ElementType,
   EncounterSessionState,
   EncounterTerminalReasonCode,
 } from "../contracts/core.ts";
@@ -23,8 +27,7 @@ export interface HeadlessEncounterDefinition {
     "unopened" | "intro_presented" | "in_progress"
   >;
   validation: {
-    has_word: (normalized_word: string) => boolean;
-    resolve_element?: (normalized_word: string) => ElementType;
+    validation_lookup: ValidationSnapshotLookup;
     minimum_word_length?: number;
   };
 }
@@ -113,13 +116,15 @@ export const runEncounterHeadless = ({
           validateCastSubmission({
             encounter_state: current_state,
             submission,
-            has_word: encounter.validation.has_word,
-            resolve_element: encounter.validation.resolve_element,
+            validation_lookup: encounter.validation.validation_lookup,
             minimum_word_length: encounter.validation.minimum_word_length,
           }),
         resolve_element_and_wand: ({ submission, normalized_word }) => ({
           element:
-            encounter.validation.resolve_element?.(normalized_word) ?? "arcane",
+            resolveElementForWord(
+              normalized_word,
+              encounter.validation.validation_lookup,
+            ) ?? "arcane",
           used_wand_tile: submission.selected_positions.some((position) => {
             const tile = before_state.board.tiles.find(
               (candidate) =>
@@ -186,9 +191,7 @@ export const runEncounterHeadless = ({
           is_dead_board: !hasPlayableWord({
             board,
             repeated_words,
-            validation_lookup: {
-              hasWord: encounter.validation.has_word,
-            },
+            validation_lookup: encounter.validation.validation_lookup,
           }),
         }),
         run_spark_shuffle_recovery: ({ board, rng_stream_states }) => {
