@@ -1921,7 +1921,7 @@ export interface EasierVariantMechanicalOverrides {
 
 export interface ActiveEncounterAssistState {
   active_level: EncounterAssistLevel | null;
-  tip_copy_id: string | null; // stable copy key for loss-#2 one-time strategy tip
+  tip_copy_id: string | null; // stable copy key selected on loss-#2 path for one-time strategy tip
   tip_text: string | null; // optional resolved fallback copy payload when id lookup is unavailable
   mechanical_overrides: EasierVariantMechanicalOverrides | null;
 }
@@ -1969,6 +1969,10 @@ Rules:
 - This section is the implementation-level runtime counterpart to `docs/creature-and-encounter-rules.md` section **"Repeated-loss assistance contract (encounter layer)"**; both docs must stay semantically aligned.
 - Runtime must materialize `ActiveEncounterAssistState` per encounter attempt; this state is reset/recomputed when a new attempt begins.
 - loss-#2 (`tip_only`) contract: `active_level = 'tip_only'`, exactly one of (`tip_copy_id`, `tip_text`) should be populated for that attempt-level payload, and `mechanical_overrides` must remain `null`.
+- loss-#2 (`tip_only`) copy-id selection point: choose `tip_copy_id` when the loss-#2 assist state is created for the next attempt (not lazily at UI render time) so restore/replay and content resolution stay deterministic.
+- approved `tip_only` strategy copy id (weakness-obscured board state): `assist.tip.arcane_refresh_when_weakness_unclear`.
+  - canonical meaning: when weakness words are not obvious, use longer Arcane casts to refresh board state and surface new options.
+  - tone constraint: wording must remain optional, calm, and non-judgmental.
 - loss-#3 (`gentle_board_bias`) contract is deterministic and one-attempt scoped:
   - allowed parameter change: temporarily raise `RuntimeBoardConfig.boardQualityPolicy.minVowelClassCount` by `+1` for that attempt only.
   - clamp rule: effective value is `min(baseMinVowelClassCount + 1, rows * cols)` where base comes from authored encounter runtime config.
