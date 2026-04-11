@@ -485,6 +485,41 @@ The player should understand cause and effect.
 
 If the order becomes visually scrambled, the game will feel unfair even when the logic is correct.
 
+### 12.3 Cast-window overlap and serialization contract (normative)
+During a single valid-cast resolution window, feedback channels must follow this strict policy:
+
+1. **Channels that may overlap (micro-feedback):**
+   - tile consume FX
+   - matchup flash (weakness/neutral/resist)
+   - Wand badge pulse
+   - damage number pop
+2. **Channels that must stay serialized (state-commit feedback):**
+   - HP bar commit
+   - countdown commit
+   - phase-transition banner
+3. **Single authoritative cast audio event:**
+   - each cast window may emit only one primary success-impact audio event
+   - if multiple success sub-events are present (e.g., Wand + weakness), choose the highest-priority event and suppress lower-priority stacked impact layers for that window
+4. **Overlap window and cutoff when events compete:**
+   - max overlap window for micro-feedback channels: **220ms** from first consume burst
+   - when a competing event starts beyond that window, late micro-feedback should hard-cut (or 60ms max fade) instead of extending the stack
+5. **Phase-change interrupt/merge rule (same-cast heavy hit):**
+   - if phase change is triggered by the same cast as a heavy hit, heavy-hit micro-feedback may complete only inside the overlap window
+   - then transition to serialized commits (HP, countdown), and finally phase-transition banner
+   - do not run heavy-hit impact loop and phase banner simultaneously
+
+Worked timeline example — **6-letter cast + Wand + weakness + phase change**:
+
+- `t=0ms`: valid cast confirm + tile consume starts
+- `t=40ms`: weakness matchup flash + Wand badge pulse start (overlap allowed)
+- `t=90ms`: damage number pops; authoritative audio chooses **weakness-heavy-hit** variant (Wand audio layer suppressed)
+- `t=0–220ms`: micro-feedback overlap window active
+- `t=220ms`: all remaining micro-feedback tails cut/faded out (<=60ms)
+- `t=230ms`: HP bar commit begins (serialized commit channel)
+- `t=430ms`: countdown commit begins after HP commit readability beat
+- `t=600ms`: phase-transition banner enters (no heavy-hit loop active)
+- `t=900ms+`: phase state settles; return to normal post-cast flow
+
 ---
 
 ## 13. Sound Design Direction
