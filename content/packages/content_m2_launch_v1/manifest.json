@@ -1,0 +1,31 @@
+{
+  "package_id": "content_pack_m2_launch",
+  "content_version": "content_m2_launch_v1",
+  "validation_snapshot_version": "val_snapshot_m2_launch_v1",
+  "battle_rules_version": "battle_rules_m2_launch_v1",
+  "board_generator_version": "board_generator_m2_launch_v1",
+  "progression_version": "progression_m2_chapter_linear_v1",
+  "min_supported_app_version": "0.1.0",
+  "schema_versions": {
+    "manifest_schema": "content-package-manifest.schema.v1",
+    "encounter_schema": "encounter.schema.v1",
+    "progression_schema": "progression.schema.v1",
+    "validation_snapshot_schema": "validation-snapshot.schema.v1"
+  },
+  "asset_pack_version": null,
+  "created_at_utc": "2026-04-11T00:00:00Z",
+  "created_by": "manual_content_authoring",
+  "status": "draft",
+  "payload_files": {
+    "encounters": {
+      "enc_starter_001": "encounters/enc_starter_001.json",
+      "enc_meadow_001": "encounters/enc_meadow_001.json"
+    },
+    "progression": {
+      "progression_m2_chapter_linear_v1": "progression/progression.progression_m2_chapter_linear_v1.json"
+    },
+    "validation": {
+      "val_snapshot_m2_launch_v1": "validation/snapshot.val_snapshot_m2_launch_v1.json"
+    }
+  }
+}

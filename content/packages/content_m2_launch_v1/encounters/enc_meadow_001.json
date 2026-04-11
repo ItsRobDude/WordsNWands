@@ -1,0 +1,82 @@
+{
+  "id": "enc_meadow_001",
+  "contentVersion": "content_m2_launch_v1",
+  "creature": {
+    "id": "creature_cinder_cub_001",
+    "displayName": "Cinder Cub",
+    "encounterType": "standard",
+    "difficultyTier": "standard",
+    "maxHp": 72,
+    "weakness": "tide",
+    "resistance": "flame",
+    "baseCountdown": 5,
+    "spellIdentity": "spell_ash_puff_v1",
+    "spellPrimitives": [
+      "apply_tile_state",
+      "tile_state:sooted",
+      "target_count:2",
+      "targeting:random_eligible"
+    ]
+  },
+  "encounter": {
+    "id": "enc_meadow_001",
+    "creatureId": "creature_cinder_cub_001",
+    "moveBudget": 10,
+    "isStarterEncounter": false,
+    "starterTutorialScript": null,
+    "introFlavorText": "Cinder Cub kicks up warm ash when it gets excited. A cool-headed spell will calm it down.",
+    "damageModelVersion": "damage_model_v1",
+    "rewardDefinition": null,
+    "hiddenBonusWordPolicy": null,
+    "boardConfig": {
+      "rows": 6,
+      "cols": 6,
+      "seedMode": "generated",
+      "fixedSeed": null,
+      "allowWandTiles": true,
+      "wandSpawnRate": 0.06,
+      "maxConcurrentWands": 2,
+      "letterDistributionProfileId": "letter_distribution_core_mainline_v1",
+      "letterWeightEntries": [
+        { "letter": "A", "weight": 9 },
+        { "letter": "B", "weight": 2 },
+        { "letter": "C", "weight": 4 },
+        { "letter": "D", "weight": 4 },
+        { "letter": "E", "weight": 12 },
+        { "letter": "F", "weight": 2 },
+        { "letter": "G", "weight": 3 },
+        { "letter": "H", "weight": 3 },
+        { "letter": "I", "weight": 8 },
+        { "letter": "J", "weight": 1 },
+        { "letter": "K", "weight": 1 },
+        { "letter": "L", "weight": 5 },
+        { "letter": "M", "weight": 3 },
+        { "letter": "N", "weight": 6 },
+        { "letter": "O", "weight": 8 },
+        { "letter": "P", "weight": 3 },
+        { "letter": "Q", "weight": 1 },
+        { "letter": "R", "weight": 6 },
+        { "letter": "S", "weight": 6 },
+        { "letter": "T", "weight": 7 },
+        { "letter": "U", "weight": 4 },
+        { "letter": "V", "weight": 1 },
+        { "letter": "W", "weight": 2 },
+        { "letter": "X", "weight": 1 },
+        { "letter": "Y", "weight": 2 },
+        { "letter": "Z", "weight": 1 }
+      ],
+      "namedLetterPoolId": "core_mainline_default_pool_v1",
+      "vowelClassProfileVersion": "vowel_class_v1",
+      "vowelClassIncludesY": false,
+      "boardQualityPolicy": {
+        "qualityPolicyVersion": "board_quality_mainline_v1",
+        "minVowelClassCount": 10
+      }
+    },
+    "balanceMetadata": {
+      "authoredFailRateBand": "low",
+      "waivers": [],
+      "shippabilityStatus": "candidate-shippable"
+    }
+  }
+}
