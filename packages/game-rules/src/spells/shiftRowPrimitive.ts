@@ -5,6 +5,10 @@ export const shiftRowPrimitive = (
   board: BoardSnapshot,
   primitive: ShiftRowPrimitive,
 ): BoardSnapshot => {
+  if (primitive.mode !== "rotate" || primitive.distance !== 1) {
+    return board;
+  }
+
   const row_tiles = board.tiles.filter(
     (tile) => tile.position.row === primitive.row_index,
   );
@@ -18,7 +22,7 @@ export const shiftRowPrimitive = (
   );
 
   const rotated_row_tiles =
-    primitive.direction === "right"
+    primitive.direction === 1
       ? [
           sorted_row_tiles[sorted_row_tiles.length - 1],
           ...sorted_row_tiles.slice(0, -1),
