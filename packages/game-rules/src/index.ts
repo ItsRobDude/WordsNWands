@@ -6,4 +6,4 @@
  * - Presentation layers should call APIs from this package rather than embedding
  *   gameplay truth directly in screen/view components.
  */
-export {};
+export * from "./contracts/index.js";

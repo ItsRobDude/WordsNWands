@@ -6,4 +6,4 @@
  * - UI code should consume validation APIs from this package, not duplicate
  *   acceptance logic in screens/components.
  */
-export {};
+export * from "./contracts/index.js";
