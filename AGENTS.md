@@ -5,6 +5,13 @@ This file defines **how contributors should work**, not full product design.
 For high-level product identity and experience goals, use `README.md`.
 For domain truth (battle rules, validation, encounters, UX flow, architecture), use focused docs in `docs/`.
 
+## Quick Start (read before coding)
+- Combat math / damage / turn order: open `docs/implementation-contracts.md` first, then `docs/game-rules.md`.
+- UX timing / input lock / interaction flow: open `docs/screens-and-session-flow.md` first.
+- RNG parity / seed determinism: open `docs/randomness-and-seeding-contract.md` first.
+- Rewards / stars / progression economy: open `docs/progression-economy-and-monetization.md` first.
+- Word validation / normalization / element tagging: open `docs/word-validation-and-element-rules.md` first.
+
 ## Why this file is short
 
 Short guidance is easier to keep accurate. A compact operating guide reduces copy drift, keeps responsibilities clear, and prevents stale narrative from competing with source-of-truth docs.
