@@ -151,7 +151,7 @@ The first shippable pack does **not** require the broader roadmap to be player-f
 ### Included player-facing content
 
 - `enc_starter_001`
-- `chapter_sunspell_meadow_001`
+- `chapter_1_meadow`
   - `enc_meadow_001`
   - `enc_meadow_002`
   - `enc_meadow_003`
@@ -192,9 +192,12 @@ This pack uses the existing early progression truth:
 
 ### Visible chapter in this pack
 
-- `chapter_id`: `chapter_sunspell_meadow_001`
+- `chapter_id`: `chapter_1_meadow`
 - `display_name`: `Sunspell Meadow`
 - `habitat_theme_id`: `habitat_sunspell_meadow_v1`
+
+ID convention note:
+- use explicit stable machine IDs like `chapter_1_meadow` and keep magical player-facing names in `display_name` (for example, `Sunspell Meadow`)
 
 ### Chapter order in this pack
 
