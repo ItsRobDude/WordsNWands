@@ -1530,6 +1530,10 @@ export interface ActiveEncounterSnapshotRecord {
   active_assist_state_json: string | null; // serialized ActiveEncounterAssistState for current attempt
   cosmetic_currency_balance_snapshot: number;
   cosmetic_unlock_records_json_snapshot: string; // JSON array of CosmeticUnlockRecord values mirrored from PlayerProfileRecord
+  starter_tutorial_current_stage: StarterTutorialCueStage;
+  starter_tutorial_block_state: StarterTutorialBlockState;
+  starter_tutorial_completed_stages_json: string; // JSON array of StarterTutorialCueStage values mirrored from PlayerProfileRecord
+  starter_tutorial_last_interrupted_stage: StarterTutorialCueStage;
   last_surface: AppPrimarySurface;
   created_at_utc: string;
   updated_at_utc: string;
@@ -1546,10 +1550,10 @@ Rules:
 - `spark_shuffle_retry_cap`, `spark_shuffle_retries_attempted`, and `spark_shuffle_fallback_outcome` are required restore/debug fields for Spark Shuffle retry-cap traces
 - `assist_policy_version` and `active_assist_state_json` are required once repeated-loss assist state exists for an attempt and must preserve one-attempt assist behavior across warm/cold restore.
 - `cosmetic_currency_balance_snapshot` and `cosmetic_unlock_records_json_snapshot` must mirror the latest persisted profile cosmetic state at snapshot write time.
+- `starter_tutorial_current_stage`, `starter_tutorial_block_state`, `starter_tutorial_completed_stages_json`, and `starter_tutorial_last_interrupted_stage` must mirror `player_profile_records` at snapshot write time so hard-resume can restore the exact cue/blocking state from a single deterministic restore payload.
 - this table stores exact restore truth, not a lossy summary
 - a terminal `session_state` may still remain here briefly until the result screen is acknowledged and cleanup rules run
 - restore must prefer this snapshot over guessed screen history
-- starter tutorial cue state fields in this table must mirror the latest persisted profile/tutorial state at snapshot write time so hard-resume behavior is deterministic.
 
 ---
 
