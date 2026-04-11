@@ -1727,6 +1727,7 @@ export interface RuntimeEncounterDefinition {
   id: string;
   creatureId: string;
   moveBudget: number;
+  starPolicyVersion: StarPolicyVersion;
   isStarterEncounter: boolean;
   starterTutorialScript: RuntimeStarterTutorialScript | null;
   introFlavorText: string | null;
@@ -1748,6 +1749,11 @@ Rules:
 - this strict first-cast element rule preserves deterministic onboarding intent: first guided success should immediately reinforce that element choice changes battle outcomes
 - this contract is onboarding truth and does not define player-invoked hint/clue behavior (M1-M2 ship with no player-invoked hint/clue runtime contract)
 - `damageModelVersion` is required encounter authoring metadata for every balance-derived encounter and must currently be `'damage_model_v1'`
+- `starPolicyVersion` is the canonical star-rating policy input for encounter results and must be passed to section 9.1.b `deriveStarRating(...)` as `star_policy_version`
+- for M1-M2, `standard` encounters default to `star_policy_v1_absolute` unless a documented standard-policy migration intentionally changes the default
+- `boss` and `event` encounters must explicitly author `starPolicyVersion` (no implied inheritance from standard defaults)
+- omission of `starPolicyVersion` for `boss`/`event` content is an authoring/validation failure and runtime must not silently fall back
+- `starPolicyVersion` routing and defaults must align with `docs/game-rules.md` section 13 ("Current star-rating direction" and "Boss/event star-policy routing rule")
 - `hiddenBonusWordPolicy` is optional and encounter-bound; when present it must select from a themed lexicon subset using deterministic seeded selection for that encounter only
 - `hiddenBonusWordPolicy.maxClaimsPerEncounter` is locked to `1`; runtime must guard against multiple claims in the same encounter session
 - hidden bonus discovery is reward-side flavor only and must not alter damage, move consumption, creature countdown behavior, or board mutation/collapse/refill semantics
