@@ -197,6 +197,7 @@ This pack uses the existing early progression truth:
 - `chapter_id`: `chapter_1_meadow`
 - `display_name`: `Sunspell Meadow`
 - `habitat_theme_id`: `habitat_sunspell_meadow_v1`
+- `sort_index`: `1`
 
 ID convention note:
 - use explicit stable machine IDs like `chapter_1_meadow` and keep magical player-facing names in `display_name` (for example, `Sunspell Meadow`)
@@ -299,7 +300,7 @@ It should not force journal/currency/bonus-reward UI before those layers are rea
 - `balanceMetadata`:
   - `authoredFailRateBand = low`
   - `waivers = []`
-  - `shippabilityStatus` remains lifecycle-driven until metrics exist
+  - `shippabilityStatus = candidate-shippable`
 
 ### Starter board-profile rules
 
@@ -382,7 +383,7 @@ Never framed as a “real enemy.”
 - `balanceMetadata`:
   - `authoredFailRateBand = low`
   - `waivers = []`
-  - `shippabilityStatus` remains lifecycle-driven until metrics exist
+  - `shippabilityStatus = candidate-shippable`
 
 ### Encounter purpose
 
@@ -439,7 +440,7 @@ The player should leave thinking:
 - `balanceMetadata`:
   - `authoredFailRateBand = low`
   - `waivers = []`
-  - `shippabilityStatus` remains lifecycle-driven until metrics exist
+  - `shippabilityStatus = candidate-shippable`
 
 ### Encounter purpose
 
@@ -500,7 +501,7 @@ The first ship should reward learning recognizable patterns.
 - `balanceMetadata`:
   - `authoredFailRateBand = medium`
   - `waivers = []`
-  - `shippabilityStatus` remains lifecycle-driven until metrics exist
+  - `shippabilityStatus = candidate-shippable`
 
 ### Encounter purpose
 
