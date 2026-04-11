@@ -510,6 +510,7 @@ The resolution pipeline below is mandatory for every **validated cast** (`submis
     - if matchup is `weakness`, keep countdown unchanged (`countdown_after = countdown_before`)
     - otherwise decrement countdown by `1`
 15. If countdown reaches `0`, resolve creature spell and reset countdown to creature base countdown.
+    - ordering lock: if the same valid cast both (a) leaves creature HP above `0`, (b) reaches countdown `0`, and (c) consumes the final remaining move, creature spell resolution from this step still executes before terminal loss finalization.
 16. Decrement durations for surviving (non-consumed) negative tile states after cast resolution:
     - Frozen: decrement after this successful cast; clear when duration reaches `0`
     - Sooted: decrement after this successful cast; clear when duration reaches `0`
@@ -523,6 +524,7 @@ The resolution pipeline below is mandatory for every **validated cast** (`submis
     - each retry must preserve `moves_remaining` and `current_countdown` (zero move change, zero countdown change)
     - on retry-cap hit, run fallback sequence: deterministic emergency board regeneration branch, then recoverable-error encounter end + retry CTA if still dead
 19. Finalize post-resolution state (`moves_remaining`, `repeated_words`, board snapshot, countdown_after, did_win/did_lose flags).
+    - terminal-loss ordering lock: in the final-move edge case above, set `did_lose`/terminal loss during this finalize step only after step-15 creature spell resolution is complete.
 
 Worked example (Dull + Sooted + weakness candidate):
 
