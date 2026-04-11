@@ -66,7 +66,7 @@ Baseline for all code tasks:
 
 | If the task involves... | Also read... |
 | --- | --- |
-| battle rules, move budget, win/loss rules, damage formula, turn flow, collapse/refill order, special tiles | `docs/game-rules.md`, `docs/word-validation-and-element-rules.md` |
+| battle rules, move budget, win/loss rules, damage formula, turn flow, collapse/refill order, special tiles | `docs/implementation-contracts.md`, `docs/game-rules.md`, `docs/word-validation-and-element-rules.md` |
 | word acceptance, normalization, repeated-word policy, dictionary scope, element tagging, Arcane fallback | `docs/word-validation-and-element-rules.md` |
 | creature HP, weaknesses/resistances, countdowns, spells, tile states, encounter balance | `docs/creature-and-encounter-rules.md`, `docs/game-rules.md` |
 | screen layout, swipe interaction, onboarding, battle HUD, results, pause/resume, animation order | `docs/screens-and-session-flow.md`; add `docs/audio-visual-style-guide.md` and `docs/accessibility-localization-and-device-support.md` if visuals/motion/sound/haptics are involved |
@@ -76,8 +76,9 @@ Baseline for all code tasks:
 | M1-M2 version pins, authorized content bundles, or deterministic fixtures | `docs/early-content-lock.md`, `docs/milestone-locked-constants.md` |
 | validation snapshot/bootstrap setup or fixture refresh workflows (not gameplay-rule or balance changes) | `docs/validation-snapshot-bootstrap-playbook.md`, `docs/engineering-standards.md` (for command/contract alignment) |
 | product identity, tone boundaries, design pillars, or vision-level decision framing | `docs/project-identity.md` |
-| player-facing semantic text, exact UI copy, names, labels, tone rules | `docs/copy-locks-and-voice-guide.md` if it exists; otherwise use `README.md` and conservative tone assumptions |
-| challenge schedules, daily/weekly structure, content release flow, encounter curation | `docs/content-pipeline-and-liveops.md`, `docs/milestone-implementation-plan.md`, `docs/challenge-and-boss-layer.md`; add `docs/encounter-generator-implementation.md` when building or modifying encounter-generation tooling (policy remains in `docs/structured-encounter-generation.md`) |
+| player-facing semantic text, exact UI copy, names, labels, tone rules | `docs/copy-locks-and-voice-guide.md` if it exists; otherwise use `docs/project-identity.md` and conservative tone assumptions |
+| challenge schedules, daily/weekly structure, content release flow, encounter curation | `docs/content-pipeline-and-liveops.md`, `docs/milestone-implementation-plan.md`, `docs/challenge-and-boss-layer.md` |
+| encounter-generation policy or encounter-generator tooling implementation details | `docs/structured-encounter-generation.md`, `docs/encounter-generator-implementation.md` |
 | first external-quality content slice, ship-no-apology criteria, M2 content readiness gates | `docs/first-shippable-content-pack.md` |
 | hints, rewards, ads, purchases, cosmetics, boosters, retention systems | `docs/progression-economy-and-monetization.md` |
 | sound, haptics, visual tone, icon style, typography, spacing, animation behavior | `docs/audio-visual-style-guide.md`, `docs/accessibility-localization-and-device-support.md` |
