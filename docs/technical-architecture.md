@@ -354,6 +354,17 @@ Likely early route groups include:
 
 The exact route names may evolve, but the structure should stay small and obvious.
 
+### 9.4 Static asset registry requirement (React Native/Expo)
+Runtime visual assets must be resolved through a compile-time registry map (for example, `id -> require(...)`) instead of dynamic runtime path construction.
+
+Rules:
+
+- content IDs such as `creature_id` and `spell_identity` are lookup keys only; they must never be treated as file paths
+- registry lookups must resolve bundled assets through static module references compatible with React Native/Expo bundling
+- missing registry keys must fail content validation in tooling and use a safe runtime fallback visual if an invalid payload still reaches the device
+
+This requirement must stay aligned with the runtime content ID contracts in `docs/implementation-contracts.md` section [8. Runtime Content Definition Contracts](./implementation-contracts.md#8-runtime-content-definition-contracts).
+
 ---
 
 ## 10. Gameplay Truth Architecture
