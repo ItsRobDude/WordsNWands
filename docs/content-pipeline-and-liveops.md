@@ -456,7 +456,7 @@ Examples of acceptable reward types later:
 - journal progress
 - profile flair
 - side-collection progress
-- bonus stars or side-grade recognition
+- capped clue charges or other side-grade recognition (non-star)
 
 Rewards should not become mandatory power gates.
 

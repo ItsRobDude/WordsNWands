@@ -891,11 +891,10 @@ The player should not feel that the whole game collapses into calendar homework.
 ### Reward rule
 If daily or weekly challenge content exists, it may offer small rewards such as:
 
-- bonus stars
+- profile flair
 - creature journal progress
 - small cosmetic currency
-- profile flair
-- optional side-collection progress
+- capped clue charges
 
 These systems should support return play without becoming the only meaningful progression.
 
