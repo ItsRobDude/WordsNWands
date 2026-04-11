@@ -1216,6 +1216,8 @@ Rules:
 - `starterTutorialScript` is required when `isStarterEncounter = true`
 - `starterTutorialScript` must be `null` for non-starter encounters
 - `guidedFirstCast.selectedPositions` must map to canonical `cue_01_trace_word` behavior in starter cue flow
+- `guidedFirstCast.expectedElement` is intentionally restricted to `NonNeutralElementType`; the first guided cast must teach a concrete weakness/resistance-facing element, not Arcane fallback
+- this strict first-cast element rule preserves deterministic onboarding intent: first guided success should immediately reinforce that element choice changes battle outcomes
 - this contract is onboarding truth and does not define player-invoked hint/clue behavior (M1-M2 ship with no player-invoked hint/clue runtime contract)
 - `damageModelVersion` is required encounter authoring metadata for every balance-derived encounter and must currently be `'damage_model_v1'`
 - `RuntimeEncounterDefinition` intentionally has no Spark Shuffle countdown/move override field in v1; runtime must apply the global Spark Shuffle pressure rule from section 5.6 without per-encounter guessing
