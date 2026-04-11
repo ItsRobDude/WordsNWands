@@ -219,6 +219,8 @@ A word is castable only if all of the following are true:
 - it is not already rejected by a more specific encounter rule
 - it has not already been cast earlier in the same encounter under the repeat rule
 
+For candidate-cast rejection precedence, apply checks in this fixed order: tile-state unselectable (`blocked_by_tile_state`) -> lexicon validity (`not_in_lexicon`) -> repeated-word (`repeated_word`) so product semantics stay aligned with implementation contracts and clue filtering.
+
 ### Minimum-length rule
 For v1, castable words must contain at least **3 letters**.
 
