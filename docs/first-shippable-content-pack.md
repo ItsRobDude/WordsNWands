@@ -208,6 +208,33 @@ ID convention note:
 2. `enc_meadow_002`
 3. `enc_meadow_003`
 
+Canonical authored progression payload requirement for this pack:
+
+```json
+{
+  "progression_version": "progression_m2_chapter_linear_v1",
+  "topology": "chapter_linear_v1",
+  "starter_encounter_id": "enc_starter_001",
+  "chapters": [
+    {
+      "chapter_id": "chapter_1_meadow",
+      "display_name": "Sunspell Meadow",
+      "habitat_theme_id": "habitat_sunspell_meadow_v1",
+      "sort_index": 1,
+      "encounter_ids": [
+        "enc_meadow_001",
+        "enc_meadow_002",
+        "enc_meadow_003"
+      ]
+    }
+  ]
+}
+```
+
+No implied ordering is allowed for authored progression JSON in this pack:
+- chapter order is canonicalized by explicit `sort_index`
+- encounter order is canonicalized by `encounter_ids[]` sequence
+
 ### Next-action surface expectations
 
 After starter win:
@@ -300,7 +327,7 @@ It should not force journal/currency/bonus-reward UI before those layers are rea
 - `balanceMetadata`:
   - `authoredFailRateBand = low`
   - `waivers = []`
-  - `shippabilityStatus = candidate-shippable`
+  - `shippabilityStatus = shippable`
 
 ### Starter board-profile rules
 
@@ -383,7 +410,7 @@ Never framed as a “real enemy.”
 - `balanceMetadata`:
   - `authoredFailRateBand = low`
   - `waivers = []`
-  - `shippabilityStatus = candidate-shippable`
+  - `shippabilityStatus = shippable`
 
 ### Encounter purpose
 
@@ -440,7 +467,7 @@ The player should leave thinking:
 - `balanceMetadata`:
   - `authoredFailRateBand = low`
   - `waivers = []`
-  - `shippabilityStatus = candidate-shippable`
+  - `shippabilityStatus = shippable`
 
 ### Encounter purpose
 
@@ -501,7 +528,7 @@ The first ship should reward learning recognizable patterns.
 - `balanceMetadata`:
   - `authoredFailRateBand = medium`
   - `waivers = []`
-  - `shippabilityStatus = candidate-shippable`
+  - `shippabilityStatus = shippable`
 
 ### Encounter purpose
 
