@@ -1,0 +1,13 @@
+{
+  "name": "@words-n-wands/content",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "node -e \"console.log('content lint placeholder')\"",
+    "typecheck": "node -e \"console.log('content typecheck placeholder')\"",
+    "test": "node -e \"console.log('content test placeholder')\"",
+    "build": "node -e \"console.log('content build placeholder')\"",
+    "format": "node -e \"console.log('content format placeholder')\""
+  }
+}
