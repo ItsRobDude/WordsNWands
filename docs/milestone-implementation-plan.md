@@ -37,7 +37,8 @@ Current repo status as of 2026-04-11:
 
 - root workspace/setup tooling is in the Milestone 0 foundation shape
 - shared packages (`packages/game-rules`, `packages/validation`, `packages/content`) contain partial Milestone 1-style implementation work
-- `apps/mobile` is still effectively pre-vertical-slice and does not yet satisfy the Milestone 1 app/runtime definition of done
+- `apps/mobile` now contains a first playable vertical slice wired into the shared gameplay and validation packages
+- the current mobile slice still does not satisfy the full Milestone 1 app/runtime definition of done because canonical swipe input, SQLite-backed save/restore, and the fuller app architecture are still in progress
 
 When contributors compare code to this plan, they should treat missing app-layer work as not-yet-built milestone scope unless code or docs explicitly claim the feature is already shipped.
 

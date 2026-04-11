@@ -19,7 +19,7 @@ Rules for keeping it trustworthy:
 
 - when a section defines a currently exported type from `packages/game-rules` or `packages/validation`, that section must match the shipped code exactly
 - future richer shapes are allowed only when they are explicitly called out as target-state rather than written as already-live runtime truth
-- `apps/mobile` is still pre-vertical-slice, so app-store and SQLite sections must not imply more implementation coverage than the repo actually has today
+- `apps/mobile` now has an early vertical slice, but app-store, restore, and SQLite sections must still distinguish active contracts from fuller target-state architecture that is not yet fully implemented
 
 ---
 
