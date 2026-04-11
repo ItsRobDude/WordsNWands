@@ -1,7 +1,30 @@
+import type { ValidationSnapshotLookup } from "../../../../validation/src/index.ts";
+
 import type { HeadlessEncounterDefinition } from "../runEncounterHeadless.ts";
 
-const starterLexicon = new Set(["cab", "bad", "dab"]);
-const standardLexicon = new Set(["face", "cafe", "deaf"]);
+const createValidationLookup = (
+  words: readonly string[],
+): ValidationSnapshotLookup => {
+  const entries = new Map(
+    words.map((word) => [
+      word,
+      { normalized_word: word, element: "flame" as const },
+    ]),
+  );
+
+  return {
+    snapshot_version: "headless_fixture_snapshot",
+    metadata: {
+      snapshot_version: "headless_fixture_snapshot",
+      language: "en",
+      word_count: entries.size,
+      tagged_word_count: entries.size,
+      generated_at_utc: "2026-04-11T00:00:00.000Z",
+    },
+    hasWord: (normalizedWord) => entries.has(normalizedWord),
+    getEntry: (normalizedWord) => entries.get(normalizedWord) ?? null,
+  };
+};
 
 export const starterEncounterFixture: HeadlessEncounterDefinition = {
   encounter_session_id: "starter-session-001",
@@ -56,8 +79,7 @@ export const starterEncounterFixture: HeadlessEncounterDefinition = {
   move_budget_total: 2,
   session_state: "in_progress",
   validation: {
-    has_word: (normalized_word) => starterLexicon.has(normalized_word),
-    resolve_element: () => "flame",
+    validation_lookup: createValidationLookup(["cab", "bad", "dab"]),
   },
 };
 
@@ -114,7 +136,6 @@ export const firstStandardEncounterFixture: HeadlessEncounterDefinition = {
   move_budget_total: 1,
   session_state: "in_progress",
   validation: {
-    has_word: (normalized_word) => standardLexicon.has(normalized_word),
-    resolve_element: () => "flame",
+    validation_lookup: createValidationLookup(["face", "cafe", "deaf"]),
   },
 };

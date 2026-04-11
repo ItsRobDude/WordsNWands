@@ -95,8 +95,21 @@ test("runEncounterHeadless terminal reason semantics parity for won, lost, and r
     encounter: {
       ...firstStandardEncounterFixture,
       validation: {
-        has_word: (normalized_word) => normalized_word === "zzz",
-        resolve_element: () => "flame",
+        validation_lookup: {
+          snapshot_version: "test",
+          metadata: {
+            snapshot_version: "test",
+            language: "en",
+            word_count: 1,
+            tagged_word_count: 1,
+            generated_at_utc: "2026-04-11T00:00:00.000Z",
+          },
+          hasWord: (normalized_word) => normalized_word === "zzz",
+          getEntry: (normalized_word) =>
+            normalized_word === "zzz"
+              ? { normalized_word: "zzz", element: "flame" }
+              : null,
+        },
       },
     },
     cast_submissions: [

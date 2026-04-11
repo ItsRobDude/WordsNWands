@@ -11,5 +11,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --test",
     "build": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@words-n-wands/validation": "workspace:*"
   }
 }

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import type { ValidationSnapshotLookup } from "../../../../validation/src/index.ts";
+
 import type { EncounterRuntimeState } from "../../contracts/board.js";
 import { validateCastSubmission } from "../validateCastSubmission.ts";
 
@@ -62,6 +64,25 @@ const createEncounterState = (): EncounterRuntimeState => ({
   updated_at_utc: "2026-04-11T00:00:00.000Z",
 });
 
+const createLookup = (): ValidationSnapshotLookup => ({
+  snapshot_version: "test",
+  metadata: {
+    snapshot_version: "test",
+    language: "en",
+    word_count: 1,
+    tagged_word_count: 1,
+    generated_at_utc: "2026-04-11T00:00:00.000Z",
+  },
+  hasWord: (normalizedWord) =>
+    normalizedWord === "cab" || normalizedWord === "abc",
+  getEntry: (normalizedWord) =>
+    normalizedWord === "abc"
+      ? { normalized_word: "abc", element: "flame" }
+      : normalizedWord === "cab"
+        ? { normalized_word: "cab", element: "flame" }
+        : null,
+});
+
 test("validateCastSubmission returns repeated for repeated words", () => {
   const encounter_state = createEncounterState();
 
@@ -75,7 +96,7 @@ test("validateCastSubmission returns repeated for repeated words", () => {
       ],
       traced_word_display: "CAB",
     },
-    has_word: () => true,
+    validation_lookup: createLookup(),
   });
 
   assert.equal(result.cast_resolution.submission_kind, "repeated");
@@ -99,14 +120,12 @@ test("validateCastSubmission deterministic valid output and no mutation", () => 
   const first = validateCastSubmission({
     encounter_state,
     submission,
-    has_word: () => true,
-    resolve_element: () => "flame",
+    validation_lookup: createLookup(),
   });
   const second = validateCastSubmission({
     encounter_state,
     submission,
-    has_word: () => true,
-    resolve_element: () => "flame",
+    validation_lookup: createLookup(),
   });
 
   assert.deepEqual({ encounter_state, submission }, before);
