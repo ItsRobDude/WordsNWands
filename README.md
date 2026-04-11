@@ -32,6 +32,7 @@ Start with `docs/engineering-standards.md` for coding and validation contract.
 Then read only the focused docs for your task area (battle rules, RNG, UX, economy, etc.) using `AGENTS.md` section 2.
 Implementation and runtime boundaries: `docs/implementation-contracts.md` + `docs/technical-architecture.md`.
 Gameplay and validation semantics: `docs/game-rules.md` + `docs/word-validation-and-element-rules.md`.
+Encounter generation governance: use `docs/structured-encounter-generation.md` for product policy and `docs/encounter-generator-implementation.md` for engineering/tool construction details.
 When docs conflict, resolve deliberately and document the decision with the conflict template from `AGENTS.md`.
 
 
