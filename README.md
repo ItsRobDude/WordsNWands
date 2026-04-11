@@ -59,6 +59,31 @@ This is the recommended order for implementing the first working slice from zero
 8. [milestone locks](docs/milestone-locked-constants.md)
 9. [first shippable content pack](docs/first-shippable-content-pack.md)
 
+## Full implementation reference path (start-to-finish)
+
+If your goal is to build the complete game shape described in docs (not just the first playable slice), use this path in order and follow milestone activation gates:
+
+1. [project identity](docs/project-identity.md)
+2. [milestone implementation plan](docs/milestone-implementation-plan.md)
+3. [engineering standards](docs/engineering-standards.md)
+4. [game rules](docs/game-rules.md)
+5. [screen/session flow](docs/screens-and-session-flow.md)
+6. [word validation + elements](docs/word-validation-and-element-rules.md)
+7. [creature + encounter rules](docs/creature-and-encounter-rules.md)
+8. [randomness + seeding contract](docs/randomness-and-seeding-contract.md)
+9. [technical architecture](docs/technical-architecture.md)
+10. [implementation contracts](docs/implementation-contracts.md)
+11. [milestone-locked constants](docs/milestone-locked-constants.md)
+12. [encounter balance framework](docs/encounter-balance-framework.md)
+13. [first shippable content pack](docs/first-shippable-content-pack.md)
+14. [content pipeline + liveops](docs/content-pipeline-and-liveops.md)
+15. [challenge + boss layer](docs/challenge-and-boss-layer.md)
+16. [hint + clue mechanics](docs/hint-and-clue-mechanics.md)
+17. [async competition rules](docs/async-competition-rules.md)
+18. [progression economy + monetization](docs/progression-economy-and-monetization.md)
+19. [analytics + experimentation](docs/analytics-and-experimentation.md)
+
+For visuals and motion work, include [audio-visual style guide](docs/audio-visual-style-guide.md) and [accessibility/localization/device support](docs/accessibility-localization-and-device-support.md) before implementation.
 
 
 ## Contribution flow

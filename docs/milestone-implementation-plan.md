@@ -94,6 +94,7 @@ These docs may be created just before the milestone that needs them, but they mu
 - `docs/content-pipeline-and-liveops.md`
 - `docs/progression-economy-and-monetization.md`
 - `docs/analytics-and-experimentation.md`
+- `docs/hint-and-clue-mechanics.md` (required before enabling any player-invoked clue surface in Milestone 3+)
 
 If a milestone depends on a missing doc, create or finalize that doc before serious coding starts for that milestone.
 
