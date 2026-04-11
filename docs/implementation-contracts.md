@@ -11,7 +11,7 @@ If the contracts are vague, the code will drift.
 
 ---
 
-## 1. Contract Stability Rules
+## 1. Contract Stability Rules *(Active in M1)*
 
 - Contract names and field names in this file are **stable** once used in production code.
 - Additive change is preferred over breaking change.
@@ -36,7 +36,18 @@ then it belongs in a stable contract here rather than being redefined ad hoc in 
 
 ---
 
-## 2. Core Shared Type Contracts
+### Scope badge legend
+
+- **Active in M1**: normative and in current implementation scope for Milestone 1.
+- **Active in M2**: normative and in current implementation scope for Milestone 2.
+- **Reserved for M3+**: normative reference only unless explicitly activated by `docs/milestone-implementation-plan.md`.
+- **Reserved post-M2**: normative reference only unless explicitly activated by `docs/milestone-implementation-plan.md`.
+
+Reserved sections remain normative references but are not implementation scope for the current milestone unless explicitly activated in `docs/milestone-implementation-plan.md`.
+
+---
+
+## 2. Core Shared Type Contracts *(Active in M1)*
 
 These contracts define the stable shared vocabulary used across app, gameplay, validation, and persistence layers.
 
@@ -140,7 +151,7 @@ Rules:
 
 ---
 
-## 3. Canonical Encounter State Contracts
+## 3. Canonical Encounter State Contracts *(Active in M1)*
 
 These contracts describe canonical encounter state and transition legality.
 
@@ -311,7 +322,7 @@ Global invariants for all phases:
 
 ---
 
-## 4. Board and Battle Runtime Contracts
+## 4. Board and Battle Runtime Contracts *(Active in M1)*
 
 These interfaces define the canonical battle-state shape consumed by app and shared logic.
 
@@ -459,7 +470,7 @@ Rules:
 
 ---
 
-## 5. Cast and Resolution Contracts
+## 5. Cast and Resolution Contracts *(Active in M1)*
 
 These contracts describe how a cast submission and its result are represented between gameplay, persistence, and UI.
 
@@ -1054,7 +1065,7 @@ Mapping-extension rule:
 
 ---
 
-## 6. Spell Primitive Contracts
+## 6. Spell Primitive Contracts *(Active in M1)*
 
 Creature spells should be built from a small reusable primitive library.
 
@@ -1366,7 +1377,7 @@ Event encounter spell (curated unusual mix, still schema-valid):
 
 ---
 
-## 7. Persisted SQLite Entity Contracts
+## 7. Persisted SQLite Entity Contracts *(Active in M1)*
 
 These are canonical entity names and required fields for local persistence.
 
@@ -1557,11 +1568,11 @@ Rules:
 
 ---
 
-## 8. Runtime Content Definition Contracts
+## 8. Runtime Content Definition Contracts *(Active in M1)*
 
 These interfaces define the stable runtime shapes for bundled encounter content.
 
-### 8.0 Content package manifest load contract (required fields)
+### 8.0 Content package manifest load contract (required fields) *(Active in M1)*
 
 Runtime content loaders must require and validate these manifest fields before any creature/encounter/validation payload is activated:
 
@@ -1601,7 +1612,7 @@ Load-time requirements:
 - `schema_versions.*` identifiers must match known runtime-supported schema IDs (`schema_invalid` on failure)
 - loaders must validate manifest first, then creature/encounter/snapshot payloads; do not partially activate package content on manifest failure
 
-### 8.0.a AssetManifest contract (required for bundled runtime assets)
+### 8.0.a AssetManifest contract (required for bundled runtime assets) *(Active in M1)*
 
 Runtime bundles that ship creature/spell/UI/audio references must provide a deterministic `AssetManifest`.
 This contract defines stable asset IDs, variant dimensions, static module binding ownership, and fallback behavior.
@@ -1791,7 +1802,7 @@ Canonical fallback-chain example for requested selector `theme=starter|density=x
 3. Density fallback hit: `theme=starter|density=default|locale=default`
 4. (Steps 4-5 not reached once step 3 resolves)
 
-### 8.1 Creature definition contract
+### 8.1 Creature definition contract *(Active in M1)*
 
 ```ts
 export interface RuntimeCreatureDefinition {
@@ -1810,7 +1821,7 @@ export interface RuntimeCreatureDefinition {
 }
 ```
 
-### 8.2 Encounter definition contract
+### 8.2 Encounter definition contract *(Active in M1)*
 
 ```ts
 export interface RuntimeStarterTutorialScript {
@@ -1869,7 +1880,7 @@ Rules:
 - any authored out-of-band balance value with `warn` severity requires an active waiver entry
 - `error` severity out-of-band values are never auto-waived by content-only metadata; they require explicit governance exception handling outside ordinary authoring flow
 
-#### 8.2.a Player assist action gating contract (M1-M2 and later)
+#### 8.2.a Player assist action gating contract (M1-M2 and later) *(Active in M2)*
 
 Milestone gating:
 
@@ -2084,7 +2095,7 @@ Rules:
 - paid and non-paid clue charges draw from the same encounter runtime budget constraints.
 - If clue-economy lock values change, update `docs/milestone-locked-constants.md` section 3.3.e first, then mirror the updated values here in the same change.
 
-#### 8.2.b Encounter balance metadata and waiver contract
+#### 8.2.b Encounter balance metadata and waiver contract *(Active in M2)*
 
 ```ts
 export interface RuntimeEncounterBalanceMetadata {
@@ -2106,7 +2117,7 @@ export interface RuntimeEncounterBalanceWaiver {
 }
 ```
 
-### 8.3 Board config contract
+### 8.3 Board config contract *(Active in M1)*
 
 ```ts
 export interface RuntimeBoardConfig {
@@ -2177,7 +2188,7 @@ Migration note for authored encounters:
 - Existing content keeps current behavior by default: authored/runtime records that omit `maxConcurrentWands` should be treated as `null` (legacy uncapped) during migration and compatibility loading.
 - Encounter authors must set a non-null `maxConcurrentWands` explicitly to opt into capped Wand concurrency behavior.
 
-### 8.4 Reward contract
+### 8.4 Reward contract *(Active in M1)*
 
 ```ts
 export interface RuntimeRewardDefinition {
@@ -2211,7 +2222,7 @@ Rules:
 - failure semantics: if any step in the spend+unlock transaction fails, the full transaction must roll back and leave persisted balance/ownership unchanged.
 - idempotency semantics: retrying an already-owned `unlock_id` must no-op without additional currency deduction and without writing duplicate ownership records.
 
-### 8.5 Progression definition contract
+### 8.5 Progression definition contract *(Active in M2)*
 
 ```ts
 export type ProgressionTopology = 'chapter_linear_v1';
@@ -2242,7 +2253,7 @@ Rules:
 - boss encounters may appear in mainline chapter order
 - event encounters do not gate mainline progression by default in Milestone 2
 
-### 8.6 Phase rule contract
+### 8.6 Phase rule contract *(Active in M2)*
 
 ```ts
 export interface RuntimePhaseRule {
@@ -2262,7 +2273,7 @@ Rules:
 - the current product direction expects very little or no use of matchup shifts in v1 ordinary content
 - `changesWeaknessTo` and `changesResistanceTo` must not be random
 
-### 8.7 Post-M2 challenge and competition runtime contracts
+### 8.7 Post-M2 challenge and competition runtime contracts *(Reserved post-M2)*
 
 ```ts
 export interface RuntimeChallengeDefinition {
@@ -2339,7 +2350,7 @@ Rules:
 
 ---
 
-## 9. Canonical progression transition rules
+## 9. Canonical progression transition rules *(Active in M2)*
 
 Progression changes are applied only when a terminal encounter result is committed.
 
@@ -2500,7 +2511,7 @@ Replays must not:
 
 ---
 
-## 10. Validation Snapshot Runtime Contracts
+## 10. Validation Snapshot Runtime Contracts *(Active in M1)*
 
 These interfaces define app/runtime validation boundaries for word lookup and element lookup.
 
@@ -2566,7 +2577,7 @@ Preferred v1 implementation:
 
 ---
 
-## 11. Content Runtime Validation Contracts
+## 11. Content Runtime Validation Contracts *(Active in M1)*
 
 These interfaces define runtime content/schema validation boundaries for encounter and creature activation.
 
@@ -2623,7 +2634,7 @@ Required runtime behavior:
 
 ---
 
-## 12. Analytics Event Contracts
+## 12. Analytics Event Contracts *(Active in M2)*
 
 This section pins canonical event names, required properties, and privacy/redaction rules.
 
@@ -2751,7 +2762,7 @@ Required behavior:
 
 ---
 
-## 13. App Store State Orchestration Contracts
+## 13. App Store State Orchestration Contracts *(Active in M1)*
 
 This section defines the canonical Zustand-facing app orchestration state described in `docs/technical-architecture.md` section 13.1–13.4.
 It intentionally separates:
@@ -2943,7 +2954,7 @@ These contracts operationalize `docs/technical-architecture.md` section 13.1–1
 - UI transient state stays local and non-canonical
 - ownership split remains: rules packages compute truth, app store orchestrates invocation and rendering
 
-## 14. Contract Usage Guidance
+## 14. Contract Usage Guidance *(Active in M1)*
 
 - `packages/game-rules` and `packages/validation` should own these exported contracts where practical
 - `apps/mobile` should consume contracts and avoid redefining parallel shape types
