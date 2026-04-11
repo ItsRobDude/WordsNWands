@@ -381,6 +381,30 @@ Milestone 2 uses one canonical mainline progression model:
 
 - `chapter_linear_v1`
 
+Canonical packaged artifact location for this model:
+
+- `content/packages/<content_version>/progression/progression.progression_m2_chapter_linear_v1.json`
+
+Concrete JSON artifact example (`progression_m2_chapter_linear_v1`):
+
+```json
+{
+  "progression_version": "progression_m2_chapter_linear_v1",
+  "topology": "chapter_linear_v1",
+  "starter_encounter_id": "enc_starter_001",
+  "chapters": [
+    {
+      "chapter_id": "chapter_1_meadow",
+      "encounter_ids": [
+        "enc_meadow_001",
+        "enc_meadow_002",
+        "enc_meadow_003"
+      ]
+    }
+  ]
+}
+```
+
 This means:
 
 - the starter encounter is a special onboarding gate and is not part of the normal chapter list
