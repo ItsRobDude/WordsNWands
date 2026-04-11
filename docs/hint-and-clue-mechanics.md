@@ -93,12 +93,26 @@ All clue actions share these global constraints:
 ## 4.1 Earning sources
 Clue charges may be earned from:
 
-- daily login streak milestone rewards
 - optional challenge completion rewards
 - one-time onboarding gifts (post-starter only)
+- daily login streak milestone rewards only if a later soft-streak rollout explicitly enables that earn path
+
+### 4.1.1 First live clue rollout rule
+The first live clue rollout in **Milestones 3-5** is earn-only.
+
+Allowed first-live earn sources:
+
+- optional challenge completion rewards
+- one-time post-starter grants
+
+Disabled for first live rollout:
+
+- purchased clue bundles
+- ad-view clue grants
+- streak-only clue dependency
 
 ### 4.2 Purchase boundaries
-Allowed purchase surface (future milestone only):
+Allowed purchase surface later (Milestone 6+ only):
 
 - capped clue bundles with explicit quantity and expiry/season scope if used
 
