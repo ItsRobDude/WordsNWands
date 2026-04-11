@@ -209,6 +209,9 @@ export interface EncounterGenerationRequest {
 - `blueprint_ids`, `habitat_pool_ids`, and `board_profile_ids` must all be non-empty.
 - `generator_mode = 'runtime_seeded_trial_v1'` is allowed in the contract but should remain product-gated until intentionally enabled.
 - `output_scope = 'draft_and_freeze_candidate'` still requires human review before promotion into approved content.
+- For the active M1–M2 content lock, request pins must match `docs/early-content-lock.md` section 1 exactly:
+  - `battle_rules_version_target = 'battle_rules_m2_launch_v1'`
+  - `board_generator_version_target = 'board_generator_m2_launch_v1'`
 
 ---
 

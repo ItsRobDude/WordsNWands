@@ -294,6 +294,11 @@ Every generation run must carry:
 
 That keeps outputs reproducible and reviewable.
 
+For the current M1–M2 lock, these target pins must use the canonical identifiers from `docs/early-content-lock.md` section 1:
+
+- `battle_rules_version_target = battle_rules_m2_launch_v1`
+- `board_generator_version_target = board_generator_m2_launch_v1`
+
 ---
 
 ## 8. Canonical generation flow

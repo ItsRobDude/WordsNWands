@@ -114,15 +114,17 @@ Required pinned identifiers:
 
 - `content_version`: `content_m2_launch_v1`
 - `validation_snapshot_version`: `val_snapshot_m2_launch_v1`
+- `battle_rules_version`: `battle_rules_m2_launch_v1`
+- `board_generator_version`: `board_generator_m2_launch_v1`
 - `progression_version`: `progression_m2_chapter_linear_v1`
 - `starter_board_profile_id`: `board_profile_starter_onboarding_v1`
 - `core_board_profile_id`: `board_profile_core_mainline_v1`
 
 Runtime/manifest rule:
 
-- do **not** invent new `battle_rules_version`, `board_generator_version`, or `reward_constants_version` identifiers in content docs or package manifests just to make this file look complete
+- do **not** invent new `battle_rules_version`, `board_generator_version`, or `reward_constants_version` identifiers in content docs or package manifests
 - this pack must inherit the active runtime-supported version pins already recognized by the app/runtime contracts
-- once canonical string identifiers for those pins are explicitly declared elsewhere, update this document to mirror them exactly
+- canonical lock values must mirror `docs/early-content-lock.md` section 1 exactly
 
 This avoids silent naming drift.
 
