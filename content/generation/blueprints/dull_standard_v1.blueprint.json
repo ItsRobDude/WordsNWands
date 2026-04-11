@@ -1,0 +1,33 @@
+{
+  "blueprint_id": "dull_standard_v1",
+  "display_label": "Dull Standard Element Disruption",
+  "allowed_tiers": ["standard"],
+  "encounter_type": "standard",
+  "pressure_style": "element_disruption",
+  "spell_identity": "dull",
+  "allowed_spell_payloads": [
+    {
+      "template_id": "dull_two_tile_standard_v1",
+      "primitive_kind": "apply_tile_state"
+    },
+    {
+      "template_id": "dull_three_tile_standard_v1",
+      "primitive_kind": "apply_tile_state"
+    }
+  ],
+  "allowed_matchup_pair_pool_ids": ["pair_pool_dull_standard_v1"],
+  "allowed_habitat_tags": ["grove", "sunlit", "soft_nature", "meadow", "fern"],
+  "profile_overrides": {
+    "weakness_hit_rate_delta": -0.04,
+    "wand_incidence_delta": 0,
+    "soot_exposure_delta": -0.15,
+    "target_casts_to_defeat_delta": -0.2,
+    "target_spell_count_on_win_delta": 0.15
+  },
+  "prohibited_combination_flags": [
+    "no_secondary_tile_state",
+    "no_chained_spell_templates",
+    "no_countdown_below_4",
+    "no_matchup_shifting"
+  ]
+}
