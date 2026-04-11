@@ -66,6 +66,7 @@ Baseline for all code tasks:
 
 | If the task involves... | Also read... |
 | --- | --- |
+| dependency installation, local bootstrap, pnpm workspace execution, or environment/setup troubleshooting | `docs/development-setup-and-dependency-troubleshooting.md`, `docs/engineering-standards.md` |
 | battle rules, move budget, win/loss rules, damage formula, turn flow, collapse/refill order, special tiles | `docs/implementation-contracts.md`, `docs/game-rules.md`, `docs/word-validation-and-element-rules.md` |
 | word acceptance, normalization, repeated-word policy, dictionary scope, element tagging, Arcane fallback | `docs/word-validation-and-element-rules.md` |
 | creature HP, weaknesses/resistances, countdowns, spells, tile states, encounter balance | `docs/creature-and-encounter-rules.md`, `docs/game-rules.md` |

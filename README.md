@@ -10,7 +10,7 @@ For contributor execution rules and scope discipline, read `AGENTS.md`.
 ## Quick start
 Use `pnpm` only.
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
 pnpm format
 pnpm lint
 pnpm typecheck
@@ -19,6 +19,8 @@ pnpm build
 pnpm check
 ```
 If scripts are not scaffolded yet, follow `docs/engineering-standards.md` section 5.1 and validate docs consistency manually.
+
+If local setup or dependency installation behaves unexpectedly, use [docs/development-setup-and-dependency-troubleshooting.md](docs/development-setup-and-dependency-troubleshooting.md) as the canonical recovery guide.
 
 ## Repo map
 - `AGENTS.md` — contributor operating rules and doc-routing matrix.
@@ -29,6 +31,7 @@ If scripts are not scaffolded yet, follow `docs/engineering-standards.md` sectio
 
 ## Source-of-truth docs
 Start with `docs/engineering-standards.md` for coding and validation contract.
+Start with `docs/development-setup-and-dependency-troubleshooting.md` for local bootstrap, dependency install, or workspace-command troubleshooting.
 Then read only the focused docs for your task area (battle rules, RNG, UX, economy, etc.) using `AGENTS.md` section 2.
 Implementation and runtime boundaries: `docs/implementation-contracts.md` + `docs/technical-architecture.md`.
 Gameplay and validation semantics: `docs/game-rules.md` + `docs/word-validation-and-element-rules.md`.
@@ -41,6 +44,7 @@ When docs conflict, resolve deliberately and document the decision with the conf
 
 - **60-second overview** (`README.md`): project purpose + core constraints (docs-first phase, deterministic/fair gameplay focus, Android-first foundation).
 - **Contributor quick path** (`README.md`, `AGENTS.md`, `docs/engineering-standards.md`): execution rules, doc-routing discipline, and canonical validation command contract.
+- **Local setup / dependency recovery path** (`README.md`, `docs/engineering-standards.md`, `docs/development-setup-and-dependency-troubleshooting.md`): install flow, Windows workspace-runner caveats, env troubleshooting, and dependency recovery.
 - **Release-readiness/content polish path** (`docs/first-shippable-content-pack.md`, `docs/milestone-implementation-plan.md`, `docs/milestone-locked-constants.md`): external-quality content composition, milestone ship checks, and locked runtime constants.
 - **Deep reference** (read only the area you are changing): `docs/game-rules.md`, `docs/word-validation-and-element-rules.md`, `docs/screens-and-session-flow.md`, `docs/implementation-contracts.md`, `docs/randomness-and-seeding-contract.md`, `docs/technical-architecture.md`, `docs/milestone-implementation-plan.md`, `docs/first-shippable-content-pack.md`, `docs/challenge-and-boss-layer.md`, `docs/async-competition-rules.md`.
 

@@ -213,6 +213,12 @@ Use this shortcut when available:
 
 - `pnpm check`
 
+Install/bootstrap expectation:
+
+- contributor setup should use `pnpm install --frozen-lockfile` from repo root before running the command contract above
+- setup and dependency troubleshooting must follow `docs/development-setup-and-dependency-troubleshooting.md`
+- root workspace validation commands may run with serial recursion to preserve Windows reliability when pnpm parallel recursion causes `spawn EPERM`
+
 Run doc-consistency validators when touched scope includes their linked docs:
 
 - `./scripts/check-damage-model-consistency.sh`
