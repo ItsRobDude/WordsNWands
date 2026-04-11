@@ -1,0 +1,33 @@
+{
+  "blueprint_id": "soot_standard_v1",
+  "display_label": "Soot Standard Nuisance",
+  "allowed_tiers": ["standard"],
+  "encounter_type": "standard",
+  "pressure_style": "soft_nuisance",
+  "spell_identity": "soot",
+  "allowed_spell_payloads": [
+    {
+      "template_id": "soot_two_tile_standard_v1",
+      "primitive_kind": "apply_tile_state"
+    },
+    {
+      "template_id": "soot_three_tile_standard_v1",
+      "primitive_kind": "apply_tile_state"
+    }
+  ],
+  "allowed_matchup_pair_pool_ids": ["pair_pool_soot_standard_v1"],
+  "allowed_habitat_tags": ["meadow", "sunlit", "soft_nature", "brook", "reed"],
+  "profile_overrides": {
+    "weakness_hit_rate_delta": -0.02,
+    "wand_incidence_delta": 0,
+    "soot_exposure_delta": 0.08,
+    "target_casts_to_defeat_delta": 0,
+    "target_spell_count_on_win_delta": 0.15
+  },
+  "prohibited_combination_flags": [
+    "no_chained_spell_templates",
+    "no_countdown_below_4",
+    "no_multi_state_payloads",
+    "no_matchup_shifting"
+  ]
+}
