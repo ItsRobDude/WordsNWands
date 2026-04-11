@@ -1,10 +1,10 @@
 import {
-  normalizeWord,
+  normalizeTracedBoardLetters,
   resolveElementForWord,
   type ValidationSnapshotLookup,
 } from "../../../validation/src/index.ts";
 
-import type { EncounterRuntimeState } from "../contracts/board.js";
+import type { BoardTile, EncounterRuntimeState } from "../contracts/board.js";
 import type { CastResolution, CastSubmission } from "../contracts/cast.js";
 import type {
   BoardPosition,
@@ -12,6 +12,7 @@ import type {
   ElementType,
   MatchupResult,
 } from "../contracts/index.js";
+import { damageModelV1 } from "../damage/damageModelV1.ts";
 import { applyCountdownStep } from "./applyCountdownStep.ts";
 
 export interface ValidateCastSubmissionInput {
@@ -22,6 +23,9 @@ export interface ValidateCastSubmissionInput {
     normalized_word: string;
     word_length: number;
     matchup_result: MatchupResult;
+    cast_element: ElementType;
+    used_wand_tile: boolean;
+    selected_tile_states: readonly (BoardTile["state"])[];
   }) => number;
   minimum_word_length?: number;
 }
@@ -40,7 +44,7 @@ export const validateCastSubmission = ({
   compute_damage,
   minimum_word_length = DEFAULT_MINIMUM_WORD_LENGTH,
 }: ValidateCastSubmissionInput): ValidateCastSubmissionResult => {
-  const normalized_word = normalizeWord(submission.traced_word_display);
+  const caller_normalized_word = submission.traced_word_display.trim().toLowerCase();
 
   const illegal_path_reason = validatePath(submission.selected_positions);
   if (illegal_path_reason) {
@@ -49,9 +53,29 @@ export const validateCastSubmission = ({
         submission_kind: "invalid",
         rejection_reason: illegal_path_reason,
       },
-      normalized_word,
+      normalized_word: caller_normalized_word,
     };
   }
+
+  let selected_tiles: BoardTile[];
+  try {
+    selected_tiles = lookupSelectedTiles({
+      encounter_state,
+      selected_positions: submission.selected_positions,
+    });
+  } catch {
+    return {
+      cast_resolution: {
+        submission_kind: "invalid",
+        rejection_reason: "illegal_path",
+      },
+      normalized_word: caller_normalized_word,
+    };
+  }
+
+  const normalized_word = normalizeTracedBoardLetters(
+    selected_tiles.map((tile) => tile.letter),
+  );
 
   if (normalized_word.length < minimum_word_length) {
     return {
@@ -63,10 +87,7 @@ export const validateCastSubmission = ({
     };
   }
 
-  const selected_tile_states = lookupSelectedTileStates({
-    encounter_state,
-    selected_positions: submission.selected_positions,
-  });
+  const selected_tile_states = selected_tiles.map((tile) => tile.state);
 
   if (selected_tile_states.some((tile_state) => tile_state === "frozen")) {
     return {
@@ -100,25 +121,41 @@ export const validateCastSubmission = ({
 
   const element =
     resolveElementForWord(normalized_word, validation_lookup) ?? "arcane";
+  const used_wand_tile = selected_tiles.some(
+    (tile) => tile.special_marker === "wand",
+  );
   const matchup_result = resolveMatchupResult({
     element,
     encounter_state,
     selected_tile_states,
   });
-  const countdown_step = applyCountdownStep({
-    encounter_state,
-    matchup_result,
-  });
   const damage_applied = Math.max(
-    0,
+    1,
     Math.floor(
       compute_damage?.({
         normalized_word,
         word_length: normalized_word.length,
         matchup_result,
-      }) ?? normalized_word.length,
+        cast_element: element,
+        used_wand_tile,
+        selected_tile_states,
+      }) ??
+        damageModelV1({
+          word_length: normalized_word.length,
+          matchup_result,
+          cast_element: element,
+          used_wand_tile,
+          selected_tile_states,
+        }).final_damage,
     ),
   );
+  const did_win = damage_applied >= encounter_state.creature.hp_current;
+  const countdown_step = did_win
+    ? null
+    : applyCountdownStep({
+        encounter_state,
+        matchup_result,
+      });
 
   return {
     cast_resolution: {
@@ -127,8 +164,10 @@ export const validateCastSubmission = ({
       element,
       matchup_result,
       damage_applied,
-      countdown_after_cast: countdown_step.countdown_after,
-      countdown_decremented: countdown_step.countdown_decremented,
+      countdown_after_cast:
+        countdown_step?.countdown_after ??
+        encounter_state.creature.spell_countdown_current,
+      countdown_decremented: countdown_step?.countdown_decremented ?? 0,
       moves_remaining_after_cast: Math.max(
         0,
         encounter_state.moves_remaining - 1,
@@ -175,21 +214,28 @@ const validatePath = (
   return null;
 };
 
-const lookupSelectedTileStates = (input: {
+const lookupSelectedTiles = (input: {
   encounter_state: EncounterRuntimeState;
   selected_positions: readonly BoardPosition[];
-}): Array<EncounterRuntimeState["board"]["tiles"][number]["state"]> => {
+}): BoardTile[] => {
   const state_by_position = new Map(
     input.encounter_state.board.tiles.map((tile) => [
       `${tile.position.row}:${tile.position.col}`,
-      tile.state,
+      tile,
     ]),
   );
 
-  return input.selected_positions.map(
-    (position) =>
-      state_by_position.get(`${position.row}:${position.col}`) ?? null,
-  );
+  return input.selected_positions.map((position) => {
+    const tile = state_by_position.get(`${position.row}:${position.col}`);
+
+    if (!tile) {
+      throw new Error(
+        `Selected position does not map to an active tile: (${position.row}, ${position.col})`,
+      );
+    }
+
+    return tile;
+  });
 };
 
 const resolveMatchupResult = (input: {

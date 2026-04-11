@@ -1,13 +1,10 @@
 import type {
   BoardSnapshot,
   EncounterRuntimeState,
+  SparkShuffleFallbackOutcome,
 } from "../contracts/board.js";
+import { DEFAULT_SPARK_SHUFFLE_RETRY_CAP } from "../contracts/board.js";
 import type { EncounterTerminalReasonCode } from "../contracts/core.js";
-
-export type SparkShuffleFallbackOutcome =
-  | "none"
-  | "deterministic_emergency_regen"
-  | "recoverable_error_end";
 
 export interface SparkShuffleMetadata {
   trigger_reason: "dead_board";
@@ -16,8 +13,8 @@ export interface SparkShuffleMetadata {
   did_hit_retry_cap: boolean;
   fallback_outcome: SparkShuffleFallbackOutcome;
   did_recover_playable_state: boolean;
-  spark_shuffle_retry_count_before: number;
-  spark_shuffle_retry_count_after: number;
+  spark_shuffle_retries_attempted_before: number;
+  spark_shuffle_retries_attempted_after: number;
 }
 
 export interface RunSparkShuffleInput {
@@ -38,7 +35,8 @@ export interface RunSparkShuffleResult {
   metadata: SparkShuffleMetadata;
 }
 
-const DEFAULT_MAX_SHUFFLE_RETRIES_PER_RECOVERY_CYCLE = 3;
+const DEFAULT_MAX_SHUFFLE_RETRIES_PER_RECOVERY_CYCLE =
+  DEFAULT_SPARK_SHUFFLE_RETRY_CAP;
 
 export const runSparkShuffle = ({
   encounter_state,
@@ -61,7 +59,7 @@ export const runSparkShuffle = ({
     }
   }
 
-  const retry_count_before = encounter_state.spark_shuffle_retry_count;
+  const retry_count_before = encounter_state.spark_shuffle_retries_attempted;
   const retry_count_after = retry_count_before + retries_attempted;
   const did_hit_retry_cap =
     !did_recover_playable_state &&
@@ -72,7 +70,8 @@ export const runSparkShuffle = ({
       encounter_state: {
         ...encounter_state,
         board,
-        spark_shuffle_retry_count: retry_count_after,
+        spark_shuffle_retries_attempted: retry_count_after,
+        spark_shuffle_fallback_outcome: "none",
       },
       metadata: {
         trigger_reason: "dead_board",
@@ -81,8 +80,8 @@ export const runSparkShuffle = ({
         did_hit_retry_cap,
         fallback_outcome: "none",
         did_recover_playable_state: true,
-        spark_shuffle_retry_count_before: retry_count_before,
-        spark_shuffle_retry_count_after: retry_count_after,
+        spark_shuffle_retries_attempted_before: retry_count_before,
+        spark_shuffle_retries_attempted_after: retry_count_after,
       },
     };
   }
@@ -92,7 +91,8 @@ export const runSparkShuffle = ({
       encounter_state: {
         ...encounter_state,
         board,
-        spark_shuffle_retry_count: retry_count_after,
+        spark_shuffle_retries_attempted: retry_count_after,
+        spark_shuffle_fallback_outcome: "none",
       },
     });
 
@@ -101,7 +101,8 @@ export const runSparkShuffle = ({
         encounter_state: {
           ...encounter_state,
           board: regeneration_result.board,
-          spark_shuffle_retry_count: retry_count_after,
+          spark_shuffle_retries_attempted: retry_count_after,
+          spark_shuffle_fallback_outcome: "deterministic_emergency_regen",
         },
         metadata: {
           trigger_reason: "dead_board",
@@ -110,8 +111,8 @@ export const runSparkShuffle = ({
           did_hit_retry_cap: true,
           fallback_outcome: "deterministic_emergency_regen",
           did_recover_playable_state: true,
-          spark_shuffle_retry_count_before: retry_count_before,
-          spark_shuffle_retry_count_after: retry_count_after,
+          spark_shuffle_retries_attempted_before: retry_count_before,
+          spark_shuffle_retries_attempted_after: retry_count_after,
         },
       };
     }
@@ -129,8 +130,8 @@ export const runSparkShuffle = ({
         did_hit_retry_cap: true,
         fallback_outcome: "recoverable_error_end",
         did_recover_playable_state: false,
-        spark_shuffle_retry_count_before: retry_count_before,
-        spark_shuffle_retry_count_after: retry_count_after,
+        spark_shuffle_retries_attempted_before: retry_count_before,
+        spark_shuffle_retries_attempted_after: retry_count_after,
       },
     };
   }
@@ -145,7 +146,8 @@ export const runSparkShuffle = ({
       : {
           ...encounter_state,
           board,
-          spark_shuffle_retry_count: retry_count_after,
+          spark_shuffle_retries_attempted: retry_count_after,
+          spark_shuffle_fallback_outcome: "none",
         },
     metadata: {
       trigger_reason: "dead_board",
@@ -154,8 +156,8 @@ export const runSparkShuffle = ({
       did_hit_retry_cap,
       fallback_outcome: did_hit_retry_cap ? "recoverable_error_end" : "none",
       did_recover_playable_state: false,
-      spark_shuffle_retry_count_before: retry_count_before,
-      spark_shuffle_retry_count_after: retry_count_after,
+      spark_shuffle_retries_attempted_before: retry_count_before,
+      spark_shuffle_retries_attempted_after: retry_count_after,
     },
   };
 };
@@ -232,6 +234,7 @@ const setRecoverableErrorState = (input: {
     board: input.board,
     session_state: "recoverable_error",
     terminal_reason_code,
-    spark_shuffle_retry_count: input.retry_count_after,
+    spark_shuffle_retries_attempted: input.retry_count_after,
+    spark_shuffle_fallback_outcome: "recoverable_error_end",
   };
 };

@@ -49,6 +49,24 @@ test("createEncounterRuntimeState seeds deterministic stream states and defaults
   assert.equal(result.moves_remaining, 12);
   assert.equal(result.terminal_reason_code, null);
   assert.deepEqual(result.repeated_words, []);
+  assert.equal(result.spark_shuffle_retry_cap, 3);
+  assert.equal(result.spark_shuffle_retries_attempted, 0);
+  assert.equal(result.spark_shuffle_fallback_outcome, "none");
+  assert.equal(result.content_version_pin, "content_version_unpinned");
+  assert.equal(
+    result.validation_snapshot_version_pin,
+    "validation_snapshot_unpinned",
+  );
+  assert.equal(result.battle_rules_version_pin, "battle_rules_unpinned");
+  assert.equal(
+    result.board_generator_version_pin,
+    "board_generator_unpinned",
+  );
+  assert.equal(
+    result.reward_constants_version_pin,
+    "reward_constants_unpinned",
+  );
+  assert.equal(result.damage_model_version, "damage_model_v1");
   assert.equal(
     result.board.rng_stream_states.board_fill_stream_state,
     "seed-a::e1::board_fill::v1::0",

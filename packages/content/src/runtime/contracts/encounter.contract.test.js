@@ -19,6 +19,16 @@ test("loader returns authored encounters by id with canonical payloads", () => {
     assert.equal(payload.contentVersion, manifest.content_version);
     assert.equal(payload.creature.contentVersion, manifest.content_version);
     assert.equal(payload.encounter.contentVersion, manifest.content_version);
+    assert.equal(
+      payload.encounter.rewardDefinition,
+      null,
+      `${encounterId} must keep rewardDefinition dormant for the shipped content slice`,
+    );
+    assert.equal(
+      payload.encounter.hiddenBonusWordPolicy,
+      null,
+      `${encounterId} must keep hiddenBonusWordPolicy dormant for the shipped content slice`,
+    );
   }
 });
 

@@ -4,6 +4,7 @@ import {
 } from "../../../validation/src/index.ts";
 
 import type { EncounterRuntimeState } from "../contracts/board.ts";
+import type { EncounterVersionPins } from "../contracts/board.ts";
 import type {
   CastResolution,
   CastSubmission,
@@ -20,6 +21,7 @@ import { drawUint32FromStreamState } from "../board/deterministicRng.ts";
 import { hasPlayableWord } from "../board/hasPlayableWord.ts";
 import { refillBoard } from "../board/refillBoard.ts";
 import { tickSurvivingTileStates } from "../board/tickSurvivingTileStates.ts";
+import { damageModelV1 } from "../damage/damageModelV1.ts";
 import { applyCastSubmission } from "../encounter/applyCastSubmission.ts";
 import { applyCountdownStep } from "../encounter/applyCountdownStep.ts";
 import { createEncounterRuntimeState } from "../encounter/createEncounterRuntimeState.ts";
@@ -34,6 +36,7 @@ export interface HeadlessEncounterDefinition {
   board: Parameters<typeof createEncounterRuntimeState>[0]["board"];
   creature: Parameters<typeof createEncounterRuntimeState>[0]["creature"];
   move_budget_total: number;
+  version_pins?: Partial<EncounterVersionPins>;
   session_state?: Extract<
     EncounterSessionState,
     "unopened" | "intro_presented" | "in_progress"
@@ -108,6 +111,7 @@ export const runEncounterHeadless = ({
     board: encounter.board,
     creature: encounter.creature,
     move_budget_total: encounter.move_budget_total,
+    version_pins: encounter.version_pins,
     session_state: encounter.session_state ?? "in_progress",
     updated_at_utc: "2026-01-01T00:00:00.000Z",
   });
@@ -130,6 +134,20 @@ export const runEncounterHeadless = ({
             encounter_state: current_state,
             submission,
             validation_lookup: encounter.validation.validation_lookup,
+            compute_damage: ({
+              word_length,
+              matchup_result,
+              cast_element,
+              used_wand_tile,
+              selected_tile_states,
+            }) =>
+              damageModelV1({
+                word_length,
+                matchup_result,
+                cast_element,
+                used_wand_tile,
+                selected_tile_states,
+              }).final_damage,
             minimum_word_length: encounter.validation.minimum_word_length,
           }),
         resolve_element_and_wand: ({ submission, normalized_word }) => ({

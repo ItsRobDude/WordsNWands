@@ -69,9 +69,11 @@ const MEADOW_PAYLOAD = CONTENT_LOADER.loadEncounterById(
 ) as AuthoredEncounterPayload;
 
 const VERSION_PINS = {
+  content_version: CONTENT_MANIFEST.content_version,
   battle_rules_version: CONTENT_MANIFEST.battle_rules_version,
   board_generator_version: CONTENT_MANIFEST.board_generator_version,
   validation_snapshot_version: CONTENT_MANIFEST.validation_snapshot_version,
+  reward_constants_version: "reward_constants_unpinned",
 } as const;
 
 const STARTER_BOARD_ROWS = [
@@ -168,6 +170,13 @@ const buildHeadlessEncounter = (input: {
     spell_countdown_reset: input.payload.creature.baseCountdown,
   },
   move_budget_total: input.payload.encounter.moveBudget,
+  version_pins: {
+    content_version_pin: VERSION_PINS.content_version,
+    validation_snapshot_version_pin: VERSION_PINS.validation_snapshot_version,
+    battle_rules_version_pin: VERSION_PINS.battle_rules_version,
+    board_generator_version_pin: VERSION_PINS.board_generator_version,
+    reward_constants_version_pin: VERSION_PINS.reward_constants_version,
+  },
   session_state: "in_progress",
   validation: {
     validation_lookup: AUTHORED_VALIDATION_LOOKUP,

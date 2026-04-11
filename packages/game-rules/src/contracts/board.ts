@@ -8,6 +8,29 @@ import type {
   TileStateKind,
 } from "./core.js";
 
+export type SparkShuffleFallbackOutcome =
+  | "none"
+  | "deterministic_emergency_regen"
+  | "recoverable_error_end";
+
+export interface EncounterVersionPins {
+  content_version_pin: string;
+  validation_snapshot_version_pin: string;
+  battle_rules_version_pin: string;
+  board_generator_version_pin: string;
+  reward_constants_version_pin: string;
+}
+
+export const DEFAULT_SPARK_SHUFFLE_RETRY_CAP = 3 as const;
+
+export const DEFAULT_ENCOUNTER_VERSION_PINS: EncounterVersionPins = {
+  content_version_pin: "content_version_unpinned",
+  validation_snapshot_version_pin: "validation_snapshot_unpinned",
+  battle_rules_version_pin: "battle_rules_unpinned",
+  board_generator_version_pin: "board_generator_unpinned",
+  reward_constants_version_pin: "reward_constants_unpinned",
+};
+
 export interface BoardPosition {
   row: number;
   col: number;
@@ -60,6 +83,14 @@ export interface EncounterRuntimeState {
   move_budget_total: number;
   repeated_words: string[];
   casts_resolved_count: number;
-  spark_shuffle_retry_count: number;
+  spark_shuffle_retry_cap: number;
+  spark_shuffle_retries_attempted: number;
+  spark_shuffle_fallback_outcome: SparkShuffleFallbackOutcome;
+  content_version_pin: string;
+  validation_snapshot_version_pin: string;
+  battle_rules_version_pin: string;
+  board_generator_version_pin: string;
+  reward_constants_version_pin: string;
+  damage_model_version: "damage_model_v1";
   updated_at_utc: string;
 }

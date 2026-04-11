@@ -2,6 +2,14 @@ import type { ValidationSnapshotLookup } from "../../../../validation/src/index.
 
 import type { HeadlessEncounterDefinition } from "../runEncounterHeadless.ts";
 
+const FIXTURE_VERSION_PINS = {
+  content_version_pin: "content_fixture_v1",
+  validation_snapshot_version_pin: "validation_fixture_v1",
+  battle_rules_version_pin: "battle_rules_fixture_v1",
+  board_generator_version_pin: "board_generator_fixture_v1",
+  reward_constants_version_pin: "reward_constants_fixture_v1",
+} as const;
+
 const createValidationLookup = (
   words: readonly string[],
 ): ValidationSnapshotLookup => {
@@ -77,6 +85,7 @@ export const starterEncounterFixture: HeadlessEncounterDefinition = {
     spell_countdown_reset: 2,
   },
   move_budget_total: 2,
+  version_pins: FIXTURE_VERSION_PINS,
   session_state: "in_progress",
   validation: {
     validation_lookup: createValidationLookup(["cab", "bad", "dab"]),
@@ -128,12 +137,13 @@ export const firstStandardEncounterFixture: HeadlessEncounterDefinition = {
     difficulty_tier: "standard",
     weakness_element: "bloom",
     resistance_element: "flame",
-    hp_current: 8,
-    hp_max: 8,
+    hp_current: 9,
+    hp_max: 9,
     spell_countdown_current: 2,
     spell_countdown_reset: 2,
   },
   move_budget_total: 1,
+  version_pins: FIXTURE_VERSION_PINS,
   session_state: "in_progress",
   validation: {
     validation_lookup: createValidationLookup(["face", "cafe", "deaf"]),

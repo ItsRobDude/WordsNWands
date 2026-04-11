@@ -1,0 +1,14 @@
+{
+  "encounter_id": "enc_draft_sunspell_meadow_soot_standard_standard_abcdef01_4",
+  "creature_id": "cre_draft_sunspell_meadow_soot_standard_standard_abcdef01_4",
+  "move_budget": 10,
+  "board_profile_id": "board_profile_core_mainline_v1",
+  "pins": {
+    "content_version_pin": "content_v0_draft",
+    "validation_snapshot_version_pin": "validation_snapshot_v1",
+    "battle_rules_version_pin": "battle_rules_v1",
+    "board_generator_version_pin": "board_generator_v1",
+    "damage_model_version": "damage_model_v1"
+  },
+  "intro_flavor_text": "The creature is lively rather than cruel, but its ash still slows sloppy play."
+}

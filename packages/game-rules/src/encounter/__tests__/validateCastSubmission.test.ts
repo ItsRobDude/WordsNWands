@@ -60,7 +60,15 @@ const createEncounterState = (): EncounterRuntimeState => ({
   move_budget_total: 5,
   repeated_words: ["cab"],
   casts_resolved_count: 0,
-  spark_shuffle_retry_count: 0,
+  spark_shuffle_retry_cap: 3,
+  spark_shuffle_retries_attempted: 0,
+  spark_shuffle_fallback_outcome: "none",
+  content_version_pin: "content_test_v1",
+  validation_snapshot_version_pin: "validation_test_v1",
+  battle_rules_version_pin: "battle_rules_test_v1",
+  board_generator_version_pin: "board_generator_test_v1",
+  reward_constants_version_pin: "reward_constants_test_v1",
+  damage_model_version: "damage_model_v1",
   updated_at_utc: "2026-04-11T00:00:00.000Z",
 });
 
@@ -134,5 +142,52 @@ test("validateCastSubmission deterministic valid output and no mutation", () => 
   if (first.cast_resolution.submission_kind === "valid") {
     assert.equal(first.cast_resolution.matchup_result, "weakness");
     assert.equal(first.cast_resolution.countdown_decremented, 0);
+  }
+});
+
+test("validateCastSubmission recomputes committed word from selected tiles instead of trusting caller text", () => {
+  const encounter_state = createEncounterState();
+
+  const result = validateCastSubmission({
+    encounter_state: {
+      ...encounter_state,
+      repeated_words: [],
+    },
+    submission: {
+      selected_positions: [
+        { row: 1, col: 0 },
+        { row: 0, col: 0 },
+        { row: 0, col: 1 },
+      ],
+      traced_word_display: "ZZZ",
+    },
+    validation_lookup: createLookup(),
+  });
+
+  assert.equal(result.normalized_word, "cab");
+  assert.equal(result.cast_resolution.submission_kind, "valid");
+  if (result.cast_resolution.submission_kind === "valid") {
+    assert.equal(result.cast_resolution.normalized_word, "cab");
+  }
+});
+
+test("validateCastSubmission rejects selections that do not map to active board tiles", () => {
+  const encounter_state = createEncounterState();
+
+  const result = validateCastSubmission({
+    encounter_state,
+    submission: {
+      selected_positions: [
+        { row: 9, col: 9 },
+        { row: 0, col: 0 },
+      ],
+      traced_word_display: "AA",
+    },
+    validation_lookup: createLookup(),
+  });
+
+  assert.equal(result.cast_resolution.submission_kind, "invalid");
+  if (result.cast_resolution.submission_kind !== "valid") {
+    assert.equal(result.cast_resolution.rejection_reason, "illegal_path");
   }
 });

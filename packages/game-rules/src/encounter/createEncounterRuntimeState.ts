@@ -1,10 +1,16 @@
 import type {
   BoardSnapshot,
   CreatureRuntimeState,
+  EncounterVersionPins,
   EncounterRngStreamStates,
   EncounterRuntimeState,
 } from "../contracts/board.js";
+import {
+  DEFAULT_ENCOUNTER_VERSION_PINS,
+  DEFAULT_SPARK_SHUFFLE_RETRY_CAP,
+} from "../contracts/board.js";
 import type { EncounterSessionState } from "../contracts/core.js";
+import { DAMAGE_MODEL_V1_VERSION } from "../damage/damageModelV1.ts";
 
 const DEFAULT_SESSION_STATE: Extract<
   EncounterSessionState,
@@ -26,7 +32,10 @@ export interface CreateEncounterRuntimeStateInput {
   moves_remaining?: number;
   repeated_words?: readonly string[];
   casts_resolved_count?: number;
-  spark_shuffle_retry_count?: number;
+  spark_shuffle_retry_cap?: number;
+  spark_shuffle_retries_attempted?: number;
+  spark_shuffle_fallback_outcome?: EncounterRuntimeState["spark_shuffle_fallback_outcome"];
+  version_pins?: Partial<EncounterVersionPins>;
   rng_stream_states?: Partial<EncounterRngStreamStates>;
 }
 
@@ -45,6 +54,10 @@ export const createEncounterRuntimeState = (
     encounter_id: input.encounter_id,
     initial_states: input.rng_stream_states,
   });
+  const version_pins = {
+    ...DEFAULT_ENCOUNTER_VERSION_PINS,
+    ...input.version_pins,
+  };
 
   return {
     encounter_session_id: input.encounter_session_id,
@@ -68,10 +81,23 @@ export const createEncounterRuntimeState = (
     move_budget_total,
     repeated_words: [...(input.repeated_words ?? [])],
     casts_resolved_count: Math.max(0, input.casts_resolved_count ?? 0),
-    spark_shuffle_retry_count: Math.max(
-      0,
-      input.spark_shuffle_retry_count ?? 0,
+    spark_shuffle_retry_cap: Math.max(
+      1,
+      input.spark_shuffle_retry_cap ?? DEFAULT_SPARK_SHUFFLE_RETRY_CAP,
     ),
+    spark_shuffle_retries_attempted: Math.max(
+      0,
+      input.spark_shuffle_retries_attempted ?? 0,
+    ),
+    spark_shuffle_fallback_outcome:
+      input.spark_shuffle_fallback_outcome ?? "none",
+    content_version_pin: version_pins.content_version_pin,
+    validation_snapshot_version_pin:
+      version_pins.validation_snapshot_version_pin,
+    battle_rules_version_pin: version_pins.battle_rules_version_pin,
+    board_generator_version_pin: version_pins.board_generator_version_pin,
+    reward_constants_version_pin: version_pins.reward_constants_version_pin,
+    damage_model_version: DAMAGE_MODEL_V1_VERSION,
     updated_at_utc: input.updated_at_utc,
   };
 };

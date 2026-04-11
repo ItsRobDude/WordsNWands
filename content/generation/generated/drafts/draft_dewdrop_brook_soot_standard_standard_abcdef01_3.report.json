@@ -1,0 +1,97 @@
+{
+  "draft_id": "draft_dewdrop_brook_soot_standard_standard_abcdef01_3",
+  "request_id": "req_duplicate_001",
+  "generator_version": "structured_generation_v1",
+  "generator_mode": "draft_generate_freeze_v1",
+  "generation_seed": "abcdef0123456789abcdef0123456789",
+  "blueprint_id": "soot_standard_v1",
+  "target_tier": "standard",
+  "content_version_target": "content_v0_draft",
+  "validation_snapshot_version_target": "validation_snapshot_v1",
+  "battle_rules_version_target": "battle_rules_v1",
+  "board_generator_version_target": "board_generator_v1",
+  "encounter_definition": {
+    "encounter_id": "enc_draft_dewdrop_brook_soot_standard_standard_abcdef01_3",
+    "creature_id": "cre_draft_dewdrop_brook_soot_standard_standard_abcdef01_3",
+    "move_budget": 10,
+    "board_profile_id": "board_profile_core_mainline_v1",
+    "pins": {
+      "content_version_pin": "content_v0_draft",
+      "validation_snapshot_version_pin": "validation_snapshot_v1",
+      "battle_rules_version_pin": "battle_rules_v1",
+      "board_generator_version_pin": "board_generator_v1",
+      "damage_model_version": "damage_model_v1"
+    },
+    "intro_flavor_text": "Warm ash is puffing across the board; cool-headed words will help."
+  },
+  "creature_definition": {
+    "creature_id": "cre_draft_dewdrop_brook_soot_standard_standard_abcdef01_3",
+    "display_name": "Ashling Pup",
+    "encounter_type": "standard",
+    "difficulty_tier": "standard",
+    "max_hp": 96,
+    "weakness": "tide",
+    "resistance": "flame",
+    "base_countdown": 3,
+    "spell_identity": "soot",
+    "spell_payload": {
+      "template_id": "soot_two_tile_standard_v1",
+      "primitive_kind": "apply_tile_state",
+      "tile_state": "sooted",
+      "target_count": 2,
+      "targeting": "random_eligible"
+    }
+  },
+  "review_summary": {
+    "habitat_theme_id": "habitat_dewdrop_brook_v1",
+    "habitat_display_name": "Dewdrop Brook",
+    "creature_display_name": "Ashling Pup",
+    "weakness": "tide",
+    "resistance": "flame",
+    "move_budget": 10,
+    "base_countdown": 3,
+    "max_hp": 96,
+    "spell_identity": "soot",
+    "why_it_should_feel_fair": "The countdown and move budget were derived from the canonical fail-rate and pace formulas with tier guardrail clamping.",
+    "why_it_matches_wordsnwands": "This draft uses a single approved blueprint identity, approved matchup pool, and curated flavor bank content only."
+  },
+  "balance_report": {
+    "expected_profile": {
+      "avg_word_length": 4.3,
+      "weakness_hit_rate": 0.32,
+      "wand_incidence": 0.2,
+      "soot_exposure": 0.22999999999999998,
+      "target_casts_to_defeat": 7,
+      "target_spell_count_on_win": 2.65
+    },
+    "derived_values": {
+      "expected_damage_per_cast": 13.660783499999997,
+      "derived_hp": 96,
+      "derived_move_budget": 10,
+      "derived_base_countdown": 3,
+      "target_casts_to_defeat": 7,
+      "target_spell_count_on_win": 2.65
+    },
+    "validator_findings": [
+      {
+        "pass_id": "DUPLICATE_BATCH_SANITY",
+        "severity": "warn",
+        "code": "DBS-BLUEPRINT-001",
+        "message": "Blueprint 'soot_standard_v1' appears 4 times in this batch."
+      },
+      {
+        "pass_id": "DUPLICATE_BATCH_SANITY",
+        "severity": "warn",
+        "code": "DBS-MATCHUP-001",
+        "message": "Matchup 'tide/flame' appears 3 times in this batch."
+      },
+      {
+        "pass_id": "DUPLICATE_BATCH_SANITY",
+        "severity": "warn",
+        "code": "DBS-SPELL-001",
+        "message": "Spell identity 'soot' appears 4 times in this batch."
+      }
+    ],
+    "guardrail_status": "warn"
+  }
+}

@@ -177,7 +177,11 @@ export const applyCastSubmission = ({
         },
         creature: hp_result.creature,
       },
-      cast_resolution: hp_result.cast_resolution,
+      cast_resolution: {
+        ...hp_result.cast_resolution,
+        countdown_after_cast: encounter_state.creature.spell_countdown_current,
+        countdown_decremented: 0,
+      },
     };
   }
 

@@ -61,7 +61,15 @@ const createEncounterState = (): EncounterRuntimeState => ({
   move_budget_total: 3,
   repeated_words: [],
   casts_resolved_count: 0,
-  spark_shuffle_retry_count: 0,
+  spark_shuffle_retry_cap: 3,
+  spark_shuffle_retries_attempted: 0,
+  spark_shuffle_fallback_outcome: "none",
+  content_version_pin: "content_test_v1",
+  validation_snapshot_version_pin: "validation_test_v1",
+  battle_rules_version_pin: "battle_rules_test_v1",
+  board_generator_version_pin: "board_generator_test_v1",
+  reward_constants_version_pin: "reward_constants_test_v1",
+  damage_model_version: "damage_model_v1",
   updated_at_utc: "2026-04-11T00:00:00.000Z",
 });
 
@@ -85,7 +93,8 @@ test("runSparkShuffle recovers a playable board while preserving tile identity a
     .sort((left, right) => left.position.col - right.position.col);
 
   assert.equal(result.metadata.did_recover_playable_state, true);
-  assert.equal(result.encounter_state.spark_shuffle_retry_count, 1);
+  assert.equal(result.encounter_state.spark_shuffle_retries_attempted, 1);
+  assert.equal(result.encounter_state.spark_shuffle_fallback_outcome, "none");
   assert.deepEqual(
     ordered.map((tile) => ({ id: tile.id, letter: tile.letter, state: tile.state })),
     [
@@ -107,6 +116,10 @@ test("runSparkShuffle reaches recoverable error after retry cap when no playable
   assert.equal(result.metadata.did_hit_retry_cap, true);
   assert.equal(result.metadata.retries_attempted, 3);
   assert.equal(result.encounter_state.session_state, "recoverable_error");
+  assert.equal(
+    result.encounter_state.spark_shuffle_fallback_outcome,
+    "recoverable_error_end",
+  );
   assert.equal(
     result.encounter_state.terminal_reason_code,
     "spark_shuffle_retry_cap_unrecoverable",

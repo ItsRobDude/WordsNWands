@@ -1,0 +1,18 @@
+{
+  "creature_id": "cre_draft_dewdrop_brook_soot_standard_standard_abcdef01_3",
+  "display_name": "Ashling Pup",
+  "encounter_type": "standard",
+  "difficulty_tier": "standard",
+  "max_hp": 96,
+  "weakness": "tide",
+  "resistance": "flame",
+  "base_countdown": 3,
+  "spell_identity": "soot",
+  "spell_payload": {
+    "template_id": "soot_two_tile_standard_v1",
+    "primitive_kind": "apply_tile_state",
+    "tile_state": "sooted",
+    "target_count": 2,
+    "targeting": "random_eligible"
+  }
+}

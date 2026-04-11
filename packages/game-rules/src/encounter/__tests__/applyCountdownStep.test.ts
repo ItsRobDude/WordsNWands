@@ -44,7 +44,15 @@ const createEncounterState = (): EncounterRuntimeState => ({
   move_budget_total: 3,
   repeated_words: [],
   casts_resolved_count: 0,
-  spark_shuffle_retry_count: 0,
+  spark_shuffle_retry_cap: 3,
+  spark_shuffle_retries_attempted: 0,
+  spark_shuffle_fallback_outcome: "none",
+  content_version_pin: "content_test_v1",
+  validation_snapshot_version_pin: "validation_test_v1",
+  battle_rules_version_pin: "battle_rules_test_v1",
+  board_generator_version_pin: "board_generator_test_v1",
+  reward_constants_version_pin: "reward_constants_test_v1",
+  damage_model_version: "damage_model_v1",
   updated_at_utc: "2026-04-11T00:00:00.000Z",
 });
 
