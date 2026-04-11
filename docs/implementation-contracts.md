@@ -665,6 +665,12 @@ Determinism rule:
 - Dead-board checks must use the same pinned `validation_snapshot_version_pin` and in-memory lookup instance as cast validation for the active encounter.
 - Implementations must not mix snapshot versions or fallback to alternate lexicon sources during the same encounter.
 
+Performance requirements (correctness-preserving):
+
+- Dead-board detection must return `true` as soon as any legal candidate word with normalized length `>= 3` is found; implementations must not introduce arbitrary max-depth caps that can miss legal longer paths.
+- Implementations must early-exit immediately on the first candidate that satisfies the full playable-word checklist above.
+- If profiling shows naive exhaustive traversal exceeds UX timing budget under normal conditions, `ValidationSnapshotLookup` structures must provide prefix-pruning support (for example, precomputed prefix lookup/trie-like checks) so traversal can prune impossible branches without changing semantic acceptance criteria.
+
 Examples:
 
 - **Dead due to repeat + blocked constraints:** board contains only one dictionary-valid adjacency path, `GLOW`, but `G` is Frozen and `"glow"` already exists in `repeated_words`; all remaining adjacency paths are either too short or not in lexicon. `hasPlayableWord(...)` returns `false`, so Spark Shuffle recovery is required.

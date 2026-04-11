@@ -520,6 +520,7 @@ Timing/readability requirements:
 - Input lock should be brief and bounded to the feedback window only.
 - If multiple invalid submissions happen quickly, each Rejected Cast Feedback cycle should run independently; do not queue long chained lockouts.
 - Return-to-idle must be deterministic and should occur no later than `~450ms` from submit end in normal runtime conditions.
+- Cross-reference: dead-board detection implementation must satisfy this document’s normal-condition UX timing targets (including return-to-idle responsiveness) using correctness-preserving performance work from `docs/implementation-contracts.md` section 5.8, with escalation through profiling/lookup optimization rather than heuristic semantic rule changes.
 
 When the player submits an invalid or repeated word:
 
