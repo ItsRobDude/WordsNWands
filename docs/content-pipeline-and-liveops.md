@@ -337,6 +337,10 @@ Validation snapshot approvals must follow the operational curation protocol defi
 
 - `docs/word-validation-and-element-rules.md`, Section **18. Operational Curation Protocol**
 
+For executable bootstrap/release steps for `val_snapshot_m2_launch_v1`, use:
+
+- `docs/validation-snapshot-bootstrap-playbook.md`
+
 This linkage is mandatory so that content operations and gameplay-validation policy remain synchronized for:
 
 - candidate-word review fields

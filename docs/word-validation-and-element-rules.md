@@ -812,6 +812,10 @@ Validation and element-tag changes should not happen silently in a way that make
 
 This section defines the required review protocol for candidate-word decisions before they enter a validation snapshot.
 
+Execution playbook for the M2 launch snapshot is defined in:
+
+- `docs/validation-snapshot-bootstrap-playbook.md`
+
 ### 18.1 Mandatory review fields per candidate word
 Each candidate word record must include all of the following fields before approval:
 
