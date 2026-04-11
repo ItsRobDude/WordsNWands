@@ -254,6 +254,20 @@ Avoid putting the most critical repeated controls in hard-to-reach top-corner po
 ### 6.6 Pause/settings rule
 Pause or settings access may live near the top because it is not a repeated primary action, but it still must remain readable and usable.
 
+### 6.7 Assistive-input parity for board lock windows
+Assistive input pathways (for example accessibility services that emit touch-equivalent gestures) must follow the same board lock behavior as direct touch input.
+
+During valid-cast resolution and creature-spell resolution lock windows:
+
+- board input is ignored/discarded
+- no queued or deferred auto-submit behavior is allowed for gestures captured during the lock
+- interactivity resumes only when control returns at the documented control-return step
+
+Cross-reference contracts:
+
+- `docs/implementation-contracts.md` section 5.1.1 (resolution-lock input discard rule)
+- `docs/screens-and-session-flow.md` sections 12–13 (control-return interaction timing)
+
 ---
 
 ## 7. Motion and Reduced-Motion Rules
