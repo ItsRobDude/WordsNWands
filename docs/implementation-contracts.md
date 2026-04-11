@@ -2665,6 +2665,34 @@ Required runtime behavior:
 - do not parse validation snapshot files per cast
 - do not query SQLite per cast for ordinary lookup paths
 
+Performance budget contract (measured on representative low-end Android hardware):
+
+- cold-start validation hydration latency budget: **<= 450 ms p95** and **<= 650 ms p99** from phase-4 start (`validation_hydrate`) to lookup publish success
+- incremental memory budget for hydrated validation lookup structures: **<= 24 MB** resident delta after hydration settles
+- baseline profiling device class must include at least one Android 11+ low-end profile approximating:
+  - 2 GB RAM class device
+  - 4x Cortex-A53-class CPU cluster (or equivalent/lower)
+  - eMMC/UFS-low-tier storage profile
+- profiling sample size for budget claims: minimum **30 cold-start runs** on the representative device profile
+
+Required profiling method and report fields before changing lookup data-structure complexity:
+
+- collect cold-start runs from a fresh process launch path (not warm-resume only) and record phase-4 hydration start/end timestamps
+- capture process memory before hydration and after hydration stabilization using one consistent measurement method per report
+- include a short report artifact in the change description with:
+  - snapshot version and `word_count`
+  - device model, Android version, and RAM class
+  - run count and percentile outputs (p50/p95/p99 hydration latency)
+  - mean + max incremental memory delta
+  - measurement tooling/method identifier
+  - explicit recommendation: `keep_simple` or `authorize_optimization`
+
+Optimization authorization rule:
+
+- if the measured budgets above are met, keep the simple pre-hydrated in-memory implementation
+- if one or more budgets are exceeded, optimization paths (for example trie/prefix index/alternative layout) are authorized
+- optimization work must preserve semantic parity with sections 10.1-10.3 and keep per-cast SQLite/file parsing forbidden
+
 Preferred v1 implementation:
 
 - hydrate generated validation snapshot data once into process-global in-memory lookup structures inside `packages/validation`
