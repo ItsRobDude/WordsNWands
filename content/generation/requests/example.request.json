@@ -1,0 +1,19 @@
+{
+  "request_id": "req_example_001",
+  "generator_version": "structured_generation_v1",
+  "generator_mode": "draft_generate_freeze_v1",
+  "generation_seed": "0123456789abcdef0123456789abcdef",
+  "content_version_target": "content_v0_draft",
+  "validation_snapshot_version_target": "validation_snapshot_v1",
+  "battle_rules_version_target": "battle_rules_v1",
+  "board_generator_version_target": "board_generator_v1",
+  "encounter_count": 1,
+  "habitat_pool_ids": ["habitat_pool_meadow_and_brook_v1"],
+  "blueprint_ids": ["soot_standard_v1", "shift_row_standard_v1"],
+  "target_tier": "standard",
+  "target_fail_rate_band": "medium",
+  "board_profile_ids": ["board_profile_core_mainline_v1"],
+  "allow_name_generation_from_bank": true,
+  "allow_flavor_generation_from_bank": true,
+  "output_scope": "draft_only"
+}

@@ -1,0 +1,18 @@
+{
+  "creature_id": "cre_draft_ripple_reedway_soot_standard_standard_01234567_1",
+  "display_name": "Ember Mew",
+  "encounter_type": "standard",
+  "difficulty_tier": "standard",
+  "max_hp": 96,
+  "weakness": "tide",
+  "resistance": "flame",
+  "base_countdown": 3,
+  "spell_identity": "soot",
+  "spell_payload": {
+    "template_id": "soot_three_tile_standard_v1",
+    "primitive_kind": "apply_tile_state",
+    "tile_state": "sooted",
+    "target_count": 3,
+    "targeting": "random_eligible"
+  }
+}
