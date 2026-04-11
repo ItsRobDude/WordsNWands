@@ -29,3 +29,5 @@ export * from "./spells/applyCreatureSpell.js";
 export * from "./recovery/runSparkShuffle.js";
 
 export * from "./results/deriveEncounterOutcome.js";
+export * from "./simulation/runEncounterHeadless.js";
+export * from "./simulation/fixtures/headlessEncounterFixtures.js";
