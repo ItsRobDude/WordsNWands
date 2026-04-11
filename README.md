@@ -34,6 +34,15 @@ Implementation and runtime boundaries: `docs/implementation-contracts.md` + `doc
 Gameplay and validation semantics: `docs/game-rules.md` + `docs/word-validation-and-element-rules.md`.
 When docs conflict, resolve deliberately and document the decision with the conflict template from `AGENTS.md`.
 
+
+## Reading paths
+
+- **60-second overview** (`README.md`): project purpose + core constraints (docs-first phase, deterministic/fair gameplay focus, Android-first foundation).
+- **Contributor quick path** (`README.md`, `AGENTS.md`, `docs/engineering-standards.md`): execution rules, doc-routing discipline, and canonical validation command contract.
+- **Deep reference** (read only the area you are changing): `docs/game-rules.md`, `docs/word-validation-and-element-rules.md`, `docs/screens-and-session-flow.md`, `docs/implementation-contracts.md`, `docs/randomness-and-seeding-contract.md`, `docs/technical-architecture.md`, `docs/milestone-implementation-plan.md`.
+
+
+
 ## Contribution flow
 1. Read `AGENTS.md` and `docs/engineering-standards.md`.
 2. Pull only the 1–3 focused docs needed for the task.
