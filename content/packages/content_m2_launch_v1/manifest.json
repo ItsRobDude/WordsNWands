@@ -8,6 +8,7 @@
   "min_supported_app_version": "0.1.0",
   "schema_versions": {
     "manifest_schema": "content-package-manifest.schema.v1",
+    "creature_schema": "creature.schema.v1",
     "encounter_schema": "encounter.schema.v1",
     "progression_schema": "progression.schema.v1",
     "validation_snapshot_schema": "validation-snapshot.schema.v1"
