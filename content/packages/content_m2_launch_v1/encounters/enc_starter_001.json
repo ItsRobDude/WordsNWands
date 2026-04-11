@@ -12,11 +12,15 @@
     "baseCountdown": 5,
     "spellIdentity": "spell_bubble_bloop_v1",
     "spellPrimitives": [
-      "apply_tile_state",
-      "tile_state:bubble",
-      "target_count:1",
-      "targeting:random_eligible"
-    ]
+      {
+        "kind": "apply_tile_state",
+        "tile_state": "bubble",
+        "target_count": 1,
+        "targeting": "random_eligible"
+      }
+    ],
+    "phaseRules": [],
+    "contentVersion": "content_m2_launch_v1"
   },
   "encounter": {
     "id": "enc_starter_001",
@@ -27,10 +31,22 @@
       "guidedFirstCast": {
         "normalizedWord": "leaf",
         "selectedPositions": [
-          { "row": 0, "col": 0 },
-          { "row": 0, "col": 1 },
-          { "row": 0, "col": 2 },
-          { "row": 0, "col": 3 }
+          {
+            "row": 0,
+            "col": 0
+          },
+          {
+            "row": 0,
+            "col": 1
+          },
+          {
+            "row": 0,
+            "col": 2
+          },
+          {
+            "row": 0,
+            "col": 3
+          }
         ],
         "expectedElement": "bloom"
       },
@@ -40,10 +56,22 @@
           "authoredSeed": "starter_opening_script_v1"
         },
         "guaranteedGuidedFirstCastPath": [
-          { "row": 0, "col": 0 },
-          { "row": 0, "col": 1 },
-          { "row": 0, "col": 2 },
-          { "row": 0, "col": 3 }
+          {
+            "row": 0,
+            "col": 0
+          },
+          {
+            "row": 0,
+            "col": 1
+          },
+          {
+            "row": 0,
+            "col": 2
+          },
+          {
+            "row": 0,
+            "col": 3
+          }
         ],
         "postFirstSpellWeaknessTeachingTarget": {
           "normalizedWord": "sun",
@@ -72,32 +100,110 @@
       "maxConcurrentWands": 0,
       "letterDistributionProfileId": "letter_distribution_starter_onboarding_v1",
       "letterWeightEntries": [
-        { "letter": "A", "weight": 10 },
-        { "letter": "B", "weight": 2 },
-        { "letter": "C", "weight": 4 },
-        { "letter": "D", "weight": 4 },
-        { "letter": "E", "weight": 13 },
-        { "letter": "F", "weight": 3 },
-        { "letter": "G", "weight": 3 },
-        { "letter": "H", "weight": 3 },
-        { "letter": "I", "weight": 8 },
-        { "letter": "J", "weight": 1 },
-        { "letter": "K", "weight": 1 },
-        { "letter": "L", "weight": 7 },
-        { "letter": "M", "weight": 3 },
-        { "letter": "N", "weight": 7 },
-        { "letter": "O", "weight": 9 },
-        { "letter": "P", "weight": 3 },
-        { "letter": "Q", "weight": 1 },
-        { "letter": "R", "weight": 7 },
-        { "letter": "S", "weight": 7 },
-        { "letter": "T", "weight": 8 },
-        { "letter": "U", "weight": 5 },
-        { "letter": "V", "weight": 1 },
-        { "letter": "W", "weight": 2 },
-        { "letter": "X", "weight": 1 },
-        { "letter": "Y", "weight": 2 },
-        { "letter": "Z", "weight": 1 }
+        {
+          "letter": "A",
+          "weight": 10
+        },
+        {
+          "letter": "B",
+          "weight": 2
+        },
+        {
+          "letter": "C",
+          "weight": 4
+        },
+        {
+          "letter": "D",
+          "weight": 4
+        },
+        {
+          "letter": "E",
+          "weight": 13
+        },
+        {
+          "letter": "F",
+          "weight": 3
+        },
+        {
+          "letter": "G",
+          "weight": 3
+        },
+        {
+          "letter": "H",
+          "weight": 3
+        },
+        {
+          "letter": "I",
+          "weight": 8
+        },
+        {
+          "letter": "J",
+          "weight": 1
+        },
+        {
+          "letter": "K",
+          "weight": 1
+        },
+        {
+          "letter": "L",
+          "weight": 7
+        },
+        {
+          "letter": "M",
+          "weight": 3
+        },
+        {
+          "letter": "N",
+          "weight": 7
+        },
+        {
+          "letter": "O",
+          "weight": 9
+        },
+        {
+          "letter": "P",
+          "weight": 3
+        },
+        {
+          "letter": "Q",
+          "weight": 1
+        },
+        {
+          "letter": "R",
+          "weight": 7
+        },
+        {
+          "letter": "S",
+          "weight": 7
+        },
+        {
+          "letter": "T",
+          "weight": 8
+        },
+        {
+          "letter": "U",
+          "weight": 5
+        },
+        {
+          "letter": "V",
+          "weight": 1
+        },
+        {
+          "letter": "W",
+          "weight": 2
+        },
+        {
+          "letter": "X",
+          "weight": 1
+        },
+        {
+          "letter": "Y",
+          "weight": 2
+        },
+        {
+          "letter": "Z",
+          "weight": 1
+        }
       ],
       "namedLetterPoolId": "starter_onboarding_readable_pool_v1",
       "vowelClassProfileVersion": "vowel_class_v1",
@@ -111,6 +217,8 @@
       "authoredFailRateBand": "low",
       "waivers": [],
       "shippabilityStatus": "candidate-shippable"
-    }
+    },
+    "starPolicyVersion": "star_policy_v1_absolute",
+    "contentVersion": "content_m2_launch_v1"
   }
 }

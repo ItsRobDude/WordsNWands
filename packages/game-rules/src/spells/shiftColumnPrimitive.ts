@@ -5,6 +5,10 @@ export const shiftColumnPrimitive = (
   board: BoardSnapshot,
   primitive: ShiftColumnPrimitive,
 ): BoardSnapshot => {
+  if (primitive.mode !== "rotate" || primitive.distance !== 1) {
+    return board;
+  }
+
   const column_tiles = board.tiles.filter(
     (tile) => tile.position.col === primitive.col_index,
   );
@@ -18,7 +22,7 @@ export const shiftColumnPrimitive = (
   );
 
   const rotated_column_tiles =
-    primitive.direction === "down"
+    primitive.direction === 1
       ? [
           sorted_column_tiles[sorted_column_tiles.length - 1],
           ...sorted_column_tiles.slice(0, -1),

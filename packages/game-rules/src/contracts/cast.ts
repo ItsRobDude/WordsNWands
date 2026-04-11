@@ -39,22 +39,29 @@ export type CreatureSpellPrimitive =
 export interface ApplyTileStatePrimitive {
   kind: "apply_tile_state";
   tile_state: TileStateKind;
-  target_positions: BoardPosition[];
+  target_count: number;
+  targeting: "random_eligible" | "authored_pattern";
 }
 
 export interface ShiftRowPrimitive {
   kind: "shift_row";
   row_index: number;
-  direction: "left" | "right";
+  mode: "rotate";
+  distance: 1;
+  direction: 1 | -1;
 }
 
 export interface ShiftColumnPrimitive {
   kind: "shift_column";
   col_index: number;
-  direction: "up" | "down";
+  mode: "rotate";
+  distance: 1;
+  direction: 1 | -1;
 }
 
 export interface ChainedSpellPrimitive {
   kind: "chained";
-  steps: CreatureSpellPrimitive[];
+  steps: Array<
+    ApplyTileStatePrimitive | ShiftRowPrimitive | ShiftColumnPrimitive
+  >;
 }

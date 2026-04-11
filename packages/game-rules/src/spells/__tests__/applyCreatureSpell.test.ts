@@ -81,12 +81,15 @@ test("applyCreatureSpell returns a new encounter object without mutating input",
         {
           kind: "shift_row",
           row_index: 0,
-          direction: "right",
+          mode: "rotate",
+          distance: 1,
+          direction: 1,
         },
         {
           kind: "apply_tile_state",
           tile_state: "frozen",
-          target_positions: [{ row: 0, col: 0 }],
+          target_count: 1,
+          targeting: "random_eligible",
         },
       ],
     },
@@ -98,6 +101,6 @@ test("applyCreatureSpell returns a new encounter object without mutating input",
     result.board.tiles.find(
       (tile) => tile.position.row === 0 && tile.position.col === 0,
     )?.state,
-    "frozen",
+    null,
   );
 });
