@@ -465,6 +465,9 @@ While tracing a word, the player should be able to see:
 - the currently traced letters
 - whether the path is visually valid
 - the order of selection
+- once traced candidate length is `>= 3` and validation marks the current candidate as a valid castable word, the trace word chip must show the currently recognized element using icon/color/state-token treatment
+- during active trace, exact damage numbers and multiplier values must not be shown
+- if a selected tile state forces neutral resolution (for example, `dull`), the trace word chip must immediately revert to neutral/Arcane preview state
 
 The game should not require the player to guess whether the swipe path was read correctly.
 
@@ -485,6 +488,7 @@ The main interaction loop is:
 
 ### Live tracing rule
 As the player traces letters, the game should show the growing word clearly.
+Preview feedback during active trace is read-only and must not alter deterministic cast math order; keep UI semantics aligned with `docs/implementation-contracts.md` section 5.1 (cast submission contract) and section 5.3 (modifier evaluation order contract).
 
 ### Path feedback rule
 The player should receive immediate visual feedback showing:
@@ -497,6 +501,7 @@ The player should receive immediate visual feedback showing:
 A completed swipe should feel deliberate and satisfying.
 
 The player should know when the game has accepted the cast attempt.
+Canonical damage and multiplier reveal timing remains in section 12 successful cast resolution flow; pre-release preview must not bypass that tension window.
 
 ### Invalid submission behavior
 Shared terminology contract (cross-doc):
