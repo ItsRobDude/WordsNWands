@@ -1,0 +1,24 @@
+{
+  "validation_snapshot_version": "val_snapshot_m2_launch_v1",
+  "content_version": "content_m2_launch_v1",
+  "anchors": {
+    "flame": ["burn", "ember", "flame", "smoke", "torch"],
+    "tide": ["rain", "river", "wave", "tide", "mist"],
+    "bloom": ["leaf", "vine", "moss", "root", "bloom", "petal"],
+    "storm": ["wind", "gust", "storm", "cloud", "bolt"],
+    "stone": ["rock", "stone", "cave", "sand", "clay"],
+    "light": ["sun", "glow", "beam", "star", "shine", "dawn"],
+    "arcane_support": [
+      "path",
+      "trail",
+      "calm",
+      "spell",
+      "magic",
+      "play",
+      "small",
+      "happy",
+      "friend",
+      "puzzle"
+    ]
+  }
+}

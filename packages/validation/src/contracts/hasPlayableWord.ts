@@ -1,5 +1,5 @@
-import { normalizeTracedBoardLetters } from "./normalizeWord.js";
-import type { ValidationSnapshotLookup } from "./types.js";
+import { normalizeTracedBoardLetters } from "./normalizeWord.ts";
+import type { ValidationSnapshotLookup } from "./types.ts";
 
 export interface PlayableBoardTile {
   letter: string;

@@ -1,9 +1,9 @@
-import { normalizeWord } from "./normalizeWord.js";
+import { normalizeWord } from "./normalizeWord.ts";
 import type {
   RuntimeValidationSnapshot,
   RuntimeValidationWord,
   ValidationSnapshotLookup,
-} from "./types.js";
+} from "./types.ts";
 
 export class InMemoryValidationSnapshotLookup implements ValidationSnapshotLookup {
   public readonly snapshot_version: string;
