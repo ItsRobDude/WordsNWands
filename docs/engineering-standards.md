@@ -222,6 +222,20 @@ For faster local loops, run checks only for touched package(s):
 - `pnpm --filter <package_name> test`
 - `pnpm --filter <package_name> build`
 
+### Package-level content validation examples
+When a change touches content packages, manifests, schema files, or version pins, run package-scoped content checks in addition to core checks:
+
+- schema validation:
+  - `pnpm --filter <package_name> content:validate:schema`
+- referential integrity checks (for example creature/encounter/snapshot references):
+  - `pnpm --filter <package_name> content:validate:refs`
+- version pin consistency checks:
+  - `pnpm --filter <package_name> content:validate:version-pins`
+- all package content checks:
+  - `pnpm --filter <package_name> content:validate`
+
+Practical rule: `content:validate` should fail if schema validation fails, if references are broken, or if manifest/runtime version pins do not match active contract versions.
+
 Before merge, always run repo-wide checks from root or the CI-equivalent command path.
 
 ### When to run each command

@@ -376,6 +376,51 @@ Do not treat “main moved” as permission for the app to silently reinterpret 
 ### 8.4 Additive change preference
 When possible, prefer additive content change over destructive content churn.
 
+### 8.5 Canonical v1 content package layout
+For v1 bundled content, use this canonical directory and file layout:
+
+```txt
+content/
+  schemas/
+    content-package-manifest.schema.json
+    creature.schema.json
+    encounter.schema.json
+    validation-snapshot.schema.json
+  packages/
+    <content_version>/
+      manifest.json
+      creatures/
+        *.json
+      encounters/
+        *.json
+      validation/
+        snapshot.<validation_snapshot_version>.json
+```
+
+Required `manifest.json` fields for every package:
+
+- `package_id` (stable package identifier)
+- `content_version` (must match package directory name)
+- `validation_snapshot_version`
+- `battle_rules_version`
+- `board_generator_version`
+- `min_supported_app_version`
+- `schema_versions` object with:
+  - `manifest_schema`
+  - `creature_schema`
+  - `encounter_schema`
+  - `validation_snapshot_schema`
+- `asset_pack_version` (or `null` if no external asset pack is required for the package)
+- `created_at_utc` (ISO-8601 UTC)
+- `created_by`
+- `status` (`draft` | `review_ready` | `fairness_reviewed` | `approved` | `bundled` | `published` | `archived` | `corrected_exception`)
+
+Practical rules:
+
+- schema files must live under `content/schemas/` and be versioned in-repo with package changes
+- package payload files must be in package-local folders (`creatures/`, `encounters/`, `validation/`) and must not reference out-of-package runtime truth files
+- package loading must fail closed if required manifest fields are missing or if any pinned version mismatches runtime expectations
+
 ---
 
 ## 9. Packaging Rules by Milestone
@@ -568,6 +613,19 @@ Content tools should be small and boring unless the content volume proves that s
 
 ### 14.4 Spreadsheet rule
 Spreadsheets may be used temporarily for planning, but they should not become the canonical runtime truth.
+
+### 14.5 Canonical content validation command set
+Use these commands for package validation work:
+
+- repo-wide content checks:
+  - `pnpm check`
+- package-level content checks:
+  - `pnpm --filter <package_name> content:validate`
+  - `pnpm --filter <package_name> content:validate:schema`
+  - `pnpm --filter <package_name> content:validate:refs`
+  - `pnpm --filter <package_name> content:validate:version-pins`
+
+`content:validate` should aggregate schema, referential, and version-pin checks for touched package content.
 
 ---
 
