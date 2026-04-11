@@ -384,6 +384,7 @@ Milestone 2 uses one canonical mainline progression model:
 Canonical packaged artifact location for this model:
 
 - `content/packages/<content_version>/progression/progression.progression_m2_chapter_linear_v1.json`
+- M1-M2 concrete example path: `content/packages/content_m2_launch_v1/progression/progression.progression_m2_chapter_linear_v1.json`
 
 Concrete JSON artifact example (`progression_m2_chapter_linear_v1`):
 

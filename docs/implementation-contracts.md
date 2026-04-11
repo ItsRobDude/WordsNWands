@@ -1741,6 +1741,56 @@ const ASSET_STATIC_BINDINGS = {
 
 Runtime resolves logical registry keys through this static map only; content files never contain bundler import paths.
 
+#### 8.0.b Minimal canonical `RuntimeAssetManifest` example (one creature + one spell)
+
+Use this as the smallest deterministic reference example for M1-M2 content:
+
+```json
+{
+  "manifest_id": "asset_manifest_m2_min_v1",
+  "asset_pack_version": "1.0.0",
+  "entries": [
+    {
+      "namespace": "creature",
+      "id": "starter_friend_v1",
+      "variants": {
+        "theme=starter|density=xhdpi|locale=en-US": "creature_starter_friend_v1_starter_xhdpi_en_us",
+        "theme=starter|density=xhdpi|locale=default": "creature_starter_friend_v1_starter_xhdpi_default",
+        "theme=starter|density=default|locale=default": "creature_starter_friend_v1_starter_default_default",
+        "theme=default|density=default|locale=default": "creature_starter_friend_v1_default_default_default"
+      },
+      "fallback_keys": {
+        "required_default": "theme=default|density=default|locale=default",
+        "theme_default": "theme=default|density=default|locale=default",
+        "density_default": "theme=starter|density=default|locale=default",
+        "locale_default": "theme=starter|density=xhdpi|locale=default"
+      }
+    },
+    {
+      "namespace": "spell",
+      "id": "starter_arc_burst_v1",
+      "variants": {
+        "theme=starter|density=xhdpi|locale=default": "spell_starter_arc_burst_v1_starter_xhdpi_default",
+        "theme=default|density=default|locale=default": "spell_starter_arc_burst_v1_default_default_default"
+      },
+      "fallback_keys": {
+        "required_default": "theme=default|density=default|locale=default",
+        "theme_default": "theme=default|density=default|locale=default",
+        "density_default": "theme=starter|density=default|locale=default",
+        "locale_default": "theme=starter|density=xhdpi|locale=default"
+      }
+    }
+  ]
+}
+```
+
+Canonical fallback-chain example for requested selector `theme=starter|density=xxhdpi|locale=fr-FR`:
+
+1. Exact key miss: `theme=starter|density=xxhdpi|locale=fr-FR`
+2. Locale fallback miss: `theme=starter|density=xxhdpi|locale=default`
+3. Density fallback hit: `theme=starter|density=default|locale=default`
+4. (Steps 4-5 not reached once step 3 resolves)
+
 ### 8.1 Creature definition contract
 
 ```ts
@@ -2454,7 +2504,7 @@ Replays must not:
 
 These interfaces define app/runtime validation boundaries for word lookup and element lookup.
 
-### 9.1 Runtime validation word contract
+### 10.1 Runtime validation word contract
 
 ```ts
 export interface RuntimeValidationWord {
@@ -2469,7 +2519,7 @@ Rules:
 - blocked or rejected words do not need to exist in the hot lookup path
 - `element = 'arcane'` is a normal valid value
 
-### 9.2 Validation snapshot metadata contract
+### 10.2 Validation snapshot metadata contract
 
 ```ts
 export interface ValidationSnapshotMetadata {
@@ -2481,7 +2531,7 @@ export interface ValidationSnapshotMetadata {
 }
 ```
 
-### 9.3 Runtime validation lookup contract
+### 10.3 Runtime validation lookup contract
 
 ```ts
 export interface ValidationSnapshotLookup {
@@ -2492,7 +2542,7 @@ export interface ValidationSnapshotLookup {
 }
 ```
 
-### 9.4 Validation snapshot provider contract
+### 10.4 Validation snapshot provider contract
 
 ```ts
 export interface ValidationSnapshotLookupProvider {

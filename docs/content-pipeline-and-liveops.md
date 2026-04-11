@@ -414,19 +414,14 @@ content/
 A package is minimally valid for M1–M2 only if all files below exist exactly at these paths:
 
 ```txt
-content/packages/content_m2_launch_v1/
-  manifest.json
-  creatures/
-    creature.starter_friend_v1.json
-  encounters/
-    enc_starter_001.json
-    enc_meadow_001.json
-    enc_meadow_002.json
-    enc_meadow_003.json
-  progression/
-    progression.progression_m2_chapter_linear_v1.json
-  validation/
-    snapshot.val_snapshot_m2_launch_v1.json
+content/packages/content_m2_launch_v1/manifest.json
+content/packages/content_m2_launch_v1/creatures/creature.starter_friend_v1.json
+content/packages/content_m2_launch_v1/encounters/enc_starter_001.json
+content/packages/content_m2_launch_v1/encounters/enc_meadow_001.json
+content/packages/content_m2_launch_v1/encounters/enc_meadow_002.json
+content/packages/content_m2_launch_v1/encounters/enc_meadow_003.json
+content/packages/content_m2_launch_v1/progression/progression.progression_m2_chapter_linear_v1.json
+content/packages/content_m2_launch_v1/validation/snapshot.val_snapshot_m2_launch_v1.json
 ```
 
 Normative determinism rules for this minimum package:
@@ -434,6 +429,7 @@ Normative determinism rules for this minimum package:
 - `manifest.json` `content_version` must be exactly `content_m2_launch_v1` and must match the package directory name.
 - `manifest.json` `validation_snapshot_version` must be exactly `val_snapshot_m2_launch_v1` and must map to `validation/snapshot.val_snapshot_m2_launch_v1.json` (exact filename match).
 - `manifest.json` must enumerate explicit payload references for creatures, encounters, progression, and validation snapshot; runtime must not discover files by directory scan or naming heuristics.
+- `progression/` is a canonical required package folder for all M1-M2 bundles; progression payloads must not be omitted or relocated.
 - Encounter IDs in manifest references must map 1:1 to encounter files in this package (`enc_starter_001`, `enc_meadow_001`, `enc_meadow_002`, `enc_meadow_003`) and each ID must resolve to exactly one file.
 - The starter creature ID used by `encounters/enc_starter_001.json` must resolve to `creatures/creature.starter_friend_v1.json` (or the currently locked canonical starter creature file for the same ID, if renamed by an explicit lock update).
 - `manifest.json` package and version pins (`battle_rules_version`, `board_generator_version`, `validation_snapshot_version`) are validity checks, not hints; if any pin does not match runtime lock values, package load must fail closed.

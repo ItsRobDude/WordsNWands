@@ -37,31 +37,52 @@ The M1–M2 lock is valid only when the following authored artifacts exist and a
 
 ### 2.1 Encounter artifacts
 
-- Starter encounter artifact for `enc_starter_001`.
-- Core chapter-1 encounter artifacts for:
+- Required filename pattern: `content/packages/content_m2_launch_v1/encounters/<encounter_id>.json`.
+- Required exact files:
+  - `content/packages/content_m2_launch_v1/encounters/enc_starter_001.json`
+  - `content/packages/content_m2_launch_v1/encounters/enc_meadow_001.json`
+  - `content/packages/content_m2_launch_v1/encounters/enc_meadow_002.json`
+  - `content/packages/content_m2_launch_v1/encounters/enc_meadow_003.json`
+- Required exact encounter IDs in file payloads:
+  - `enc_starter_001`
   - `enc_meadow_001`
   - `enc_meadow_002`
   - `enc_meadow_003`
 
 ### 2.2 Progression artifacts
 
-- One progression definition artifact pinned to `progression_m2_chapter_linear_v1`.
-- `starter_encounter_id` set to `enc_starter_001`.
-- Chapter-1 ordered encounter list exactly:
+- Required exact progression artifact filename:
+  - `content/packages/content_m2_launch_v1/progression/progression.progression_m2_chapter_linear_v1.json`
+- Required exact progression ID/version in payload:
+  - `progression_version = progression_m2_chapter_linear_v1`
+- Required exact reference expectations:
+  - `starter_encounter_id` must be exactly `enc_starter_001`.
+  - `starter_encounter_id` must not appear in any `chapters[*].encounter_ids`.
+  - Chapter-1 payload must use `chapter_id = chapter_1_meadow`.
+  - Chapter-1 ordered `encounter_ids` list must be exactly:
   1. `enc_meadow_001`
   2. `enc_meadow_002`
   3. `enc_meadow_003`
+- No additional mainline encounter IDs may appear before, between, or after this locked sequence in the M1-M2 package.
 
 ### 2.3 Validation artifacts
 
-- One validation snapshot artifact pinned to `val_snapshot_m2_launch_v1`.
+- Required exact validation artifact filename:
+  - `content/packages/content_m2_launch_v1/validation/snapshot.val_snapshot_m2_launch_v1.json`
+- Required exact validation snapshot ID/version in payload:
+  - `validation_snapshot_version = val_snapshot_m2_launch_v1`
 - Snapshot coverage must include all expected tutorial and chapter-1 intended-valid vocabulary used by authored onboarding/progression fixtures.
 
 ### 2.4 Deterministic fixture artifacts
 
-- Starter onboarding deterministic fixture set, including cue-stage progression checkpoints.
-- Chapter-1 progression deterministic fixture set, including unlock/order assertions.
-- Determinism fixture set for seed/replay parity across:
+- Required deterministic fixture IDs (minimum set must exist exactly):
+  - `fixture_starter_onboarding_cue_sequence_v1`
+  - `fixture_chapter1_progression_unlock_order_v1`
+  - `fixture_seed_replay_board_init_parity_v1`
+  - `fixture_seed_replay_refill_parity_v1`
+  - `fixture_seed_replay_spell_targeting_parity_v1`
+  - `fixture_seed_replay_spark_shuffle_parity_v1`
+- Determinism fixture coverage requirements:
   - initial board generation
   - refill generation
   - spell targeting
@@ -72,6 +93,7 @@ Rules:
 - Missing any required artifact blocks lock adoption.
 - Artifact IDs and version pins must match section 1 exactly.
 - Encounter/progression/validation artifacts must be cross-reference-valid (no dangling IDs).
+- `content/packages/content_m2_launch_v1/manifest.json` must reference every required artifact above exactly once (no omitted, duplicate, or alternate-path references).
 
 ---
 

@@ -298,6 +298,7 @@ This is the player’s main “Continue Adventure” target.
 
 Replaying an older cleared encounter must not replace this Home primary-action target.
 Because of the one-next-unlock model, this should normally be exactly one encounter.
+Home must derive this target from the packaged progression artifact (`progression.progression_m2_chapter_linear_v1.json`) plus persisted progression rows (`encounter_progress_records`), never from an ad hoc in-memory encounter list.
 
 ### Resume rule from Home
 If an encounter is currently in progress, Home should not pretend there is no active session.
