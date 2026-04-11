@@ -363,6 +363,13 @@ Runtime content should be pinned by at least:
 - battle rules version
 - board generator version where relevant
 
+For the active M1–M2 lock, canonical strings are defined in `docs/early-content-lock.md` section 1:
+
+- `content_version = content_m2_launch_v1`
+- `validation_snapshot_version = val_snapshot_m2_launch_v1`
+- `battle_rules_version = battle_rules_m2_launch_v1`
+- `board_generator_version = board_generator_m2_launch_v1`
+
 ### 8.2 Why this matters
 Version pins protect trust in:
 

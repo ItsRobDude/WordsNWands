@@ -10,6 +10,8 @@ All M1–M2 authored content, runtime loading, restore snapshots, and determinis
 
 - `content_version`: `content_m2_launch_v1`
 - `validation_snapshot_version`: `val_snapshot_m2_launch_v1`
+- `battle_rules_version`: `battle_rules_m2_launch_v1`
+- `board_generator_version`: `board_generator_m2_launch_v1`
 - `progression_version`: `progression_m2_chapter_linear_v1`
 - `starter_board_profile_id`: `board_profile_starter_onboarding_v1`
 - `core_board_profile_id`: `board_profile_core_mainline_v1`
