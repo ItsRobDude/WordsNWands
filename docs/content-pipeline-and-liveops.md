@@ -414,12 +414,19 @@ content/
         snapshot.<validation_snapshot_version>.json
 ```
 
-#### 8.5.1 Normative minimum valid M1–M2 package example
+#### 8.5.1 Normative package structure and manifest-reference integrity example (M1–M2)
+This subsection is limited to package folder/file layout plus manifest/reference integrity checks.
+Example IDs and payload fragments below are non-canonical placeholders for schema illustration only (not live content canon).
+Gameplay-authoritative starter/chapter values (creature IDs, tutorial scripts, HP/countdown/reward/board tuning, etc.) come from:
+
+- `docs/first-shippable-content-pack.md`
+- `docs/early-content-lock.md`
+
 A package is minimally valid for M1–M2 only if all files below exist exactly at these paths:
 
 ```txt
 content/packages/content_m2_launch_v1/manifest.json
-content/packages/content_m2_launch_v1/creatures/creature.starter_friend_v1.json
+content/packages/content_m2_launch_v1/creatures/creature.placeholder_starter_creature.json
 content/packages/content_m2_launch_v1/encounters/enc_starter_001.json
 content/packages/content_m2_launch_v1/encounters/enc_meadow_001.json
 content/packages/content_m2_launch_v1/encounters/enc_meadow_002.json
@@ -428,7 +435,7 @@ content/packages/content_m2_launch_v1/progression/progression.progression_m2_cha
 content/packages/content_m2_launch_v1/validation/snapshot.val_snapshot_m2_launch_v1.json
 ```
 
-Canonical `manifest.json` example (complete JSON, including explicit package-local payload references required by this section):
+Structural `manifest.json` example (complete JSON; placeholder IDs illustrate required package-local references only):
 
 ```json
 {
@@ -450,7 +457,7 @@ Canonical `manifest.json` example (complete JSON, including explicit package-loc
   "status": "approved",
   "payload_files": {
     "creatures": {
-      "starter_friend_v1": "creatures/creature.starter_friend_v1.json"
+      "placeholder_starter_creature_v1": "creatures/creature.placeholder_starter_creature.json"
     },
     "encounters": {
       "enc_starter_001": "encounters/enc_starter_001.json",
@@ -468,122 +475,59 @@ Canonical `manifest.json` example (complete JSON, including explicit package-loc
 }
 ```
 
-Canonical starter creature file example (`content/packages/content_m2_launch_v1/creatures/creature.starter_friend_v1.json`):
+Structural creature file example (`content/packages/content_m2_launch_v1/creatures/creature.placeholder_starter_creature.json`):
 
 ```json
 {
-  "id": "starter_friend_v1",
-  "displayName": "Starter Friend",
+  "id": "placeholder_starter_creature_v1",
+  "displayName": "Placeholder Starter Creature",
   "encounterType": "standard",
-  "difficultyTier": "gentle",
-  "maxHp": 24,
-  "weakness": "flame",
-  "resistance": "tide",
-  "baseCountdown": 4,
-  "spellIdentity": "starter_arc_burst_v1",
-  "spellPrimitives": [
-    {
-      "kind": "apply_tile_state",
-      "tile_state": "bubble",
-      "target_count": 1,
-      "targeting": "random_eligible"
-    }
-  ],
+  "difficultyTier": "intro_placeholder",
+  "maxHp": 1,
+  "weakness": "arcane",
+  "resistance": "arcane",
+  "baseCountdown": 1,
+  "spellIdentity": "placeholder_spell_identity_v1",
+  "spellPrimitives": [],
   "phaseRules": [],
   "contentVersion": "content_m2_launch_v1"
 }
 ```
 
-Canonical starter encounter file example (`content/packages/content_m2_launch_v1/encounters/enc_starter_001.json`):
+Structural starter encounter file example (`content/packages/content_m2_launch_v1/encounters/enc_starter_001.json`):
 
 ```json
 {
   "id": "enc_starter_001",
-  "creatureId": "starter_friend_v1",
-  "moveBudget": 12,
+  "creatureId": "placeholder_starter_creature_v1",
+  "moveBudget": 1,
   "starPolicyVersion": "star_policy_v1_absolute",
   "isStarterEncounter": true,
-  "starterTutorialScript": {
-    "guidedFirstCast": {
-      "normalizedWord": "SPARK",
-      "selectedPositions": [
-        {
-          "row": 0,
-          "col": 0
-        },
-        {
-          "row": 0,
-          "col": 1
-        },
-        {
-          "row": 0,
-          "col": 2
-        },
-        {
-          "row": 0,
-          "col": 3
-        },
-        {
-          "row": 0,
-          "col": 4
-        }
-      ],
-      "expectedElement": "flame"
-    },
-    "weaknessTeachingWord": "SPARK",
-    "mustShowCreatureSpellBeforeWin": true
-  },
-  "introFlavorText": "Let us practice one brave first spell.",
+  "starterTutorialScript": null,
+  "introFlavorText": "Placeholder intro flavor text.",
   "damageModelVersion": "damage_model_v1",
   "rewardDefinition": {
-    "grantsProgressUnlock": 1,
-    "grantsJournalProgress": 1,
-    "grantsCosmeticCurrency": 20
+    "grantsProgressUnlock": 0,
+    "grantsJournalProgress": 0,
+    "grantsCosmeticCurrency": 0
   },
   "hiddenBonusWordPolicy": null,
   "boardConfig": {
-    "rows": 6,
-    "cols": 6,
+    "rows": 1,
+    "cols": 1,
     "seedMode": "generated",
     "fixedSeed": null,
-    "allowWandTiles": true,
-    "wandSpawnRate": 0.1,
-    "maxConcurrentWands": 3,
-    "letterDistributionProfileId": "letter_distribution_v1",
-    "letterWeightEntries": [
-      { "letter": "A", "weight": 8 },
-      { "letter": "B", "weight": 2 },
-      { "letter": "C", "weight": 3 },
-      { "letter": "D", "weight": 4 },
-      { "letter": "E", "weight": 12 },
-      { "letter": "F", "weight": 2 },
-      { "letter": "G", "weight": 3 },
-      { "letter": "H", "weight": 3 },
-      { "letter": "I", "weight": 7 },
-      { "letter": "J", "weight": 1 },
-      { "letter": "K", "weight": 1 },
-      { "letter": "L", "weight": 4 },
-      { "letter": "M", "weight": 3 },
-      { "letter": "N", "weight": 7 },
-      { "letter": "O", "weight": 8 },
-      { "letter": "P", "weight": 3 },
-      { "letter": "Q", "weight": 1 },
-      { "letter": "R", "weight": 6 },
-      { "letter": "S", "weight": 6 },
-      { "letter": "T", "weight": 9 },
-      { "letter": "U", "weight": 3 },
-      { "letter": "V", "weight": 1 },
-      { "letter": "W", "weight": 2 },
-      { "letter": "X", "weight": 1 },
-      { "letter": "Y", "weight": 2 },
-      { "letter": "Z", "weight": 1 }
-    ],
-    "namedLetterPoolId": "v1_default_pool",
-    "vowelClassProfileVersion": "vowel_class_v1",
+    "allowWandTiles": false,
+    "wandSpawnRate": 0,
+    "maxConcurrentWands": 0,
+    "letterDistributionProfileId": "placeholder_letter_distribution_v1",
+    "letterWeightEntries": [],
+    "namedLetterPoolId": "placeholder_pool_v1",
+    "vowelClassProfileVersion": "placeholder_vowel_class_v1",
     "vowelClassIncludesY": false,
     "boardQualityPolicy": {
-      "qualityPolicyVersion": "board_quality_v1",
-      "minVowelClassCount": 8
+      "qualityPolicyVersion": "placeholder_quality_policy_v1",
+      "minVowelClassCount": 0
     }
   },
   "balanceMetadata": {
@@ -602,7 +546,7 @@ Normative determinism rules for this minimum package:
 - `manifest.json` must enumerate explicit payload references for creatures, encounters, progression, and validation snapshot; runtime must not discover files by directory scan or naming heuristics.
 - `progression/` is a canonical required package folder for all M1-M2 bundles; progression payloads must not be omitted or relocated.
 - Encounter IDs in manifest references must map 1:1 to encounter files in this package (`enc_starter_001`, `enc_meadow_001`, `enc_meadow_002`, `enc_meadow_003`) and each ID must resolve to exactly one file.
-- The starter creature ID used by `encounters/enc_starter_001.json` must resolve to `creatures/creature.starter_friend_v1.json` (or the currently locked canonical starter creature file for the same ID, if renamed by an explicit lock update).
+- The starter encounter creature ID used by `encounters/enc_starter_001.json` must resolve to the currently locked canonical starter creature entry (ID and path) for the active content lock.
 - `manifest.json` package and version pins (`battle_rules_version`, `board_generator_version`, `validation_snapshot_version`) are validity checks, not hints; if any pin does not match runtime lock values, package load must fail closed.
 - Any missing file, duplicate ID target, or unresolved manifest reference makes the package invalid.
 
