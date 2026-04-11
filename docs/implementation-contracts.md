@@ -1097,6 +1097,29 @@ Rules:
 - `show_restore_recap_banner` is restore-only and must be enqueued only from snapshot-derived launch/resume logic (never from live engine frame execution).
 - `show_restore_recap_banner` must be short-lived and non-blocking, and must not enqueue `persist_event_checkpoint` on its own.
 
+Queue-consumption completion/advancement contract (normative):
+
+- `ActionQueueItem` completion source must be declared at execution start as exactly one of:
+  - **sync completion**: action is complete in the same tick/frame the dispatcher invokes it.
+  - **async callback completion**: action is complete only after its registered completion callback fires.
+- Default completion mode when no callback is needed:
+  - `persist_event_checkpoint`: sync completion (must not wait on animation/audio lifecycle).
+  - micro-feedback actions (`show_cast_trace_feedback`, `show_cast_resolution_banner`, `show_restore_recap_banner`, `animate_damage_number`, `play_spell_windup`, `play_spell_resolution`): sync completion by default unless an implementation explicitly registers an async completion callback for that action instance.
+  - state-commit channel actions (`animate_hp_bar`, `animate_countdown_tick`, `show_phase_transition_banner`, `show_encounter_result`): async callback completion by default; they may use sync completion only when implemented as instantaneous/no-op commits.
+- Required timeout/fallback when async callback is expected but never received:
+  - queue runtime must enforce a bounded completion timeout per in-flight async action.
+  - on timeout, mark the action as `timed_out_complete`, emit non-blocking diagnostics telemetry, and advance queue consumption; do not deadlock progression.
+  - timeout fallback must not replay or duplicate the timed-out action body; advancement is forward-only.
+- Ordering/advancement interaction with `source_sequence` and `dedupe_key`:
+  - queue head advancement is allowed only after current head is terminal (`completed_sync` | `completed_callback` | `timed_out_complete`).
+  - next action selection must continue stable ordering by (`source_sequence`, insertion order), preserving cross-event causality.
+  - dedupe (`dedupe_key`) is evaluated before execution start; deduped items are treated as terminal-skip (non-executing complete) and must still unblock advancement.
+  - dedupe must never reorder remaining items with different `source_sequence`; it only removes duplicate executions.
+- Serialization/overlap policy integration with `docs/audio-visual-style-guide.md` section 12.3:
+  - queue advancement for state-commit channels (`animate_hp_bar`, `animate_countdown_tick`, `show_phase_transition_banner`) must respect strict serialization (one active state-commit action at a time).
+  - permitted micro-feedback overlap may run concurrently within the defined overlap window, but overlapping micro-feedback must not gate serialized state-commit advancement once their completion mode resolves.
+  - when overlap-window cutoff is reached, truncated micro-feedback tails are considered complete at cutoff for queue advancement purposes.
+
 Engine events -> required baseline UI action mapping:
 
 | Engine event | Required `ActionQueueItem` entries |
