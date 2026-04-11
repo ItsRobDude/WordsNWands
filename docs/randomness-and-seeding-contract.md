@@ -114,6 +114,7 @@ Rules:
 - Wand assignment draw semantics:
   - letter selection and Wand assignment must not share a single draw.
   - Wand assignment consumes one additional `nextUint32()` draw per generated tile slot when `allowWandTiles = true`.
+  - if `maxConcurrentWands` is configured and the active board already has `maxConcurrentWands` Wand markers, the Wand roll result is still consumed but marker assignment is suppressed for that slot.
   - when `allowWandTiles = false`, Wand assignment is skipped and consumes no draw.
 - `board_init` state is persisted after initial generation.
 
@@ -128,6 +129,7 @@ Rules:
 - Wand assignment draw semantics:
   - letter selection and Wand assignment must not share a single draw.
   - Wand assignment consumes one additional `nextUint32()` draw per spawned tile slot when `allowWandTiles = true`.
+  - if `maxConcurrentWands` is configured and the active board already has `maxConcurrentWands` Wand markers, the Wand roll result is still consumed but marker assignment is suppressed for that spawned tile.
   - when `allowWandTiles = false`, Wand assignment is skipped and consumes no draw.
 - Collapse movement itself is deterministic and non-random.
 - Refill retries (if required by board safety checks) consume from `board_refill` only.
@@ -253,6 +255,10 @@ Required automated tests:
    - If emergency branch succeeds, regenerated board must match across repeated runs.
    - If emergency branch fails, recoverable error termination state and retry CTA payload must match across repeated runs.
 
+6. **Wand-cap hit consumption determinism**
+   - For fixed seed and fixed encounter config with non-null `maxConcurrentWands`, runs that hit Wand-cap saturation must still consume Wand-assignment draws in identical order.
+   - Suppressed Wand assignments at cap-hit points must be replay-stable and produce identical downstream board/spell outcomes across repeated runs and restore paths.
+
 ---
 
 
@@ -312,6 +318,9 @@ At minimum, v1 must ship and keep green the following deterministic fixtures:
    - Crafted dead-board sequence that deterministically reaches retry cap behavior.
 5. `starter_loss_retry_win_gate` *(required only when starter gate is in active milestone scope, e.g., M1/M2 if applicable)*
    - Verifies starter loss → retry → win gate behavior parity under fixed seed/version pins.
+6. `wand_cap_hit_consumption_determinism`
+   - Uses non-null `maxConcurrentWands` and verifies cap-hit suppression still consumes mandatory Wand rolls.
+   - Confirms repeated runs (and restore path where applicable) keep identical board timelines after cap-hit events.
 
 ### 8.3 Fixture storage conventions
 

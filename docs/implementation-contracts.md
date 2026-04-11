@@ -1519,6 +1519,7 @@ export interface RuntimeBoardConfig {
   fixedSeed: string | null;
   allowWandTiles: boolean;
   wandSpawnRate: number; // finite rate in [0, 1], canonical runtime wand incidence source
+  maxConcurrentWands: number | null; // null = legacy uncapped behavior; non-null = active board cap
   letterDistributionProfileId: string; // e.g. `letter_distribution_v1`
   letterWeightEntries: RuntimeLetterWeightEntry[]; // canonical weighted A-Z entries for this runtime config
   namedLetterPoolId: string | null; // optional named pool alias, e.g. `v1_default_pool`
@@ -1537,6 +1538,10 @@ Rules:
 - `wandSpawnRate` is required and is the canonical runtime-authored wand incidence representation used by encounter balance parity validators.
 - `wandSpawnRate` must be finite and clamped to inclusive range `[0, 1]`; runtime/content validators must fail values outside this range (no silent coercion).
 - if `allowWandTiles = false`, `wandSpawnRate` must be exactly `0`; any non-zero value is invalid.
+- `maxConcurrentWands` controls the active-board Wand marker cap:
+  - `null` means legacy uncapped behavior (no board-level Wand cap enforced).
+  - non-null values must be finite integers in inclusive range `[0, rows * cols]` (`[0, 36]` for current 6x6 board).
+  - values outside the allowed range, non-integers, and non-finite values must fail runtime/content validation (no silent coercion).
 - `letterWeightEntries` is the canonical runtime source for weighted refill and initial-board letter selection.
 - `letterWeightEntries` must contain exactly one entry per letter `A` through `Z`.
 - normalization must canonicalize letters to uppercase ASCII and reject non-`A`-`Z` values.
@@ -1546,7 +1551,13 @@ Rules:
 - deterministic RNG consumption rule for Wand assignment:
   - board generation/refill resolves each tile in a fixed row-major order.
   - when `allowWandTiles = true`, runtime must consume exactly one Bernoulli roll per generated tile using `wandSpawnRate` from the same board RNG stream used for tile generation; consumption is mandatory even if the tile ultimately is not marked as Wand.
+  - when `allowWandTiles = true` and `maxConcurrentWands` cap is reached, the Wand Bernoulli result is still consumed, but Wand assignment is suppressed for that tile.
   - when `allowWandTiles = false`, runtime must consume zero Wand rolls and assign no Wand markers.
+
+Migration note for authored encounters:
+
+- Existing content keeps current behavior by default: authored/runtime records that omit `maxConcurrentWands` should be treated as `null` (legacy uncapped) during migration and compatibility loading.
+- Encounter authors must set a non-null `maxConcurrentWands` explicitly to opt into capped Wand concurrency behavior.
 
 ### 8.4 Reward contract
 

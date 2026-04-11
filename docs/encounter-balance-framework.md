@@ -82,10 +82,15 @@ Authors should start with these baseline profile assumptions before creature-spe
 - If an encounter intentionally differs (for example, anti-Wand creature or heavy-soot identity), document the overridden assumptions in encounter data review notes.
 - Tooling should record both the tier default profile and the authored profile override for auditability.
 - `wandIncidence` is canonicalized as a runtime-authored value mapped directly from `RuntimeBoardConfig.wandSpawnRate` (see `docs/implementation-contracts.md` section 8.3).
+- when `RuntimeBoardConfig.maxConcurrentWands` is non-null, `wandIncidence` remains the authored per-tile roll-rate assumption, but realized in-battle Wand usage may be lower due to cap suppression at saturation.
 - Authoring tools may still present tier defaults and local overrides for planning, but content shippability validators must compare the final assumed `wandIncidence` against `RuntimeBoardConfig.wandSpawnRate` for parity.
 - Validator parity rule:
   - `abs(balanceProfile.wandIncidence - runtimeBoardConfig.wandSpawnRate) <= 0.001` passes.
   - Difference above `0.001` must emit a validation error and block shippable status.
+- Cap-aware validator parity rules:
+  - parity against `runtimeBoardConfig.wandSpawnRate` remains mandatory regardless of cap configuration.
+  - if `runtimeBoardConfig.maxConcurrentWands` is non-null, validator/report output must include an informational cap-impact note showing configured cap and expected suppression risk band used in tuning review.
+  - if `runtimeBoardConfig.maxConcurrentWands = 0`, tooling should require an explicit authored acknowledgement that effective Wand usage is intentionally disabled despite non-zero/zero `wandSpawnRate`.
 
 ### 2.2 Worked mapping example (authoring → runtime + validator parity)
 Given a Standard encounter authored with:
@@ -99,6 +104,7 @@ Runtime encounter config must include:
 
 - `RuntimeBoardConfig.allowWandTiles = true`
 - `RuntimeBoardConfig.wandSpawnRate = 0.20`
+- `RuntimeBoardConfig.maxConcurrentWands = null` (legacy uncapped in this example)
 
 Validator parity check:
 
@@ -109,6 +115,10 @@ Mismatch example:
 - authored `wandIncidence = 0.22`
 - runtime `wandSpawnRate = 0.20`
 - `|0.22 - 0.20| = 0.02 > 0.001` → emit validation error (non-shippable until corrected or re-authored).
+
+Cap-aware tuning note:
+
+- If a designer sets `RuntimeBoardConfig.maxConcurrentWands` to a low non-null value (for example `2-4`), keep `wandIncidence` parity tied to `wandSpawnRate` but re-tune HP/move/countdown expectations with playtest data because effective Wand multiplier uptime will usually decrease versus uncapped assumptions.
 
 ---
 
