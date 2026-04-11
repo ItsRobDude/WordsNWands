@@ -157,6 +157,28 @@ Rules:
 - Spark Shuffle must use Fisher–Yates shuffle with draws from this stream only.
 - Post-shuffle “board is playable” checks and any required re-shuffle attempts consume from this same stream.
 - `max_shuffle_retries_per_recovery_cycle` is a canonical v1 constant set to `3`.
+- Emergency-regeneration deterministic lineage is explicit:
+  - branch input is the active `spark_shuffle` stream state at retry-cap hit,
+  - emergency attempt stream states are derived deterministically from that branch input (no `board_init`/`board_refill`/`spell_targeting` borrowing),
+  - branch lineage and resulting state must be persisted for deterministic replay.
+- Emergency-regeneration board-construction attempt order is fixed:
+  - attempts execute in strictly increasing attempt index order (`attempt_index = 0..N-1`),
+  - within each attempt, tiles are generated in row-major slot order,
+  - per slot, consume letter draw first, then optional Wand-assignment draw.
+- Emergency-regeneration acceptance predicate is required:
+  - accept candidate only when `hasPlayableWord(...)` returns `true`,
+  - `hasPlayableWord(...)` must execute against the active pinned validation lookup for `validation_snapshot_version_pin` (no alternate lexicon fallback).
+- Emergency-regeneration retries are bounded:
+  - if acceptance is not reached within bounded retry budget, terminal fallback is mandatory,
+  - terminal fallback is encounter transition to `recoverable_error` with retry CTA payload parity guarantees.
+- Required telemetry for Spark Shuffle emergency branch must include:
+  - `spark_shuffle_retries_attempted`
+  - `spark_shuffle_retry_cap_hit`
+  - `spark_shuffle_fallback_outcome`
+  - `emergency_regen_attempt_count`
+  - `emergency_regen_acceptance_result`
+  - `validation_snapshot_version_pin`
+- If product wants “guaranteed anchor words,” anchors must be a versioned content artifact pinned to validation snapshot versions; implicit external frequency lists (for example ad-hoc “top-1000” lists) are forbidden in runtime recovery logic.
 - If retry cap is reached and board is still dead, fallback sequence is mandatory:
   1. regenerate board via deterministic emergency seed branch
   2. if still dead, end encounter safely in recoverable error state with retry CTA
