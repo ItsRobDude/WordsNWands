@@ -49,11 +49,16 @@ No additional tile-state families are in scope for M1.
 
 ## 3. M2 progression constants
 
-### 3.1 Mainline chapter and encounter shape (locked for M2)
+### 3.1 Mainline chapter and encounter shape (planning targets vs active authored lock)
 
-- chapter count: `3`
-- encounters per chapter: `3`
-- total M2 mainline encounters (excluding starter): `9`
+The active authored lock for M1-M2 remains the first shippable slice (starter + Chapter 1 only) until additional chapter docs/artifacts are explicitly authored and lock-approved.
+
+- active authored lock: Chapter 1 only (`chapter_1_meadow`) with `3` mainline encounters (excluding starter)
+- planned M2 expansion target (not active authored lock): `3` chapters, `3` encounters each, `9` total mainline encounters (excluding starter)
+
+Cross-reference:
+- active authored slice definition: `docs/first-shippable-content-pack.md`
+- active lock constraints and required artifacts: `docs/early-content-lock.md`
 
 ### 3.2 Default move-budget bands by tier (M2 defaults)
 
@@ -124,7 +129,7 @@ If any clue-economy numbers change, update this section first, then update every
 
 ### 4.2 Not in M2
 
-- changing M2 chapter count from `3` without explicit milestone-plan update
+- changing the planned M2 chapter target (`3`) without explicit milestone-plan update
 - adding branching chapter topology (M2 remains `chapter_linear_v1`)
 - adding event progression lanes as mainline requirements
 - exposing move-purchase/revive systems that alter locked move-budget expectations

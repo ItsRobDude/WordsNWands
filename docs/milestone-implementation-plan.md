@@ -393,6 +393,13 @@ At minimum:
 Expand the game from one proof-of-concept encounter into a small but real repeatable loop.
 
 ### Scope
+Active content-lock priority for M2:
+
+- treat the first shippable slice as the active authored lock until additional chapters are explicitly authored and locked
+- do not treat planned Chapter 2/3 breadth as active player-facing authored content until lock docs/artifacts are intentionally expanded
+- use `docs/first-shippable-content-pack.md` as the active authored slice definition
+- use `docs/early-content-lock.md` as the active lock constraints source
+
 - several standard creatures
 - tuned HP/countdown/spell variety
 - basic progression structure
@@ -433,16 +440,18 @@ Milestone 2 enables the middle assist tier but keeps strongest assists off:
 - `docs/implementation-contracts.md` expanded for progression and encounter records if needed
 - `docs/milestone-locked-constants.md` reviewed and updated for M2 locks before implementation
 - `docs/first-shippable-content-pack.md` required before implementation begins for first external-quality content slice and ship-no-apology readiness criteria
+- `docs/early-content-lock.md` required before implementation begins as the active authored lock constraints source
 
 ### Definition of done
 Milestone 2 is done when:
 
-- the player can progress through a small roster of encounters
+- the player can progress through the active authored first shippable slice without placeholder breadth assumptions
 - creatures feel distinct without requiring a new rules language every fight
 - difficulty ramps in a readable way
 - star ratings and repeat play make sense
 - progression feels lightweight rather than bloated
 - the game begins to support “one more battle” behavior honestly
+- any Chapter 2/3 expansion claims are deferred until those chapters are explicitly authored and lock-approved in scope/lock docs
 
 ### Required automated tests before Milestone 2 is complete
 At minimum:
