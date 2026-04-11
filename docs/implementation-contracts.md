@@ -878,6 +878,7 @@ export type EngineEventType =
   | 'countdown_ticked'
   | 'spell_started'
   | 'spell_resolved'
+  | 'phase_transitioned'
   | 'encounter_ended';
 
 export type EngineFramePhase =
@@ -886,6 +887,7 @@ export type EngineFramePhase =
   | 'damage_commit'
   | 'countdown_commit'
   | 'spell_resolution'
+  | 'phase_commit'
   | 'terminal_commit';
 
 export interface EngineEventEnvelope {
@@ -960,6 +962,21 @@ export interface SpellResolvedEvent extends EngineEventEnvelope {
   countdown_reset_to: number;
 }
 
+export interface CommittedMatchupStateChanges {
+  matchup_result_before: MatchupResult;
+  matchup_result_after: MatchupResult;
+  active_modifier_ids_before: string[];
+  active_modifier_ids_after: string[];
+}
+
+export interface PhaseTransitionedEvent extends EngineEventEnvelope {
+  event_type: 'phase_transitioned';
+  frame_phase: 'phase_commit';
+  prior_phase: string;
+  new_phase: string;
+  committed_matchup_state_changes: CommittedMatchupStateChanges;
+}
+
 export interface EncounterEndedEvent extends EngineEventEnvelope {
   event_type: 'encounter_ended';
   frame_phase: 'terminal_commit';
@@ -974,6 +991,7 @@ export type EngineEvent =
   | CountdownTickedEvent
   | SpellStartedEvent
   | SpellResolvedEvent
+  | PhaseTransitionedEvent
   | EncounterEndedEvent;
 ```
 
@@ -987,8 +1005,11 @@ export type EngineEvent =
   4. optional `countdown_ticked` (only when creature survives)
   5. optional `spell_started`
   6. optional `spell_resolved`
-  7. optional `encounter_ended` (terminal outcome)
+  7. optional `phase_transitioned` (only after committed countdown/spell results for that cast)
+  8. optional `encounter_ended` (terminal outcome)
 - `spell_started` and `spell_resolved` must share the same `turn_index`/`cast_index` as the triggering cast.
+- `phase_transitioned` must be emitted only when canonical creature/encounter phase state has committed, with deterministic payload fields (`prior_phase`, `new_phase`, `committed_matchup_state_changes`) sourced from engine commit state.
+- Per `docs/audio-visual-style-guide.md` section 12.3 serialization order, `show_phase_transition_banner` timing is anchored to `phase_transitioned` emission; UI must not infer phase banners from HP/countdown deltas alone.
 - `encounter_ended` must be the final emitted event for the session (`sequence = last_consumed_sequence` at terminal commit).
 
 #### 5.9.4 Restore/replay emission rules
@@ -1012,6 +1033,7 @@ export type EngineEvent =
   - `countdown_ticked`
   - `spell_started`
   - `spell_resolved`
+  - `phase_transitioned`
   - `encounter_ended`
 - analytics-only events are emitted by analytics adapters (section 12), not by this battle-engine union.
 - rule: presentation side effects are optional consumers of `EngineEvent`; skipping an effect must not change canonical battle state.
@@ -1023,6 +1045,7 @@ export type UIActionType =
   | 'show_cast_trace_feedback'
   | 'show_cast_resolution_banner'
   | 'show_restore_recap_banner'
+  | 'show_phase_transition_banner'
   | 'animate_damage_number'
   | 'animate_hp_bar'
   | 'animate_countdown_tick'
@@ -1064,6 +1087,7 @@ Engine events -> required baseline UI action mapping:
 | `countdown_ticked` | `animate_countdown_tick`, `persist_event_checkpoint` |
 | `spell_started` | `play_spell_windup`, `persist_event_checkpoint` |
 | `spell_resolved` | `play_spell_resolution`, `persist_event_checkpoint` |
+| `phase_transitioned` | `show_phase_transition_banner`, `persist_event_checkpoint` |
 | `encounter_ended` | `show_encounter_result`, `persist_event_checkpoint` |
 
 Mapping-extension rule:
