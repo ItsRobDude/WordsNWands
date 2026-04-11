@@ -440,6 +440,9 @@ Current focused-doc direction for this repo:
   - `docs/game-rules.md`
   - `docs/word-validation-and-element-rules.md`
   - `docs/creature-and-encounter-rules.md`
+  - `docs/hint-and-clue-mechanics.md`
+  - `docs/challenge-and-boss-layer.md`
+  - `docs/async-competition-rules.md`
   - `docs/progression-economy-and-monetization.md`
   - `docs/content-pipeline-and-liveops.md`
 - UX
