@@ -2209,7 +2209,199 @@ Required behavior:
 
 ---
 
-## 13. Contract Usage Guidance
+## 13. App Store State Orchestration Contracts
+
+This section defines the canonical Zustand-facing app orchestration state described in `docs/technical-architecture.md` section 13.1–13.4.
+It intentionally separates:
+
+- engine-owned battle truth
+- persistence restore truth
+- UI-only transient orchestration state
+
+`AppStoreState` and slice contracts below are normative for `apps/mobile` store modules.
+
+### 13.1 Root `AppStoreState` composition
+
+```ts
+export interface AppStoreState {
+  sessionSlice: SessionSliceState;
+  encounterSlice: EncounterSliceState;
+  settingsSlice: SettingsSliceState;
+  uiSlice: UiSliceState;
+}
+```
+
+Rules:
+
+- root composition must remain a shallow object with stable slice keys (`sessionSlice`, `encounterSlice`, `settingsSlice`, `uiSlice`)
+- slice renames are breaking contract changes
+- store middleware must not inject hidden gameplay-truth fields outside these slices
+
+### 13.2 `sessionSlice` contract
+
+```ts
+export interface SessionSliceState {
+  app_session_id: string;
+  app_primary_surface: AppPrimarySurface;
+  encounter_restore_target: EncounterRestoreTarget;
+  active_encounter_session_id: string | null;
+  active_encounter_id: string | null;
+  active_result_record_id: string | null;
+  starter_tutorial_cue_stage: StarterTutorialCueStage;
+  starter_tutorial_block_state: StarterTutorialBlockState;
+  has_completed_starter_flow: 0 | 1;
+  last_route_change_at_utc: string;
+}
+```
+
+Allowed write sources:
+
+- persistence restore (`EncounterRestoreTarget`, starter-flow/profile flags)
+- engine result mapping (`active_*` references after encounter creation or terminalization)
+- UI-only interaction (`app_primary_surface` route acknowledgment)
+
+Forbidden fields (must stay in encounter runtime/persistence contracts):
+
+- `moves_remaining`, `move_budget_total`, board tiles, creature HP/countdown, repeated words, RNG stream state
+- any inferred encounter outcome flags that duplicate `EncounterSessionState` or `EncounterResultRecord`
+
+Required actions and idempotency:
+
+- `sessionSlice.hydrateFromRestore(target)` must be idempotent for identical `EncounterRestoreTarget` payloads
+- `sessionSlice.setPrimarySurface(surface)` must be idempotent for repeated same-value calls
+- `sessionSlice.bindActiveEncounterRefs(refs)` must only update reference fields and never mutate canonical battle truth
+
+Selector stability rules:
+
+- provide leaf selectors (`selectAppPrimarySurface`, `selectActiveEncounterSessionId`) for route rendering
+- avoid selectors that allocate new object literals per call for stable React memoization
+- route selectors must be pure and derive only from `sessionSlice` + immutable contract values
+
+### 13.3 `encounterSlice` contract
+
+```ts
+export interface EncounterSliceState {
+  runtime_state: EncounterRuntimeState | null;
+  last_engine_transition: EncounterSessionTransition | null;
+  pending_persist_write: 0 | 1;
+  last_persisted_snapshot_updated_at_utc: string | null;
+}
+```
+
+Allowed write sources:
+
+- engine result only (`runtime_state`, `last_engine_transition`)
+- persistence restore (`runtime_state`, `last_persisted_snapshot_updated_at_utc`)
+- orchestration flags (`pending_persist_write`)
+
+Forbidden fields (battle-truth duplication):
+
+- parallel `board`, `creature`, `moves`, or `session_state` fields outside `runtime_state`
+- separate UI-owned Spark Shuffle counters or terminal reason mirrors
+- derived damage previews stored as canonical state
+
+Required actions and idempotency:
+
+- `encounterSlice.applyEngineResult(nextState, transition)` must be idempotent when same state/version payload is reapplied
+- `encounterSlice.restoreFromSnapshot(snapshot)` must preserve snapshot fidelity and not recompute deterministic fields
+- `encounterSlice.markPersisted(updatedAtUtc)` must only clear `pending_persist_write` when `runtime_state` version matches persisted payload
+- `encounterSlice.clearActiveEncounter()` must be safe to call repeatedly after terminal acknowledgment
+
+Selector stability rules:
+
+- expose granular selectors (`selectEncounterSessionState`, `selectMovesRemaining`, `selectCreatureRuntimeState`)
+- selectors that project composite objects must be memoized and preserve referential equality when inputs are unchanged
+- list/array projections from `runtime_state` (for example board tile lists) must avoid per-render resort/reallocation unless source changed
+
+### 13.4 `settingsSlice` contract
+
+```ts
+export interface SettingsSliceState {
+  sfx_enabled: 0 | 1;
+  music_enabled: 0 | 1;
+  haptics_enabled: 0 | 1;
+  reduce_motion_enabled: 0 | 1;
+  locale_code: string;
+  analytics_opt_in: 0 | 1;
+  has_seen_settings_education: 0 | 1;
+}
+```
+
+Allowed write sources:
+
+- persistence restore (authoritative for durable player preferences)
+- UI-only interaction from settings surfaces
+
+Forbidden fields:
+
+- runtime encounter/battle state
+- progression unlock state that belongs to profile/progression contracts
+- ad-hoc feature flags that alter gameplay truth without corresponding documented contract
+
+Required actions and idempotency:
+
+- `settingsSlice.hydrate(persisted)` must be idempotent for same payload
+- toggle/update actions (`setSfxEnabled`, `setLocaleCode`, etc.) must no-op on identical value
+- `settingsSlice.resetToDefaults()` must restore documented defaults only, never infer from current encounter state
+
+Selector stability rules:
+
+- provide per-setting primitive selectors for render isolation
+- avoid returning new grouped objects from selectors in frequently rerendered HUD roots
+
+### 13.5 `uiSlice` contract
+
+```ts
+export interface UiSliceState {
+  swipe_preview_path: BoardPosition[];
+  highlighted_word_preview: string;
+  transient_banner: 'none' | 'invalid_word' | 'repeated_word' | 'countdown_warning' | 'recoverable_error';
+  pause_overlay_open: 0 | 1;
+  result_ack_pending: 0 | 1;
+}
+```
+
+Allowed write sources:
+
+- UI-only interaction and view lifecycle state
+- engine event reactions that map to presentation cues (`transient_banner`, `result_ack_pending`)
+
+Forbidden fields:
+
+- canonical encounter terminal outcome or persistence identifiers
+- board truth, creature truth, or deterministic RNG progression
+- duplicated starter-flow progression flags (`has_completed_starter_flow`, `starter_tutorial_cue_stage`)
+
+Required actions and idempotency:
+
+- `uiSlice.setSwipePreview(path, word)` must accept empty-path resets and be idempotent for same preview payload
+- `uiSlice.showTransientBanner(kind)` must allow safe repeated calls without queue duplication side effects
+- `uiSlice.acknowledgeResultView()` must only clear UI acknowledgment flags and must not mutate encounter outcome truth
+
+Selector stability rules:
+
+- transient selectors must return stable primitives or stable array references unless payload changed
+- interaction-heavy selectors (swipe preview) should avoid derived allocations in render path
+- UI-only selectors must never derive or infer gameplay legality; legality comes from engine output
+
+### 13.6 Field mapping to existing contracts
+
+- `sessionSlice.encounter_restore_target` maps directly to `EncounterRestoreTarget` (section 3.2)
+- `encounterSlice.runtime_state` maps directly to `EncounterRuntimeState` (section 4.4)
+- persistence hydrate and flush flows must use `ActiveEncounterSnapshotRecord` (section 7.5) as the serialized source of truth
+- terminal result acknowledgement must reference `EncounterResultRecord.result_id` (section 7.4) without duplicating result truth in UI state
+- restore routing decisions must continue to follow `EncounterSessionState` semantics defined in section 2.2 and section 3.1
+
+### 13.7 Relationship to architecture boundary rules
+
+These contracts operationalize `docs/technical-architecture.md` section 13.1–13.4:
+
+- Zustand orchestrates app/session/UI state
+- battle transitions remain engine-owned
+- UI transient state stays local and non-canonical
+- ownership split remains: rules packages compute truth, app store orchestrates invocation and rendering
+
+## 14. Contract Usage Guidance
 
 - `packages/game-rules` and `packages/validation` should own these exported contracts where practical
 - `apps/mobile` should consume contracts and avoid redefining parallel shape types
