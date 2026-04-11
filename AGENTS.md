@@ -20,6 +20,10 @@ Short guidance is easier to keep accurate. A compact operating guide reduces cop
 
 ## 1) Contributor operating rules
 
+### Context Conservation (Read-Only-What-You-Need)
+- Do NOT read the entire `docs/` folder.
+- Use the routing matrix in Section 2 to fetch only the 1-3 files strictly required for your immediate task.
+
 ### Source-of-truth order
 1. Focused docs for the touched area
 2. Implementation contracts and engineering/process docs
@@ -45,7 +49,7 @@ Rules:
 - Document assumptions when docs are incomplete; choose conservative behavior.
 
 ### Required conflict template (when docs disagree)
-Include this in the PR description or final report:
+Include this in the PR description or final report (per `docs/engineering-standards.md` Appendix A):
 - **Conflicting docs/sections:** `<doc path + section>` vs `<doc path + section>`
 - **Chosen interpretation:** `<interpretation used in this change>`
 - **Why this preserves fairness/trust:** `<short rationale>`
@@ -67,6 +71,9 @@ Baseline for all code tasks:
 | creature HP, weaknesses/resistances, countdowns, spells, tile states, encounter balance | `docs/creature-and-encounter-rules.md`, `docs/game-rules.md` |
 | screen layout, swipe interaction, onboarding, battle HUD, results, pause/resume, animation order | `docs/screens-and-session-flow.md`; add `docs/audio-visual-style-guide.md` and `docs/accessibility-localization-and-device-support.md` if visuals/motion/sound/haptics are involved |
 | battle session save/restore, local persistence, content loading, runtime data ownership, architecture boundaries | `docs/technical-architecture.md`, `docs/implementation-contracts.md` |
+| RNG, board generation, refill logic, or Spark Shuffle determinism | `docs/randomness-and-seeding-contract.md`, `docs/implementation-contracts.md` |
+| numeric tuning, HP/move derivation, fail-rate targeting, or content shippability gates | `docs/encounter-balance-framework.md` |
+| M1-M2 version pins, authorized content bundles, or deterministic fixtures | `docs/early-content-lock.md`, `docs/milestone-locked-constants.md` |
 | player-facing semantic text, exact UI copy, names, labels, tone rules | `docs/copy-locks-and-voice-guide.md` if it exists; otherwise use `README.md` and conservative tone assumptions |
 | challenge schedules, daily/weekly structure, content release flow, encounter curation | `docs/content-pipeline-and-liveops.md`, `docs/milestone-implementation-plan.md` |
 | hints, rewards, ads, purchases, cosmetics, boosters, retention systems | `docs/progression-economy-and-monetization.md` |
@@ -82,6 +89,7 @@ If a task does not touch one of these areas, do not pull in extra docs.
 
 Validation source of truth:
 - `docs/engineering-standards.md`, section **5.1 Operational Validation Commands (Contributor Contract)**.
+- Damage Model Consistency: Run `./scripts/check-damage-model-consistency.sh` if touching combat math, formulas, or balance documents.
 
 Use the canonical commands from that section (`pnpm format`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm check` when available) and follow milestone-specific requirements.
 
