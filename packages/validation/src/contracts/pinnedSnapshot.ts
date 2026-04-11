@@ -1,4 +1,4 @@
-import type { RuntimeValidationSnapshot } from "./types.js";
+import type { RuntimeValidationSnapshot } from "./types.ts";
 
 const starterAndChapterAnchorWords = [
   "leaf",

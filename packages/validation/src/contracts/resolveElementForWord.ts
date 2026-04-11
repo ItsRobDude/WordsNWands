@@ -1,5 +1,5 @@
-import { normalizeWord } from "./normalizeWord.js";
-import type { ElementType, ValidationSnapshotLookup } from "./types.js";
+import { normalizeWord } from "./normalizeWord.ts";
+import type { ElementType, ValidationSnapshotLookup } from "./types.ts";
 
 export function resolveElementForWord(
   word: string,

@@ -1,8 +1,8 @@
 import type {
   RuntimeValidationSnapshot,
   ValidationSnapshotLookupProvider,
-} from "./types.js";
-import { InMemoryValidationSnapshotLookup } from "./ValidationSnapshotLookup.js";
+} from "./types.ts";
+import { InMemoryValidationSnapshotLookup } from "./ValidationSnapshotLookup.ts";
 
 export class InMemoryValidationSnapshotLookupProvider implements ValidationSnapshotLookupProvider {
   private readonly lookupsByVersion: ReadonlyMap<
