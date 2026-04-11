@@ -1712,11 +1712,12 @@ The canonical onboarding timeline is:
    - clear starter gate
    - route to `home` and point primary progression CTA to first unlocked, uncleared mainline encounter
 
-### 9.1.b Deterministic Star Rating v1 contract
+### 9.1.b Deterministic star-rating policy contract
 
-Star-rating computation for persisted encounter results is locked to:
+Star-rating computation for persisted encounter results is policy-versioned:
 
-- `star_rating_model_v1`
+- `star_policy_v1_absolute`
+- `star_policy_v2_percentage`
 
 This must align with `docs/game-rules.md` ("Current star-rating direction") and `docs/progression-economy-and-monetization.md` section 9 (`win_any_stars`, no relock).
 
@@ -1724,38 +1725,55 @@ TypeScript-facing pure contract:
 
 ```ts
 export type StarRating = 0 | 1 | 2 | 3;
+export type StarPolicyVersion = 'star_policy_v1_absolute' | 'star_policy_v2_percentage';
 
 export function deriveStarRating(
   outcome: EncounterOutcome,
   moves_remaining: number,
+  move_budget_total: number,
+  star_policy_version: StarPolicyVersion,
 ): StarRating;
 ```
 
-Deterministic threshold mapping:
+Deterministic policy mappings:
 
-- if `outcome = 'lost'`, return `0` (ignore `moves_remaining` for rating)
+- if `outcome = 'lost'`, return `0` (ignore `moves_remaining`, `move_budget_total`, and policy thresholds for rating)
+
+`star_policy_v1_absolute` (current standard encounter behavior):
+
 - if `outcome = 'won'` and `moves_remaining >= 4`, return `3`
 - if `outcome = 'won'` and `moves_remaining` is `2` or `3`, return `2`
 - if `outcome = 'won'` and `moves_remaining` is `0` or `1`, return `1`
 
+`star_policy_v2_percentage` (percentage-of-budget behavior):
+
+- compute `remaining_ratio = moves_remaining / move_budget_total`
+- `move_budget_total` must be `>= 1` for any playable encounter and policy evaluation
+- deterministic rounding rule: compute `remaining_percent_floor = floor(remaining_ratio * 100)` (no nearest rounding; always floor)
+- deterministic boundary rule (inclusive lower bounds):
+  - `remaining_percent_floor >= 30` => `3` stars
+  - `remaining_percent_floor >= 15` and `< 30` => `2` stars
+  - `remaining_percent_floor >= 0` and `< 15` => `1` star
+- deterministic guardrail rule: clamp `remaining_percent_floor` to `[0, 100]` before threshold checks so out-of-range persisted values do not produce undefined mapping
+
 Boundary examples:
 
-- `deriveStarRating('won', 0) = 1`
-- `deriveStarRating('won', 1) = 1`
-- `deriveStarRating('won', 2) = 2`
-- `deriveStarRating('won', 3) = 2`
-- `deriveStarRating('won', 4) = 3`
-- `deriveStarRating('won', 7) = 3` (same `4+` bucket)
-- `deriveStarRating('lost', 0) = 0`
-- `deriveStarRating('lost', 5) = 0` (loss always maps to `0`)
+- `deriveStarRating('won', 0, 12, 'star_policy_v1_absolute') = 1`
+- `deriveStarRating('won', 3, 12, 'star_policy_v1_absolute') = 2`
+- `deriveStarRating('won', 4, 12, 'star_policy_v1_absolute') = 3`
+- `deriveStarRating('won', 3, 10, 'star_policy_v2_percentage') = 3` (`floor(30.0)`)
+- `deriveStarRating('won', 2, 10, 'star_policy_v2_percentage') = 2` (`floor(20.0)`)
+- `deriveStarRating('won', 1, 10, 'star_policy_v2_percentage') = 1` (`floor(10.0)`)
+- `deriveStarRating('won', 9, 31, 'star_policy_v2_percentage') = 2` (`floor(29.03) = 29`)
+- `deriveStarRating('lost', 5, 10, 'star_policy_v2_percentage') = 0` (loss always maps to `0`)
 
 Persistence and progression application rules:
 
-- compute `encounter_result_records.star_rating` exactly once, at terminal result commit time, using `deriveStarRating(outcome, moves_remaining)` and persist with the result row
+- compute `encounter_result_records.star_rating` exactly once, at terminal result commit time, using `deriveStarRating(outcome, moves_remaining, move_budget_total, star_policy_version)` and persist with the result row
 - do not derive or rewrite `star_rating` later from UI state or replay screens
 - on outcome `won`, update `encounter_progress_records.best_star_rating = max(existing_best_star_rating, result.star_rating)`
 - on outcome `lost`, do not change `encounter_progress_records.best_star_rating`
-- progression unlock semantics remain `win_any_stars` (`1|2|3` on win unlocks next canonical encounter); losses (`0` stars) do not unlock and replays must not relock
+- progression unlock semantics remain `win_any_stars` (`1|2|3` on win unlocks next canonical encounter) regardless of `star_policy_version`; losses (`0` stars) do not unlock and replays must not relock
 
 ### 9.2 Mainline win transition rules
 

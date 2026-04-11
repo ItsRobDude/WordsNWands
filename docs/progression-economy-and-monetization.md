@@ -385,6 +385,7 @@ The mainline unlock condition for Milestone 2 is:
 
 A win with `1`, `2`, or `3` stars unlocks the next mainline encounter.
 A loss with `0` stars does not unlock the next mainline encounter.
+This unlock rule is policy-version agnostic: `win_any_stars` remains canonical even if different encounter sets use different `star_policy_version` mappings.
 
 Stars are mastery rewards, not progression gates.
 

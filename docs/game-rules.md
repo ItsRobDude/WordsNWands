@@ -787,7 +787,7 @@ The player should not be confused about how the battle ended.
 ### Current star-rating direction
 The encounter may award stars based on efficiency.
 
-Current standard direction:
+Current **standard encounter** direction (`star_policy_v1_absolute`):
 
 - 3 stars: win with `4+` moves remaining
 - 2 stars: win with `2-3` moves remaining
@@ -795,6 +795,15 @@ Current standard direction:
 - 0 stars: loss
 
 This gives players a gentle reason to replay without making failure feel cruel.
+
+### Boss/event star-policy routing rule
+Boss and event encounters must not implicitly inherit standard absolute thresholds by assumption.
+
+Routing rules:
+
+- if encounter type is `standard`, use `star_policy_v1_absolute` unless a future standard-policy migration is explicitly declared
+- if encounter type is `boss` or `event`, resolve rating using that content’s authored `star_policy_version`
+- if a boss/event content row omits `star_policy_version`, treat content as invalid at authoring/validation time (do not silently fall back at runtime)
 
 ### No humiliation rule
 Failure should feel like:
