@@ -19,7 +19,7 @@ Words 'n Wands! should give players a reason to open the app, solve something cl
 This README is the current top-level source of truth for Words 'n Wands! product direction.
 
 Focused documents under `docs/` exist to refine this overview with more exact gameplay, screen, balance, and engineering rules.  
-When a more specific document goes deeper than this README, the more specific document should win.
+If README conflicts with focused docs, focused docs win.
 
 ---
 
@@ -146,98 +146,22 @@ It should **not** feel like:
 Words 'n Wands! is built around a small set of tightly related layers.
 
 ### 1. Creature Encounters
-This is the heart of the product.
-
-In the current MVP rules direction:
-
-- the game is portrait-only
-- each battle uses one creature
-- the board is a **6x6 letter grid**
-- players form words by swiping through adjacent letters
-- adjacency includes horizontal, vertical, and diagonal
-- tiles cannot be reused within one word
-- words must be at least **3 letters**
-- used letters disappear and the board refills
-- battles are controlled by a **fixed move budget**, not player hearts/lives
-- the creature has a visible cast countdown and visible weakness/resistance information
+Creature encounters are the core loop; canonical encounter structure, board rules, move-budget rules, and win/loss conditions live in `docs/game-rules.md` (§3, §4, §5, §8, §11, §15). ([Direct link](docs/game-rules.md#3-core-product-shape))
 
 ### 2. Word Magic System
-Words are not just score.
-
-Words 'n Wands! should be built around the idea that **word meaning matters**.
-
-Current direction:
-
-- longer words deal more base damage
-- some words carry elemental meaning
-- creatures react differently to different elements
-- a weakness hit should feel meaningfully better than a neutral hit
-- a resistant hit should still work, but less effectively
-- words with no assigned element still function as valid neutral magic
-
-The current element set is:
-
-- Flame
-- Tide
-- Bloom
-- Storm
-- Stone
-- Light
-- Arcane (neutral fallback)
+Word casting, normalization, element tagging, Arcane fallback, and damage interplay are defined in `docs/word-validation-and-element-rules.md` (§5, §11, §12, §15) plus `docs/game-rules.md` (§9, §10). ([Direct link](docs/word-validation-and-element-rules.md#11-element-assignment-philosophy))
 
 ### 3. Creature Mischief System
-Creatures are not passive targets.
-
-Each creature should have a simple, readable board identity:
-
-- a visible cast countdown
-- one weakness
-- one resistance
-- one signature board spell or mischief effect
-
-Creature spells should create interesting decisions, not chaos for its own sake.
-
-Examples of the intended style:
-
-- freezing a few tiles temporarily
-- adding soot that weakens damage
-- shifting a row or column
-- bubbling a tile upward
-- dulling a tile so it loses element value
-
-The creature system should deepen the puzzle without turning the board into unreadable noise.
+Creature countdowns, weakness/resistance behavior, and spell/tile-state constraints are canonical in `docs/creature-and-encounter-rules.md` (§5, §10, §11, §13, §20) and `docs/game-rules.md` (§11, §12). ([Direct link](docs/creature-and-encounter-rules.md#5-standard-creature-rules))
 
 ### 4. Light Progression and Replayability
-Progression should support the battle loop, not bury it.
-
-Likely progression layers later may include:
-
-- creature unlocks
-- new habitats/chapters/worlds
-- star ratings
-- creature journals or codex entries
-- curated daily or weekly challenges
-- gentle cosmetic rewards
-
-The current product direction does **not** support turning the game into a loot treadmill.
+Progression, stars, challenge rewards, and anti-treadmill economy boundaries are canonical in `docs/progression-economy-and-monetization.md` (§3, §4, §6, §8, §11, §16). ([Direct link](docs/progression-economy-and-monetization.md#3-progression-principles))
 
 ### 5. Daily / Weekly Challenge Layer Later
-A daily or weekly ritual may become an important retention layer later.
-
-However, the core identity of Words 'n Wands! is **the battle loop itself**, not an artificial calendar wrapper.
-
-That means:
-
-- one strong encounter matters more than a weak daily system
-- challenge cadence should support the game, not define it too early
-- daily/weekly systems should be added only after the core battle loop is genuinely fun
+Daily/weekly challenge scope, optionality, and placement timing are owned by `docs/progression-economy-and-monetization.md` (§11) and `docs/content-pipeline-and-liveops.md` (challenge scheduling/operations). ([Direct link](docs/progression-economy-and-monetization.md#11-daily-and-weekly-flavor-reward-rules))
 
 ### 6. Async Competitive Mode Later
-An asynchronous competitive mode may fit later, but it is not the current product identity.
-
-The most promising future direction is **asynchronous mirror competition**, where players face equivalent seeded boards and compare outcomes fairly.
-
-Real-time multiplayer is not a core requirement and should not shape early architecture at the expense of the solo battle loop.
+Async competition scope and guardrails are canonical in `docs/async-competition-rules.md`, and milestone timing lives in `docs/milestone-implementation-plan.md` (§11). ([Direct link](docs/milestone-implementation-plan.md#11-milestone-5--async-competition-later))
 
 ---
 
@@ -246,56 +170,16 @@ Real-time multiplayer is not a core requirement and should not shape early archi
 The current MVP battle direction is intentionally tight.
 
 ### Core battle structure
-- one creature per encounter
-- one board
-- one move budget
-- one clearly readable objective: defeat the creature before moves run out
+MVP encounter structure (single-creature board battle with move-budget objective) is canonical in `docs/game-rules.md` (§4, §8, §15). ([Direct link](docs/game-rules.md#4-standard-encounter-rules))
 
 ### Current rule direction
-- valid words consume 1 move
-- invalid words do not consume a move
-- repeated words are rejected within the same battle
-- the creature’s cast countdown ticks down on successful turns
-- weakness hits can stall or disrupt the creature’s countdown
-- when the countdown reaches 0, the creature casts its board spell and the timer resets
-- the battle ends when the creature is defeated or the player runs out of moves
+Turn resolution, valid/invalid/repeat handling, countdown timing, spell reset, and battle-end rules are canonical in `docs/game-rules.md` (§6, §7, §8, §11, §15) and `docs/screens-and-session-flow.md` (§11–§13). ([Direct link](docs/game-rules.md#7-turn-flow-rules))
 
 ### Failure-state direction
-Words 'n Wands! currently prefers:
-
-- **move pressure**
-- **board pressure**
-- **decision pressure**
-
-over:
-
-- health loss
-- harsh punishment
-- panic-heavy stress
-
-This is a deliberate tone choice.
-
-Words 'n Wands! should feel tense in a puzzle sense, not mean in a combat sense.
+Failure pressure style (move/board/decision pressure over health-loss punishment) is canonical in `docs/game-rules.md` (§3, §4, §15, §20). ([Direct link](docs/game-rules.md#3-core-product-shape))
 
 ### Tone direction
-Creatures should feel like:
-
-- magical
-- playful
-- mischievous
-- charming
-- expressive
-
-The player is not “slaughtering monsters.”
-
-The fantasy is closer to:
-
-- calming wild magic
-- breaking mischief spells
-- restoring order
-- outsmarting a magical creature in a friendly fantasy world
-
-That emotional framing matters.
+Creature/player emotional framing and family-friendly battle tone are canonical in `docs/game-rules.md` (§20) and `docs/audio-visual-style-guide.md` (presentation tone). ([Direct link](docs/game-rules.md#20-family-friendly-tone-rules))
 
 ---
 
@@ -463,70 +347,7 @@ Words 'n Wands! should not depend on contributors guessing the rules from scatte
 
 ## Current Build Strategy
 
-Words 'n Wands! should be built in controlled phases.
-
-The practical order is:
-
-1. repo and docs foundation
-2. one fully playable offline encounter vertical slice
-3. a small creature roster and basic progression
-4. challenge cadence and content expansion
-5. content pipeline and balancing tools
-6. async competition later if the core supports it
-7. monetization and expansion only after the game is genuinely fun
-
-The **battle loop is the product**.  
-Everything else should support that.
-
-### Milestone shape direction
-
-#### Milestone 0 — Foundation
-- repo structure
-- doc structure
-- pnpm-only command expectations
-- Android-first app shell
-- battle architecture direction
-- typed data structure direction
-- boring implementation standards
-
-#### Milestone 1 — Core Vertical Slice
-- one playable creature encounter
-- one battle screen
-- one result screen
-- valid word casting
-- board collapse and refill
-- damage calculation
-- creature countdown and one board spell
-- basic save/resume
-- restrained first-pass feedback
-
-#### Milestone 2 — Small Roster + Basic Progression
-- several creatures
-- difficulty ramp
-- star ratings
-- creature variety
-- a stable feeling of “one more battle”
-
-#### Milestone 3 — Challenge Structure
-- daily/weekly challenge evaluation
-- curated encounter sets
-- stronger return reasons
-- content pacing that still protects the core loop
-
-#### Milestone 4 — Content Operations and Balance Hardening
-- balancing tools
-- content schema hardening
-- validation tools
-- clearer encounter data pipelines
-
-#### Milestone 5 — Async Competition Later
-- only if the solo battle loop is already strong
-- only if fairness and clarity can be preserved
-- async mirror-style direction preferred over real-time dependency
-
-#### Milestone 6 — Monetization and Content Expansion
-- only if it supports the emotional contract
-- only if it does not deform the game into pressure or clutter
+Milestone sequencing and exact phase scope are canonical in `docs/milestone-implementation-plan.md` (§6–§13), while architecture-by-phase rules are canonical in `docs/technical-architecture.md` (§6, §24). ([Direct link](docs/milestone-implementation-plan.md#6-milestone-0--project-foundation))
 
 ---
 
@@ -566,40 +387,19 @@ That order matters.
 Some boundaries should remain stable unless the docs are intentionally updated.
 
 ### Product-shape boundaries
-- Words 'n Wands! is Android-first
-- Words 'n Wands! is portrait-first
-- one-handed usability matters
-- the player should understand the repeated loop quickly
-- the board should remain the primary play surface
-- creatures should add personality and strategy, not noise
+Platform/surface boundaries and board-first interaction constraints are canonical in `docs/game-rules.md` (§3), `docs/screens-and-session-flow.md` (§9), and `docs/technical-architecture.md` (§2, §20). ([Direct link](docs/screens-and-session-flow.md#9-battle-screen-layout-rules))
 
 ### Fairness and trust boundaries
-- word validation must be consistent
-- element assignment must be consistent
-- creature rules must be visible and explainable
-- damage should feel understandable
-- board state changes should be readable
-- the player should be able to understand why they won or lost
-- the game must not feel like it cheated
+Fairness, validation consistency, readable combat outcomes, and anti-cheating trust constraints are canonical in `docs/word-validation-and-element-rules.md` (§4, §17), `docs/game-rules.md` (§13, §15), and `docs/creature-and-encounter-rules.md` (§20). ([Direct link](docs/game-rules.md#13-board-fairness-and-safety-rules))
 
 ### Tone boundaries
-- the game should remain family-friendly
-- the game should avoid dark or grim identity drift
-- creature interaction should feel magical, not cruel
-- challenge should not require the game to become mean
+Family-friendly and non-cruel tone boundaries are canonical in `docs/game-rules.md` (§20), `docs/word-validation-and-element-rules.md` (§9), and `docs/audio-visual-style-guide.md`. ([Direct link](docs/game-rules.md#20-family-friendly-tone-rules))
 
 ### Complexity boundaries
-- no loot treadmill
-- no deep RPG stat soup
-- no fake difficulty through obscure validation
-- no live-service clutter before the core loop is proven
-- no AI-runtime magic that makes rules feel inconsistent
+Complexity limits (no treadmill/stat-soup/obscure validation/early live-service drift/runtime AI for battle semantics) are canonical in `docs/game-rules.md` (§22), `docs/word-validation-and-element-rules.md` (§1, §21), and `docs/technical-architecture.md` (§11.4, §25). ([Direct link](docs/technical-architecture.md#25-what-this-architecture-deliberately-avoids-early))
 
 ### Monetization boundaries
-- no interruption during active solving
-- no pay-to-win battle outcomes
-- no deforming the puzzle loop to force spending
-- no making the player pay for fairness, dignity, or clarity
+Monetization guardrails (no active-battle interruption, no pay-to-win, no fairness-for-sale mechanics) are canonical in `docs/progression-economy-and-monetization.md` (§8, §15, §16, §17). ([Direct link](docs/progression-economy-and-monetization.md#8-core-economy-boundaries))
 
 ---
 
