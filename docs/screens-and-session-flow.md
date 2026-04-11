@@ -200,6 +200,7 @@ The goal is confidence, not proving difficulty.
 
 ### Starter tutorial cue sequence (canonical)
 The starter encounter uses a fixed cue sequence so onboarding behavior is deterministic and testable.
+Its first guided cast should teach a non-neutral element outcome (not Arcane fallback) so the player immediately learns that element choice, not only word validity, affects battle results.
 
 | Cue stage | Trigger condition | Dismissal behavior | Gameplay state |
 | --- | --- | --- | --- |
