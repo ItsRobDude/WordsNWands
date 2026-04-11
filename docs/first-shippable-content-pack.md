@@ -285,7 +285,7 @@ It should not force journal/currency/bonus-reward UI before those layers are rea
 - `damageModelVersion`: `damage_model_v1`
 - `rewardDefinition`: `null`
 - `hiddenBonusWordPolicy`: `null`
-- `boardConfig`: must use `board_profile_starter_onboarding_v1`
+- `boardConfig`: must inline the canonical starter `RuntimeBoardConfig` payload from section 8.1 (no runtime profile-id resolution)
 - `balanceMetadata`:
   - `authoredFailRateBand = low`
   - `waivers = []`
@@ -368,7 +368,7 @@ Never framed as a “real enemy.”
 - `damageModelVersion`: `damage_model_v1`
 - `rewardDefinition`: `null`
 - `hiddenBonusWordPolicy`: `null`
-- `boardConfig`: must use `board_profile_core_mainline_v1`
+- `boardConfig`: must inline the canonical mainline `RuntimeBoardConfig` payload from section 8.2 (no runtime profile-id resolution)
 - `balanceMetadata`:
   - `authoredFailRateBand = low`
   - `waivers = []`
@@ -425,7 +425,7 @@ The player should leave thinking:
 - `damageModelVersion`: `damage_model_v1`
 - `rewardDefinition`: `null`
 - `hiddenBonusWordPolicy`: `null`
-- `boardConfig`: must use `board_profile_core_mainline_v1`
+- `boardConfig`: must inline the canonical mainline `RuntimeBoardConfig` payload from section 8.2 (no runtime profile-id resolution)
 - `balanceMetadata`:
   - `authoredFailRateBand = low`
   - `waivers = []`
@@ -486,7 +486,7 @@ The first ship should reward learning recognizable patterns.
 - `damageModelVersion`: `damage_model_v1`
 - `rewardDefinition`: `null`
 - `hiddenBonusWordPolicy`: `null`
-- `boardConfig`: must use `board_profile_core_mainline_v1`
+- `boardConfig`: must inline the canonical mainline `RuntimeBoardConfig` payload from section 8.2 (no runtime profile-id resolution)
 - `balanceMetadata`:
   - `authoredFailRateBand = medium`
   - `waivers = []`
@@ -519,49 +519,143 @@ It must **not** feel like:
 
 ---
 
-## 8. Board-profile expectations for this pack
+## 8. Canonical boardConfig payloads for this pack
 
-## 8.1 Starter profile — `board_profile_starter_onboarding_v1`
+M1–M2 encounter payloads must carry fully authored inline `RuntimeBoardConfig` objects.
+Do not rely on unresolved runtime board profile IDs.
 
-The starter profile is not just “easy RNG.”
-It is authored learning support.
+### 8.1 Starter canonical boardConfig (editorial label: `board_profile_starter_onboarding_v1`)
 
-Required properties for the first ship:
+Editorial label note: this label is for human review only and has no runtime loader semantics.
 
-- fixed or tightly scripted sequence support for the starter’s opening and tutorial checkpoints
-- no Wand tiles
-- common, readable letter distribution bias
-- no misleading rare-letter clutter
-- enough playability to preserve confidence after the tutorial beat transitions
-- support for the exact `LEAF` guided cast and the intended post-spell `SUN` weakness-teaching moment
+```json
+{
+  "rows": 6,
+  "cols": 6,
+  "seedMode": "fixed_seed",
+  "fixedSeed": "starter_opening_script_v1",
+  "allowWandTiles": false,
+  "wandSpawnRate": 0,
+  "maxConcurrentWands": 0,
+  "letterDistributionProfileId": "letter_distribution_starter_onboarding_v1",
+  "letterWeightEntries": [
+    { "letter": "A", "weight": 10 },
+    { "letter": "B", "weight": 2 },
+    { "letter": "C", "weight": 4 },
+    { "letter": "D", "weight": 4 },
+    { "letter": "E", "weight": 13 },
+    { "letter": "F", "weight": 3 },
+    { "letter": "G", "weight": 3 },
+    { "letter": "H", "weight": 3 },
+    { "letter": "I", "weight": 8 },
+    { "letter": "J", "weight": 1 },
+    { "letter": "K", "weight": 1 },
+    { "letter": "L", "weight": 7 },
+    { "letter": "M", "weight": 3 },
+    { "letter": "N", "weight": 7 },
+    { "letter": "O", "weight": 9 },
+    { "letter": "P", "weight": 3 },
+    { "letter": "Q", "weight": 1 },
+    { "letter": "R", "weight": 7 },
+    { "letter": "S", "weight": 7 },
+    { "letter": "T", "weight": 8 },
+    { "letter": "U", "weight": 5 },
+    { "letter": "V", "weight": 1 },
+    { "letter": "W", "weight": 2 },
+    { "letter": "X", "weight": 1 },
+    { "letter": "Y", "weight": 2 },
+    { "letter": "Z", "weight": 1 }
+  ],
+  "namedLetterPoolId": "starter_onboarding_readable_pool_v1",
+  "vowelClassProfileVersion": "vowel_class_v1",
+  "vowelClassIncludesY": false,
+  "boardQualityPolicy": {
+    "qualityPolicyVersion": "board_quality_starter_v1",
+    "minVowelClassCount": 12
+  }
+}
+```
 
-The starter profile exists to teach confidence, not to test systemic variety.
+Starter scripted opening behavior (required explicit representation):
 
-## 8.2 Mainline profile — `board_profile_core_mainline_v1`
+```json
+{
+  "starterScriptedOpening": {
+    "mode": "fixed_seed_opening_then_generated",
+    "openingBoardContract": {
+      "mustContainGuidedWord": "LEAF",
+      "guidedWordPath": [
+        { "row": 0, "col": 0 },
+        { "row": 0, "col": 1 },
+        { "row": 0, "col": 2 },
+        { "row": 0, "col": 3 }
+      ],
+      "mustEnableWeaknessTeachingWordAfterFirstCreatureSpell": "SUN"
+    },
+    "postOpeningTransition": {
+      "seedMode": "generated",
+      "fixedSeed": null,
+      "inheritsRemainingBoardConfig": true
+    }
+  }
+}
+```
 
-All three Meadow encounters use the same core profile.
+The starter board exists to teach confidence, not to test systemic variety.
 
-Required properties:
+### 8.2 Mainline canonical boardConfig (editorial label: `board_profile_core_mainline_v1`)
 
-- `seedMode = generated`
-- shared profile across mainline encounters for skill transfer and board trust
-- Wand tiles allowed
-- readable, family-safe, ordinary-player vocabulary support
-- strong support for common 3–6 letter words
-- no encounter-specific gimmick letter pools for the first ship
+Editorial label note: this label is for human review only and has no runtime loader semantics.
 
-### Shared-skill rule
+```json
+{
+  "rows": 6,
+  "cols": 6,
+  "seedMode": "generated",
+  "fixedSeed": null,
+  "allowWandTiles": true,
+  "wandSpawnRate": 0.06,
+  "maxConcurrentWands": 2,
+  "letterDistributionProfileId": "letter_distribution_core_mainline_v1",
+  "letterWeightEntries": [
+    { "letter": "A", "weight": 9 },
+    { "letter": "B", "weight": 2 },
+    { "letter": "C", "weight": 4 },
+    { "letter": "D", "weight": 4 },
+    { "letter": "E", "weight": 12 },
+    { "letter": "F", "weight": 2 },
+    { "letter": "G", "weight": 3 },
+    { "letter": "H", "weight": 3 },
+    { "letter": "I", "weight": 8 },
+    { "letter": "J", "weight": 1 },
+    { "letter": "K", "weight": 1 },
+    { "letter": "L", "weight": 5 },
+    { "letter": "M", "weight": 3 },
+    { "letter": "N", "weight": 6 },
+    { "letter": "O", "weight": 8 },
+    { "letter": "P", "weight": 3 },
+    { "letter": "Q", "weight": 1 },
+    { "letter": "R", "weight": 6 },
+    { "letter": "S", "weight": 6 },
+    { "letter": "T", "weight": 7 },
+    { "letter": "U", "weight": 4 },
+    { "letter": "V", "weight": 1 },
+    { "letter": "W", "weight": 2 },
+    { "letter": "X", "weight": 1 },
+    { "letter": "Y", "weight": 2 },
+    { "letter": "Z", "weight": 1 }
+  ],
+  "namedLetterPoolId": "core_mainline_default_pool_v1",
+  "vowelClassProfileVersion": "vowel_class_v1",
+  "vowelClassIncludesY": false,
+  "boardQualityPolicy": {
+    "qualityPolicyVersion": "board_quality_mainline_v1",
+    "minVowelClassCount": 10
+  }
+}
+```
 
-The creature identities should vary.
-The board-trust contract should stay stable.
-
-The player should learn:
-
-- “creatures change how I use the board”
-
-not:
-
-- “every encounter secretly rewrites how letter generation behaves.”
+Shared-skill rule: creatures should vary while this board-generation contract stays stable across `enc_meadow_001` through `enc_meadow_003`.
 
 ---
 
