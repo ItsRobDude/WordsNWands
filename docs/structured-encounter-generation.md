@@ -26,6 +26,7 @@ Use this together with:
 - `docs/randomness-and-seeding-contract.md`
 - `docs/technical-architecture.md`
 - `docs/implementation-contracts.md`
+- `docs/encounter-generator-implementation.md` (engineering companion implementation doc; this policy doc remains product behavior source of truth)
 - `docs/fun-research-guide-team1.md`
 - `docs/fun-research-guide-team2.md`
 

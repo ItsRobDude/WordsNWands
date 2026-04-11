@@ -75,7 +75,7 @@ Baseline for all code tasks:
 | numeric tuning, HP/move derivation, fail-rate targeting, or content shippability gates | `docs/encounter-balance-framework.md` |
 | M1-M2 version pins, authorized content bundles, or deterministic fixtures | `docs/early-content-lock.md`, `docs/milestone-locked-constants.md` |
 | player-facing semantic text, exact UI copy, names, labels, tone rules | `docs/copy-locks-and-voice-guide.md` if it exists; otherwise use `README.md` and conservative tone assumptions |
-| challenge schedules, daily/weekly structure, content release flow, encounter curation | `docs/content-pipeline-and-liveops.md`, `docs/milestone-implementation-plan.md` |
+| challenge schedules, daily/weekly structure, content release flow, encounter curation | `docs/content-pipeline-and-liveops.md`, `docs/milestone-implementation-plan.md`; add `docs/encounter-generator-implementation.md` when building or modifying encounter-generation tooling (policy remains in `docs/structured-encounter-generation.md`) |
 | hints, rewards, ads, purchases, cosmetics, boosters, retention systems | `docs/progression-economy-and-monetization.md` |
 | sound, haptics, visual tone, icon style, typography, spacing, animation behavior | `docs/audio-visual-style-guide.md`, `docs/accessibility-localization-and-device-support.md` |
 | analytics, telemetry, experiments, funnel measurement | `docs/analytics-and-experimentation.md` |
