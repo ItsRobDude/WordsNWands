@@ -1,14 +1,18 @@
 # Words 'n Wands!
 
 ## What this is
+
 Words 'n Wands! is an Android-first, portrait-first magical word battle game where players swipe valid words to cast spells.
-This repository is still docs-first, but it is no longer docs-only: shared packages contain partial headless battle, validation, and content-loading implementations while `apps/mobile` remains pre-vertical-slice.
+This repository is still docs-first, but it is no longer docs-only: shared packages contain working battle, validation, and content-loading pieces, and `apps/mobile` now ships a first playable vertical slice wired into those shared packages.
+The current app slice covers starter flow, an active encounter board, result routing, and a simple Home continuation surface. It still uses tap-chained board input and app-local bundled-content wiring while swipe-native gestures, SQLite restore, and fuller app architecture are still in progress.
 The main goal right now is to keep gameplay rules, UX flow, and implementation contracts aligned.
 Treat focused docs in `docs/` as product truth; this file is a fast entry point.
 For contributor execution rules and scope discipline, read `AGENTS.md`.
 
 ## Quick start
+
 Use `pnpm` only.
+
 ```bash
 pnpm install --frozen-lockfile
 pnpm format
@@ -24,6 +28,7 @@ If scripts are not scaffolded yet, follow `docs/engineering-standards.md` sectio
 If local setup or dependency installation behaves unexpectedly, use [docs/development-setup-and-dependency-troubleshooting.md](docs/development-setup-and-dependency-troubleshooting.md) as the canonical recovery guide.
 
 ## Repo map
+
 - `AGENTS.md` — contributor operating rules and doc-routing matrix.
 - `docs/` — focused source-of-truth documents by domain.
 - `README.md` — short orientation and command entry point.
@@ -31,6 +36,7 @@ If local setup or dependency installation behaves unexpectedly, use [docs/develo
 - Future app/workspace packages should follow boundaries in `docs/technical-architecture.md`.
 
 ## Source-of-truth docs
+
 Start with `docs/engineering-standards.md` for coding and validation contract.
 Start with `docs/development-setup-and-dependency-troubleshooting.md` for local bootstrap, dependency install, or workspace-command troubleshooting.
 Then read only the focused docs for your task area (battle rules, RNG, UX, economy, etc.) using `AGENTS.md` section 2.
@@ -40,7 +46,6 @@ Encounter generation governance: use `docs/structured-encounter-generation.md` f
 Milestone-specific required behavior docs: `docs/first-shippable-content-pack.md` (M2 external-quality content readiness), `docs/challenge-and-boss-layer.md` (M3 challenge/boss behavior constraints), and `docs/async-competition-rules.md` (M5 async competition policy).
 When docs conflict, resolve deliberately and document the decision with the conflict template from `AGENTS.md`.
 
-
 ## Reading paths
 
 - **60-second overview** (`README.md`): project purpose + core constraints (docs-first phase, deterministic/fair gameplay focus, Android-first foundation).
@@ -48,7 +53,6 @@ When docs conflict, resolve deliberately and document the decision with the conf
 - **Local setup / dependency recovery path** (`README.md`, `docs/engineering-standards.md`, `docs/development-setup-and-dependency-troubleshooting.md`): install flow, Windows workspace-runner caveats, env troubleshooting, and dependency recovery.
 - **Release-readiness/content polish path** (`docs/first-shippable-content-pack.md`, `docs/milestone-implementation-plan.md`, `docs/milestone-locked-constants.md`): external-quality content composition, milestone ship checks, and locked runtime constants.
 - **Deep reference** (read only the area you are changing): `docs/game-rules.md`, `docs/word-validation-and-element-rules.md`, `docs/screens-and-session-flow.md`, `docs/implementation-contracts.md`, `docs/randomness-and-seeding-contract.md`, `docs/technical-architecture.md`, `docs/milestone-implementation-plan.md`, `docs/first-shippable-content-pack.md`, `docs/challenge-and-boss-layer.md`, `docs/async-competition-rules.md`.
-
 
 ## Clean-room implementation path
 
@@ -90,8 +94,8 @@ If your goal is to build the complete game shape described in docs (not just the
 
 For visuals and motion work, include [audio-visual style guide](docs/audio-visual-style-guide.md) and [accessibility/localization/device support](docs/accessibility-localization-and-device-support.md) before implementation.
 
-
 ## Contribution flow
+
 1. Read `AGENTS.md` and `docs/engineering-standards.md`.
 2. Pull only the 1–3 focused docs needed for the task.
 3. Make the smallest safe change; avoid widening scope.
@@ -99,6 +103,7 @@ For visuals and motion work, include [audio-visual style guide](docs/audio-visua
 5. Report changes, assumptions, commands run, deferred work, and risks.
 
 ## Non-goals
+
 - Do not invent undocumented gameplay, combat math, or word-validation behavior.
 - Do not hide gameplay truth in UI-only code.
 - Do not add monetization/live-ops/social complexity to unrelated tasks.

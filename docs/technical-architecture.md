@@ -30,7 +30,9 @@ This document describes the intended architecture, not a claim that every layer 
 Current repo status as of 2026-04-11:
 
 - `packages/game-rules`, `packages/validation`, and `packages/content` contain the main implemented shared logic
-- `apps/mobile` is still a shell stub and does not yet realize the full routing, Zustand, SQLite, or persistence architecture described later in this document
+- `apps/mobile` now contains a first playable vertical slice that routes through starter flow, active encounter, result, and a minimal Home continuation surface using the shared gameplay and validation packages
+- the current mobile slice does not yet realize the full Expo Router, Zustand, SQLite, or persistence architecture described later in this document
+- current implementation note: board input is tap-chained rather than the canonical final swipe gesture, and bundled content is loaded through an app-local adapter because the existing shared file-system loader is Node-only
 - when current code and target architecture differ, contributors must either align the code or mark the target-only architecture explicitly instead of treating future structure as already shipped
 
 ---
@@ -70,6 +72,7 @@ over:
 - multiple overlapping tools for the same job
 
 ### Practical architecture rule
+
 A version of the game that is technically “modern” but hard for you and your AI tools to maintain is worse than a simpler version that is boring and reliable.
 
 ---
@@ -79,6 +82,7 @@ A version of the game that is technically “modern” but hard for you and your
 This architecture is intentionally shaped around the project’s real constraints.
 
 ### Current practical constraints
+
 - primary builder is not writing the entire game manually from scratch
 - implementation help comes mainly from Codex and Jules
 - design tooling is available through Adobe Creative Cloud, but high-skill custom asset pipelines should not be assumed
@@ -86,6 +90,7 @@ This architecture is intentionally shaped around the project’s real constraint
 - the game must be understandable and maintainable by reading the docs and code, not by reverse-engineering clever systems
 
 ### Architecture consequences
+
 Because of those constraints, the architecture should:
 
 - avoid custom engine work
@@ -131,6 +136,7 @@ Those belong in other focused docs.
 The architecture should make it easy to build and maintain the following:
 
 ### 4.1 A local playable vertical slice
+
 The game must be able to reach a real playable Android encounter without requiring:
 
 - accounts
@@ -140,6 +146,7 @@ The game must be able to reach a real playable Android encounter without requiri
 - backend-only truth
 
 ### 4.2 Shared gameplay truth
+
 Core battle truth must live outside screen components.
 
 The system must have one trustworthy place for:
@@ -153,6 +160,7 @@ The system must have one trustworthy place for:
 - dead-board recovery
 
 ### 4.3 Reliable save and resume
+
 A player should be able to:
 
 - background the app
@@ -162,9 +170,11 @@ A player should be able to:
 without screen-level hacks or duplicated state ownership.
 
 ### 4.4 Easy content expansion later
+
 Creature and encounter content should be data-driven enough that new content can be added without rewriting battle logic.
 
 ### 4.5 Low-ops foundation
+
 The early game should not require:
 
 - live backend hosting
@@ -182,6 +192,7 @@ unless and until the product truly needs them.
 Words 'n Wands! should stay aligned with a conservative TypeScript-first mobile stack.
 
 ### Current working stack direction
+
 - **Language:** TypeScript
 - **Mobile app:** React Native with Expo
 - **Routing:** Expo Router
@@ -192,6 +203,7 @@ Words 'n Wands! should stay aligned with a conservative TypeScript-first mobile 
 - **Future background/scheduled work later where needed:** TypeScript worker
 
 ### Why this stack fits the project
+
 This stack is a good fit because it provides:
 
 - strong AI-tool familiarity
@@ -202,6 +214,7 @@ This stack is a good fit because it provides:
 - enough structure without forcing heavy native complexity early
 
 ### Dependency rule
+
 Prefer Expo-compatible, first-party or boring mainstream tools where they are good enough.
 
 Do not add tech because it is fashionable.
@@ -213,6 +226,7 @@ Do not add tech because it is fashionable.
 The project should not pretend it needs its final long-term architecture on day one.
 
 ### 6.1 Immediate architecture shape (Milestones 0–2)
+
 For early milestones, Words 'n Wands! should behave like:
 
 - one local-first mobile app
@@ -224,6 +238,7 @@ For early milestones, Words 'n Wands! should behave like:
 This is the correct early architecture.
 
 ### 6.2 Later architecture shape (Milestones 3+)
+
 Only when needed, the project may expand to include:
 
 - content pipeline tooling
@@ -243,6 +258,7 @@ They must not redefine the core solo architecture.
 The repo should remain understandable from the product point of view.
 
 ### 7.1 Long-term target shape
+
 The long-term expected top-level structure is:
 
 - `apps/mobile`
@@ -263,6 +279,7 @@ The long-term expected top-level structure is:
 - `assets/marketing`
 
 ### 7.2 Practical early shape
+
 For Milestones 0–2, the repo should only create what is actually needed.
 
 The smallest practical early shape is likely:
@@ -279,6 +296,7 @@ The smallest practical early shape is likely:
 - `assets/marketing`
 
 ### 7.3 M0 bootstrap contract (required artifacts)
+
 > **Normative (M0 required):** Milestone 0 must include these root-level and workspace bootstrap artifacts before Milestone 1 implementation begins.
 
 - `package.json` at repo root **must exist** as the root scripts contract owner (`format`, `lint`, `typecheck`, `test`, `build`, and `check` when present). It must exist in M0 so every workspace runs one canonical command surface; deferred: package-level script specialization and milestone-specific script expansion.
@@ -305,6 +323,7 @@ tsconfig.base.json
 ```
 
 ### 7.4 Deferred folders rule
+
 Do not create speculative scaffolding for:
 
 - `apps/api`
@@ -316,6 +335,7 @@ Do not create speculative scaffolding for:
 unless the current milestone truly needs them.
 
 ### 7.5 Naming rule
+
 Use boring, obvious names.
 
 A contributor should be able to guess what a folder owns without reading three more files.
@@ -327,6 +347,7 @@ A contributor should be able to guess what a folder owns without reading three m
 The architecture should enforce strong boundaries between product truth and presentation.
 
 ### 8.1 Core runtime layers
+
 Words 'n Wands! should separate these layers clearly:
 
 - app shell and routing
@@ -339,12 +360,15 @@ Words 'n Wands! should separate these layers clearly:
 - optional side-effect systems such as audio or analytics
 
 ### 8.2 Non-negotiable boundary rule
+
 UI code must not become the hidden source of gameplay truth.
 
 ### 8.3 Shared truth rule
+
 If a battle rule matters to fairness, it should live in shared gameplay or validation code, not as an animation side effect or screen helper accident.
 
 ### 8.4 Side-effect isolation rule
+
 Audio, haptics, analytics, ads, and logging must react to battle outcomes.  
 They must not define those outcomes.
 
@@ -353,6 +377,7 @@ They must not define those outcomes.
 ## 9. Mobile App Architecture
 
 ### 9.1 App shell responsibilities
+
 `apps/mobile` should own:
 
 - routing
@@ -366,6 +391,7 @@ They must not define those outcomes.
 - result and progression surfaces
 
 ### 9.2 App shell should not own
+
 `apps/mobile` should not own the canonical implementation of:
 
 - damage rules
@@ -378,6 +404,7 @@ They must not define those outcomes.
 Those belong in shared packages.
 
 ### 9.3 Routing direction
+
 Expo Router should be used for predictable screen-level structure.
 
 Likely early route groups include:
@@ -391,6 +418,7 @@ Likely early route groups include:
 The exact route names may evolve, but the structure should stay small and obvious.
 
 ### 9.4 Static asset registry requirement (React Native/Expo)
+
 Runtime visual assets must be resolved through a compile-time registry map (for example, `id -> require(...)`) instead of dynamic runtime path construction.
 
 Rules:
@@ -408,9 +436,11 @@ This requirement must stay aligned with the runtime content ID contracts in `doc
 Core battle truth is the most important part of the architecture.
 
 ### 10.1 Ownership
+
 `packages/game-rules` should own the canonical implementation of battle rules and state transitions where practical.
 
 ### 10.2 What `packages/game-rules` should own
+
 This package should own logic for:
 
 - encounter initialization from content definitions
@@ -427,6 +457,7 @@ This package should own logic for:
 - star-rating evaluation if it becomes rule truth rather than pure UI formatting
 
 ### 10.3 What `packages/game-rules` should return
+
 The gameplay package should produce explicit results such as:
 
 - updated encounter state
@@ -439,6 +470,7 @@ The gameplay package should produce explicit results such as:
 It should not require the UI to infer hidden meaning from half-finished data.
 
 ### 10.4 Reducer/state-machine preference
+
 Core battle updates should be implemented as explicit state transitions or reducer-style operations rather than a web of mutable UI helpers.
 
 This is especially important for AI-assisted maintenance.
@@ -450,6 +482,7 @@ This is especially important for AI-assisted maintenance.
 Validation and element tagging are separate trust systems and should not be tangled with UI code.
 
 ### 11.1 Ownership
+
 `packages/validation` should own:
 
 - castable-word lookup
@@ -461,6 +494,7 @@ Validation and element tagging are separate trust systems and should not be tang
 - board-playability checks that depend on the real lexicon
 
 ### 11.2 Shared-truth rule
+
 The same validation truth must power:
 
 - player word acceptance
@@ -470,11 +504,13 @@ The same validation truth must power:
 - content QA tools later
 
 ### 11.3 No split-dictionary rule
+
 Do not let one dictionary govern board logic while another governs player submission.
 
 That is how trust dies.
 
 ### 11.4 No runtime AI rule
+
 The validation/element package must not call runtime AI or remote semantic services to decide battle-critical truth.
 
 ---
@@ -484,6 +520,7 @@ The validation/element package must not call runtime AI or remote semantic servi
 Content should be typed and reviewable, not scattered through screens.
 
 ### 12.1 Ownership
+
 `packages/content` should own typed content definitions such as:
 
 - `CreatureDefinition`
@@ -493,6 +530,7 @@ Content should be typed and reviewable, not scattered through screens.
 - optional daily/weekly challenge content later
 
 ### 12.2 Content direction
+
 For early milestones, content should be:
 
 - bundled locally
@@ -501,11 +539,13 @@ For early milestones, content should be:
 - easy to understand without custom tooling
 
 ### 12.3 Early content format rule
+
 Early content should use simple typed objects or JSON-like static data structures.
 
 Do not invent a complicated authoring format too early.
 
 ### 12.4 Stable identifier rule
+
 Creature IDs and encounter IDs should be stable once introduced.
 
 This protects persistence, progression, and future content operations.
@@ -515,6 +555,7 @@ This protects persistence, progression, and future content operations.
 ## 13. UI and State Management Architecture
 
 ### 13.1 Zustand role
+
 Zustand should manage:
 
 - app-level session state
@@ -525,11 +566,13 @@ Zustand should manage:
 - lightweight UI state
 
 ### 13.2 Zustand should not become the rules engine
+
 Zustand is for state orchestration, not hidden battle semantics.
 
 The canonical battle updates should still come from shared gameplay-truth functions.
 
 ### 13.3 UI-local transient state
+
 Purely transient UI state may live in components or view-level state, such as:
 
 - active swipe preview
@@ -539,6 +582,7 @@ Purely transient UI state may live in components or view-level state, such as:
 These should not become the canonical battle record.
 
 ### 13.4 Suggested ownership split
+
 A healthy split is:
 
 - `packages/game-rules`: computes legal state changes
@@ -549,9 +593,11 @@ A healthy split is:
 ## 14. Persistence Architecture
 
 ### 14.1 Local-first rule
+
 Core solo play must work locally without requiring a backend.
 
 ### 14.2 SQLite role
+
 SQLite should be the source of important device-local persistent truth such as:
 
 - active encounter snapshot
@@ -561,6 +607,7 @@ SQLite should be the source of important device-local persistent truth such as:
 - optional daily/weekly completion history later
 
 ### 14.3 What should be persisted
+
 At minimum, an active encounter snapshot should preserve:
 
 - encounter identifier
@@ -573,6 +620,7 @@ At minimum, an active encounter snapshot should preserve:
 - current session/result state
 
 ### 14.4 Autosave trigger rule
+
 The app should autosave after meaningful stable actions such as:
 
 - encounter creation
@@ -583,6 +631,7 @@ The app should autosave after meaningful stable actions such as:
 - explicit retry/restart
 
 ### 14.5 No half-truth restore rule
+
 Persisted state should represent a safe restore point, not a partial mid-animation guess.
 
 ---
@@ -590,9 +639,11 @@ Persisted state should represent a safe restore point, not a partial mid-animati
 ## 15. Session Restore Architecture
 
 ### 15.1 Restore authority
+
 The app should derive restore routing from persisted encounter/session truth, not from loose guesses about what screen the player “probably meant” to be on.
 
 ### 15.2 Restore behavior
+
 On launch or resume, the restore system should decide whether to route to:
 
 - active encounter
@@ -603,6 +654,7 @@ On launch or resume, the restore system should decide whether to route to:
 based on explicit stored state.
 
 ### 15.3 No duplicated-resolution rule
+
 Restore logic must not:
 
 - replay a completed cast
@@ -612,9 +664,11 @@ Restore logic must not:
 - re-trigger a spell that already resolved
 
 ### 15.4 Lifecycle principle
+
 Battle truth should be durable enough that app lifecycle interruptions do not create fairness bugs.
 
 ### 15.5 State/persistence/session orchestration order (required)
+
 For each accepted in-battle player action, the runtime order is:
 
 1. UI submits the action to `packages/game-rules`.
@@ -627,6 +681,7 @@ For each accepted in-battle player action, the runtime order is:
 This ordering must align with the interaction lock behavior in `docs/screens-and-session-flow.md` and with the canonical event/action contracts in `docs/implementation-contracts.md`.
 
 ### 15.5.a Encounter action lifecycle contract (canonical terms)
+
 Use the following lifecycle terms and sequence as the implementation contract:
 
 1. UI submits player action to `packages/game-rules`.
@@ -644,9 +699,11 @@ Use the following lifecycle terms and sequence as the implementation contract:
 Board generation is a gameplay-truth problem, not just a UI convenience.
 
 ### 16.1 Ownership
+
 Board generation and refill logic should live with gameplay-truth code, not inside screen components.
 
 ### 16.2 Generator responsibilities
+
 The board-generation system should be responsible for:
 
 - generating a starting playable board
@@ -656,9 +713,11 @@ The board-generation system should be responsible for:
 - enabling spark-shuffle recovery when necessary
 
 ### 16.3 Safety-check rule
+
 Board generation must use the same validation truth as player casting.
 
 ### 16.4 Randomness contract (required)
+
 Encounter randomness is mandatory and contract-driven in v1.
 
 System-of-record document: `docs/randomness-and-seeding-contract.md`.
@@ -679,6 +738,7 @@ This is a gameplay fairness and trust requirement, not an optional optimization.
 Audio and feedback are important, but they are not allowed to redefine game truth.
 
 ### 17.1 Early architecture direction
+
 For Milestones 0–1, feedback can remain simple and local:
 
 - UI-triggered animation cues
@@ -686,10 +746,12 @@ For Milestones 0–1, feedback can remain simple and local:
 - lightweight sound triggers
 
 ### 17.2 Separation rule
+
 The battle engine should say what happened.  
 The feedback layer should decide how that is presented.
 
 ### 17.3 No hidden semantic audio rule
+
 Audio/haptic code must not be where battle semantics “really happen.”
 
 ---
@@ -699,9 +761,11 @@ Audio/haptic code must not be where battle semantics “really happen.”
 This project should assume a practical, low-drama asset workflow.
 
 ### 18.1 Asset-pipeline rule
+
 The asset pipeline should be easy for a mostly non-specialist solo owner to manage.
 
 ### 18.2 Preferred asset direction
+
 Prefer assets that are easy to export, version, and replace, such as:
 
 - creature illustrations
@@ -712,6 +776,7 @@ Prefer assets that are easy to export, version, and replace, such as:
 - font files only when necessary and licensed correctly
 
 ### 18.3 Avoid early complexity
+
 Avoid early dependence on:
 
 - skeletal animation pipelines
@@ -721,6 +786,7 @@ Avoid early dependence on:
 - custom VFX authoring systems that are hard to maintain
 
 ### 18.4 Practical animation rule
+
 For early milestones, use code-driven UI animation and simple asset swaps/transforms where possible.
 
 The product needs clarity and consistency more than cinematic asset systems.
@@ -732,6 +798,7 @@ The product needs clarity and consistency more than cinematic asset systems.
 This architecture must remain friendly to AI-assisted implementation.
 
 ### 19.1 Explicitness rule
+
 Systems should use:
 
 - descriptive names
@@ -740,6 +807,7 @@ Systems should use:
 - obvious data flow
 
 ### 19.2 Avoid cleverness rule
+
 Avoid architecture that depends on:
 
 - deep metaprogramming
@@ -749,9 +817,11 @@ Avoid architecture that depends on:
 - difficult-to-reason-about dependency injection webs
 
 ### 19.3 Documentation-first rule
+
 If a major architecture decision is not obvious from the code, it should be documented in a focused doc before widespread implementation starts.
 
 ### 19.4 Acceptance-rule path
+
 AI tools should be able to answer, by reading the docs and code:
 
 - where does battle truth live
@@ -767,9 +837,11 @@ If that is unclear, the architecture is too muddy.
 ## 20. Backend and Online Scope Boundaries
 
 ### 20.1 No required backend for core solo play
+
 The game must not require a backend for ordinary solo encounter play in early milestones.
 
 ### 20.2 When backend may become justified
+
 A backend may become justified later for:
 
 - challenge distribution
@@ -781,11 +853,13 @@ A backend may become justified later for:
 - optional monetization support
 
 ### 20.3 Backend boundary rule
+
 Even when a backend exists later, it must not quietly become the sole source of truth for ordinary local battle semantics.
 
 The player should still be able to play the core solo game with strong local reliability.
 
 ### 20.4 Worker/content-tools rule
+
 `apps/worker` and `apps/content-tools` should not appear as real required infrastructure until the game actually has enough content cadence or remote behavior to need them.
 
 ---
@@ -795,7 +869,9 @@ The player should still be able to play the core solo game with strong local rel
 The following is the recommended package/module responsibility map.
 
 ### `apps/mobile`
+
 Owns:
+
 - routing
 - screens
 - Zustand stores
@@ -805,7 +881,9 @@ Owns:
 - player-visible navigation and presentation
 
 ### `packages/game-rules`
+
 Owns:
+
 - encounter state transitions
 - cast resolution
 - countdown behavior
@@ -815,7 +893,9 @@ Owns:
 - board generation/refill logic where practical
 
 ### `packages/validation`
+
 Owns:
+
 - word normalization
 - castable word lookup
 - element tagging
@@ -823,18 +903,24 @@ Owns:
 - playability checks
 
 ### `packages/content`
+
 Owns:
+
 - typed creature content
 - typed encounter content
 - content versioning metadata
 - optional challenge content later
 
 ### `packages/utils`
+
 Owns:
+
 - generic helpers that are truly shared and not game-specific dumping grounds
 
 ### Deferred packages
+
 Introduce only when justified:
+
 - `packages/audio`
 - `packages/analytics`
 
@@ -845,18 +931,19 @@ Introduce only when justified:
 This map anchors implementation-contract ownership to concrete module/package targets for Milestones 1 and 2.
 
 All rows below are normative for M1/M2 implementation:
+
 - contract-owned logic must live in the listed package/module targets
 - UI components may render state and dispatch intent, but must not re-implement contract logic
 - if a row spans app + package code, the app side is orchestration/adaptation only
 
-| Contract group | Contract section reference (`docs/implementation-contracts.md`) | Target package/module path convention (M1/M2) | UI layer prohibition |
-| --- | --- | --- | --- |
-| Encounter state transitions and reducer ownership | 3.1 `Canonical encounter transition rules`; 13.2 `sessionSlice` contract; 13.3 `encounterSlice` contract | `packages/game-rules/encounter/**` for transition legality + reducer helpers; `apps/mobile/session/store/**` for wiring reducers into app store | Must not be implemented in UI component layer (`apps/mobile/**/components/**`); components dispatch typed actions only. |
-| Word validation lookup ownership | 10.3 `Runtime validation lookup contract`; 10.4 `Validation snapshot provider contract` | `packages/validation/lookup/**` and `packages/validation/provider/**`; app integration in `apps/mobile/validation/**` | Must not be implemented in UI component layer; screens must call lookup/provider adapters rather than embedding lexicon or normalization logic. |
-| RNG substream manager ownership | 4.2 `Board snapshot contract` (`rng_stream_states`); 7.5 `active_encounter_snapshots`; 5.7 `Spark shuffle resolution contract` | `packages/game-rules/rng/**` for substream lifecycle and deterministic advancement; persistence bridge in `apps/mobile/session/persistence/**` | Must not be implemented in UI component layer; UI must never advance RNG streams directly. |
-| Snapshot persistence read/write ownership | 7.5 `active_encounter_snapshots`; 3.2 `Encounter route restoration contract` | `apps/mobile/session/persistence/**` for SQLite repository adapters; domain shape mappers in `packages/game-rules/session-snapshot/**` | Must not be implemented in UI component layer; components must not read/write snapshot tables directly. |
-| Launch/resume phase orchestrator ownership | 3.3 `Launch/resume phase contract`; 3.2 `Encounter route restoration contract` | `apps/mobile/session/orchestration/launch-resume/**` for phase runner + restore target derivation; pure helpers in `packages/game-rules/session-restore/**` | Must not be implemented in UI component layer; components may observe phase state but cannot sequence restore phases. |
-| Telemetry event adapter ownership | 12.1 `Canonical event names`; 12.2 `Base required analytics properties`; 12.3 `Gameplay analytics fields`; 12.4 `Redaction/privacy contract` | `packages/analytics/contracts/**` (when package exists) or `apps/mobile/telemetry/adapters/**` in M1 fallback | Must not be implemented in UI component layer; components emit semantic intents only, never construct raw analytics payloads. |
+| Contract group                                    | Contract section reference (`docs/implementation-contracts.md`)                                                                              | Target package/module path convention (M1/M2)                                                                                                               | UI layer prohibition                                                                                                                            |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Encounter state transitions and reducer ownership | 3.1 `Canonical encounter transition rules`; 13.2 `sessionSlice` contract; 13.3 `encounterSlice` contract                                     | `packages/game-rules/encounter/**` for transition legality + reducer helpers; `apps/mobile/session/store/**` for wiring reducers into app store             | Must not be implemented in UI component layer (`apps/mobile/**/components/**`); components dispatch typed actions only.                         |
+| Word validation lookup ownership                  | 10.3 `Runtime validation lookup contract`; 10.4 `Validation snapshot provider contract`                                                      | `packages/validation/lookup/**` and `packages/validation/provider/**`; app integration in `apps/mobile/validation/**`                                       | Must not be implemented in UI component layer; screens must call lookup/provider adapters rather than embedding lexicon or normalization logic. |
+| RNG substream manager ownership                   | 4.2 `Board snapshot contract` (`rng_stream_states`); 7.5 `active_encounter_snapshots`; 5.7 `Spark shuffle resolution contract`               | `packages/game-rules/rng/**` for substream lifecycle and deterministic advancement; persistence bridge in `apps/mobile/session/persistence/**`              | Must not be implemented in UI component layer; UI must never advance RNG streams directly.                                                      |
+| Snapshot persistence read/write ownership         | 7.5 `active_encounter_snapshots`; 3.2 `Encounter route restoration contract`                                                                 | `apps/mobile/session/persistence/**` for SQLite repository adapters; domain shape mappers in `packages/game-rules/session-snapshot/**`                      | Must not be implemented in UI component layer; components must not read/write snapshot tables directly.                                         |
+| Launch/resume phase orchestrator ownership        | 3.3 `Launch/resume phase contract`; 3.2 `Encounter route restoration contract`                                                               | `apps/mobile/session/orchestration/launch-resume/**` for phase runner + restore target derivation; pure helpers in `packages/game-rules/session-restore/**` | Must not be implemented in UI component layer; components may observe phase state but cannot sequence restore phases.                           |
+| Telemetry event adapter ownership                 | 12.1 `Canonical event names`; 12.2 `Base required analytics properties`; 12.3 `Gameplay analytics fields`; 12.4 `Redaction/privacy contract` | `packages/analytics/contracts/**` (when package exists) or `apps/mobile/telemetry/adapters/**` in M1 fallback                                               | Must not be implemented in UI component layer; components emit semantic intents only, never construct raw analytics payloads.                   |
 
 ---
 
@@ -865,6 +952,7 @@ All rows below are normative for M1/M2 implementation:
 This document does not replace the engineering standards, but architecture should support testing naturally.
 
 ### 23.1 High-value test targets
+
 The architecture should make it easy to test:
 
 - cast resolution
@@ -878,6 +966,7 @@ The architecture should make it easy to test:
 - validation and element lookup
 
 ### 23.2 Testability rule
+
 If battle truth can only be tested through the full UI, the architecture is probably wrong.
 
 Core battle logic should be testable without rendering screens.
@@ -887,6 +976,7 @@ Core battle logic should be testable without rendering screens.
 ## 24. Error Handling Architecture
 
 ### 24.1 Player-facing failure rule
+
 If supporting systems fail, the app should degrade gracefully.
 
 Examples:
@@ -896,6 +986,7 @@ Examples:
 - if persistence temporarily fails, the player should get a calm recoverable state rather than corrupted play
 
 ### 24.2 No invented truth rule
+
 If content or validation cannot be loaded correctly, the app should not invent replacement gameplay truth on the fly.
 
 Prefer:
@@ -913,6 +1004,7 @@ over silent improvisation.
 For this specific project, the best early implementation strategy is:
 
 ### Milestone 0
+
 Create:
 
 - `apps/mobile`
@@ -923,6 +1015,7 @@ Create:
 - docs and asset folders
 
 ### Milestone 1
+
 Implement:
 
 - one starter encounter
@@ -933,6 +1026,7 @@ Implement:
 - battle UI on top of that engine
 
 ### Milestone 2
+
 Expand:
 
 - creature roster

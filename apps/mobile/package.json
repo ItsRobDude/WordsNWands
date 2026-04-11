@@ -6,7 +6,7 @@
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
-    "lint": "prettier --check \"{App.tsx,tsconfig.json}\" && tsc -p tsconfig.json --noEmit",
+    "lint": "prettier --check \"{App.tsx,metro.config.js,src/**/*.{ts,tsx},tsconfig.json}\" && tsc -p tsconfig.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --eval \"console.log('No app tests are scaffolded for @words-n-wands/mobile yet.')\"",
     "build": "expo export --platform android"

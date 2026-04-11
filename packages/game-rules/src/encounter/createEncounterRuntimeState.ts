@@ -39,6 +39,34 @@ export interface CreateEncounterRuntimeStateInput {
   rng_stream_states?: Partial<EncounterRngStreamStates>;
 }
 
+export const createSeededEncounterRngStreamStates = (input: {
+  encounter_seed: string;
+  encounter_id: string;
+  initial_states?: Partial<EncounterRngStreamStates>;
+}): EncounterRngStreamStates => ({
+  board_fill_stream_state:
+    input.initial_states?.board_fill_stream_state ??
+    deriveSeededStreamState({
+      encounter_seed: input.encounter_seed,
+      encounter_id: input.encounter_id,
+      stream_label: "board_fill",
+    }),
+  creature_spell_stream_state:
+    input.initial_states?.creature_spell_stream_state ??
+    deriveSeededStreamState({
+      encounter_seed: input.encounter_seed,
+      encounter_id: input.encounter_id,
+      stream_label: "creature_spell",
+    }),
+  spark_shuffle_stream_state:
+    input.initial_states?.spark_shuffle_stream_state ??
+    deriveSeededStreamState({
+      encounter_seed: input.encounter_seed,
+      encounter_id: input.encounter_id,
+      stream_label: "spark_shuffle",
+    }),
+});
+
 export const createEncounterRuntimeState = (
   input: CreateEncounterRuntimeStateInput,
 ): EncounterRuntimeState => {
@@ -49,7 +77,7 @@ export const createEncounterRuntimeState = (
     move_budget_total,
   );
 
-  const rng_stream_states = createSeededRngStreamStates({
+  const rng_stream_states = createSeededEncounterRngStreamStates({
     encounter_seed: input.encounter_seed,
     encounter_id: input.encounter_id,
     initial_states: input.rng_stream_states,
@@ -101,34 +129,6 @@ export const createEncounterRuntimeState = (
     updated_at_utc: input.updated_at_utc,
   };
 };
-
-const createSeededRngStreamStates = (input: {
-  encounter_seed: string;
-  encounter_id: string;
-  initial_states?: Partial<EncounterRngStreamStates>;
-}): EncounterRngStreamStates => ({
-  board_fill_stream_state:
-    input.initial_states?.board_fill_stream_state ??
-    deriveSeededStreamState({
-      encounter_seed: input.encounter_seed,
-      encounter_id: input.encounter_id,
-      stream_label: "board_fill",
-    }),
-  creature_spell_stream_state:
-    input.initial_states?.creature_spell_stream_state ??
-    deriveSeededStreamState({
-      encounter_seed: input.encounter_seed,
-      encounter_id: input.encounter_id,
-      stream_label: "creature_spell",
-    }),
-  spark_shuffle_stream_state:
-    input.initial_states?.spark_shuffle_stream_state ??
-    deriveSeededStreamState({
-      encounter_seed: input.encounter_seed,
-      encounter_id: input.encounter_id,
-      stream_label: "spark_shuffle",
-    }),
-});
 
 const deriveSeededStreamState = (input: {
   encounter_seed: string;

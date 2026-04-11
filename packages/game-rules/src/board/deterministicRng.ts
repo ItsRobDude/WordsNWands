@@ -53,7 +53,7 @@ export const pickLetterFromDraw = (
   const normalized_pool =
     letter_pool.length === 0
       ? ["A"]
-      : [...new Set(letter_pool.map((letter) => letter.toUpperCase()))];
+      : letter_pool.map((letter) => letter.toUpperCase());
   const index = Math.floor(
     (draw_value / UINT32_RANGE) * normalized_pool.length,
   );

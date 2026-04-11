@@ -32,6 +32,7 @@ Words 'n Wands! is not the place for:
 - overbuilt systems added just because they sound impressive
 
 ### Practical project rule
+
 This project is being built with heavy AI assistance and limited human implementation bandwidth.
 
 That means the codebase must stay easy to:
@@ -71,6 +72,7 @@ Important rules:
 Words 'n Wands! should stay aligned with the current intended stack direction.
 
 ### Current working stack
+
 - mobile app: React Native with Expo
 - language: TypeScript
 - routing: Expo Router
@@ -87,44 +89,54 @@ If a later technical architecture document intentionally changes part of this, t
 These tools are mandatory unless the engineering docs are intentionally updated later.
 
 ### Package management
+
 - **pnpm** only
 
 Do not mix:
+
 - npm workspace commands
 - yarn
 - bun
 
 ### Formatting
+
 - **Prettier** is mandatory
 
 Formatting should be automatic and non-negotiable.  
 Humans should not waste review time on whitespace fights.
 
 ### Linting
+
 - **ESLint** is mandatory
 - TypeScript-aware linting is mandatory
 - obvious unused code/imports should be caught automatically
 - import/order rules should be enforced
 
 ### Type checking
+
 - **TypeScript compiler checks** are mandatory
 
 Code that passes visually but fails type safety is not done.
 
 ### Testing
+
 Mandatory test tools:
+
 - **Node's built-in test runner** for the current shared-package/unit-test path (`node --test` with the repo's TypeScript runner flags/hooks)
 - **React Native Testing Library** for app/component behavior where needed
 - **Jest with `jest-expo`** for Expo/React Native test environment support where needed
 
 ### Build / app validation
+
 Mandatory build/app validation tools:
+
 - **Expo CLI**
 - **Expo Doctor**
 
 The project must maintain a reliable way to validate that the mobile app still bundles and remains sane for Android.
 
 ### CI
+
 - **GitHub Actions** should be the standard CI path
 
 ---
@@ -132,6 +144,7 @@ The project must maintain a reliable way to validate that the mobile app still b
 ## 5. What Lint / Format / Test / Build Tools Are Mandatory?
 
 ### Mandatory tools summary
+
 - `pnpm`
 - `prettier`
 - `eslint`
@@ -144,6 +157,7 @@ The project must maintain a reliable way to validate that the mobile app still b
 - GitHub Actions CI
 
 ### Practical rule
+
 If a proposed tool does not clearly improve:
 
 - trust
@@ -154,7 +168,9 @@ If a proposed tool does not clearly improve:
 it should not be added.
 
 ### Dependency discipline reminder
+
 Words 'n Wands! does not need:
+
 - five testing stacks
 - overlapping formatters
 - heavy state frameworks
@@ -170,11 +186,13 @@ This section is the single operational contract for contributor validation.
 Use these exact commands so local validation, milestone gates, and CI all run the same path.
 
 Reference points:
+
 - `AGENTS.md` for execution expectations
 - `docs/milestone-implementation-plan.md` for milestone-required checks
 - `docs/technical-architecture.md` for package and boundary assumptions
 
 ### Canonical command names
+
 The repo/workspace must expose these command names:
 
 - `format`
@@ -185,22 +203,24 @@ The repo/workspace must expose these command names:
 - `check` (aggregated validation: `lint` + `typecheck` + `test` + `build`)
 
 ### Requirement vs enforcement state
+
 A requirement is normative as soon as it appears in this document.  
 Lack of automation does not make the requirement optional; it only changes whether enforcement is currently manual or automated.
 
-| Requirement | Canonical command | Required since milestone | Current enforcement | Blocking now |
-| :--- | :--- | :--- | :--- | :--- |
-| Code formatting | `pnpm format` | M0 | Manual / Unavailable until scripts exist | No |
-| Linting | `pnpm lint` | M0 | Manual / Unavailable until scripts exist | No |
-| Type checking | `pnpm typecheck` | M0 | Manual / Unavailable until scripts exist | No |
-| Testing | `pnpm test` | M0 | Manual / Unavailable until scripts exist | No |
-| Building | `pnpm build` | M0 | Manual / Unavailable until scripts exist | No |
-| All checks | `pnpm check` | M0 | Manual / Unavailable until scripts exist | No |
+| Requirement     | Canonical command | Required since milestone | Current enforcement                      | Blocking now |
+| :-------------- | :---------------- | :----------------------- | :--------------------------------------- | :----------- |
+| Code formatting | `pnpm format`     | M0                       | Manual / Unavailable until scripts exist | No           |
+| Linting         | `pnpm lint`       | M0                       | Manual / Unavailable until scripts exist | No           |
+| Type checking   | `pnpm typecheck`  | M0                       | Manual / Unavailable until scripts exist | No           |
+| Testing         | `pnpm test`       | M0                       | Manual / Unavailable until scripts exist | No           |
+| Building        | `pnpm build`      | M0                       | Manual / Unavailable until scripts exist | No           |
+| All checks      | `pnpm check`      | M0                       | Manual / Unavailable until scripts exist | No           |
 
 During the docs-first phase, enforcement is mostly manual.  
 Automated scripts and CI should become blocking once workspace scaffolding is introduced.
 
 ### Repo-wide usage
+
 Run from repo root:
 
 - `pnpm format`
@@ -227,6 +247,7 @@ Run doc-consistency validators when touched scope includes their linked docs:
 - `./scripts/check-early-content-version-pin-consistency.sh`
 
 ### Package-scoped usage during iteration
+
 For faster local loops, run checks only for touched package(s):
 
 - `pnpm --filter <package_name> format`
@@ -236,6 +257,7 @@ For faster local loops, run checks only for touched package(s):
 - `pnpm --filter <package_name> build`
 
 ### Package-level content validation examples
+
 When a change touches content packages, manifests, schema files, or version pins, run package-scoped content checks in addition to core checks:
 
 - schema validation:
@@ -259,8 +281,10 @@ Performance-budget reporting rule for validation lookup complexity changes:
   - incremental memory delta (mean + max)
   - sample size and measurement method/tool
   - recommendation outcome (`keep_simple` vs `authorize_optimization`) tied to the budgets in `docs/implementation-contracts.md` section 10.4
+- local regression helper command for this repo: `pnpm --filter @words-n-wands/validation run profile:has-playable-word`
 
 ### When to run each command
+
 - `format`: after edits and before opening or merging PRs
 - `lint`: on every feature, fix, or code-touching docs update before commit
 - `typecheck`: on every TypeScript change before commit
@@ -269,11 +293,13 @@ Performance-budget reporting rule for validation lookup complexity changes:
 - `check`: preferred pre-commit / pre-PR command when available
 
 ### Milestone-specific required checks
+
 - **Milestone 0 and onward:** `format`, `lint`, `typecheck`, `test`, and `build` must pass
 - **Milestones that touch Expo/mobile runtime paths:** run `expo-doctor` and a successful Expo bundle/start validation in addition to the core checks
 - **Milestones that change battle truth, validation policy, element tagging behavior, or canonical encounter/session restore logic:** require targeted tests covering the changed rule path plus passing repo-wide checks
 
 ### Expected CI parity
+
 CI must execute the same command contract, in this order:
 
 1. `pnpm format --check` or equivalent non-mutating formatter check
@@ -283,6 +309,7 @@ CI must execute the same command contract, in this order:
 5. `pnpm build`
 
 When relevant, CI should also run:
+
 - `expo-doctor`
 - content/schema validation checks
 - package-level validation for touched critical modules
@@ -293,14 +320,14 @@ Do not create a CI-only validation path that differs from contributor-local comm
 
 Use this matrix as a mandatory acceptance checklist whenever a change can affect launch routing, encounter restore, cast validity handling, Spark Shuffle recovery, telemetry, or persistence mutation order.
 
-| Scenario ID | Preconditions (seed / profile / encounter) | Action sequence | Expected canonical state transitions | Expected routing target | Expected telemetry/events | Expected persistence mutations | Contract references |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `XAC-01` First launch -> starter win -> home route | Seed: deterministic starter seed loaded.<br>Profile: first-time player (`has_completed_starter_encounter = 0`, `starter_result_outcome = 'unplayed'`).<br>Encounter: no active snapshot at launch. | Cold launch -> first-time flow -> start starter encounter -> complete valid win -> dismiss result CTA. | Launch phases complete in canonical order (`app_init` -> `route_commit`) -> starter runtime enters `active` -> result transition commits first-time completion + reward transaction order. | `Home` after starter win result confirmation. | Launch/resume phase + route commit events, encounter start, cast/resolution stream, starter win/result commit, home route commit. | Create/update `player_profile_records`; write `encounter_result_records`; clear `active_encounter_snapshots`; update progression-unlock fields required by starter-complete contract. | `docs/screens-and-session-flow.md` §5.1, §5.3, §5.4, §18.5; `docs/implementation-contracts.md` §3.3, §9.1, §9.1.a, §9.1.c, §12.1; `docs/randomness-and-seeding-contract.md` §3.1, §5.1, §6.1. |
-| `XAC-02` Starter loss -> retry flow cue restoration | Seed: deterministic starter seed chain available for retry behavior.<br>Profile: first-time player, starter not yet completed.<br>Encounter: active starter encounter ends in loss. | Lose starter encounter -> open loss result -> tap retry -> re-enter starter encounter and observe cue replay eligibility. | Encounter transitions `active` -> `lost` -> retry initializes new active attempt with starter guidance restored under cue interruption/repetition rules. | Retry returns to starter encounter battle route (not Home/progression). | Loss result event, retry intent event, encounter restart event, cue-restoration/replay event(s). | Prior failed attempt committed to `encounter_result_records`; prior active snapshot replaced or reinitialized; cue state restored according to starter cue contract without corrupting profile completion flags. | `docs/screens-and-session-flow.md` §5.4, §17.1, §18.3; `docs/implementation-contracts.md` §9.3, §9.4, §12.1; `docs/randomness-and-seeding-contract.md` §3.2, §5.1, §6.2. |
-| `XAC-03` Warm resume during active encounter with pending cue | Seed: persisted RNG stream counters available in active snapshot.<br>Profile: existing player with in-progress encounter.<br>Encounter: active snapshot exists with pending starter/assist cue state. | Enter background during encounter -> warm resume -> restore snapshot -> continue interaction. | Resume-priority path restores exact active encounter state; pending cue remains pending/eligible per interruption rules; no duplicate transition replay. | Battle route for restored active encounter. | Resume lifecycle event, snapshot restore success event, cue pending/restored event, no duplicate terminal result event. | Read and retain `active_encounter_snapshots`; no premature writes to `encounter_result_records`; RNG counters and cue state remain consistent with snapshot contract. | `docs/screens-and-session-flow.md` §15.2, §16.1-§16.4; `docs/implementation-contracts.md` §3.2, §3.3, §7.5, §13.2, §13.3; `docs/randomness-and-seeding-contract.md` §6.1-§6.2. |
-| `XAC-04` Spark Shuffle retry-cap -> emergency regeneration -> recoverable error fallback | Seed: shuffle stream seeded from encounter root seed.<br>Profile: any profile in active encounter.<br>Encounter: dead-board detected; configured retry cap reached. | Trigger dead-board -> execute Spark Shuffle retries until cap -> trigger emergency regeneration path -> if still invalid, present recoverable-error result overlay and fallback action. | Dead-board detection -> shuffle attempts consume deterministic stream -> emergency regeneration attempt -> recoverable-error terminal handling if non-playable persists. | Recoverable-error overlay/result route, then deterministic fallback target (retry/restart path). | Dead-board detected, shuffle attempt count events, retry-cap reached, emergency regeneration attempted, recoverable error surfaced, fallback action chosen. | Persist shuffle/recovery counters and latest valid snapshot; write recoverable-error result record when terminal; prevent silent state corruption between retries and fallback. | `docs/screens-and-session-flow.md` §14.1-§14.2, §18.4, §18.6; `docs/implementation-contracts.md` §5.7, §5.8, §9.4, §12.1; `docs/randomness-and-seeding-contract.md` §5.5, §5.6, §7. |
-| `XAC-05` Repeated-word reject (no move consumption) | Seed: any deterministic encounter seed.<br>Profile: active encounter with at least one previously cast valid word recorded.<br>Encounter: player attempts previously accepted word in same encounter. | Submit word once successfully -> submit identical normalized word again in same encounter. | First submission follows valid cast resolution; second submission follows rejected-cast path with repeated-word reason and no move/board/countdown mutation. | Stay on active battle route (no route change). | First cast success events emitted; repeated-word rejection event emitted with explicit reason and no terminal/result event. | No move decrement and no board mutation persisted for rejected cast; only rejection metadata/logging side effects allowed; active snapshot remains otherwise unchanged. | `docs/screens-and-session-flow.md` §11.4; `docs/implementation-contracts.md` §5.2, §5.5, §5.8, §10.3, §12.1; `docs/randomness-and-seeding-contract.md` §5.2, §6.2. |
-| `XAC-06` Validation pin mismatch on launch (encounter restore disabled safely) | Seed: existing persisted encounter seed/snapshot from previous validation pin version.<br>Profile: player has prior progress.<br>Encounter: active snapshot present but validation snapshot pin mismatches runtime contract. | Cold launch -> manifest/validation hydrate detects pin mismatch -> block unsafe encounter restore -> continue to safe route/state with clear recoverable messaging. | Launch phase reaches `manifest_validate`/`validation_hydrate` mismatch branch -> restore target derivation disables encounter restore -> route commit proceeds with safe non-restored state. | Safe non-encounter target (Home/first-time gate per profile), never directly into invalid restored battle state. | Validation pin mismatch event, restore-disabled safeguard event, route-commit fallback event. | Preserve prior snapshot records for diagnostics or migration; do not hydrate invalid active runtime state; write explicit safeguard marker/version state as defined by restore contract. | `docs/screens-and-session-flow.md` §4.2, §16.2, §16.5; `docs/implementation-contracts.md` §3.3 (Phase 3-6), §10.2-§10.4, §11.2, §12.1; `docs/randomness-and-seeding-contract.md` §6.3, §9. |
+| Scenario ID                                                                              | Preconditions (seed / profile / encounter)                                                                                                                                                                                   | Action sequence                                                                                                                                                                         | Expected canonical state transitions                                                                                                                                                         | Expected routing target                                                                                          | Expected telemetry/events                                                                                                                                   | Expected persistence mutations                                                                                                                                                                                   | Contract references                                                                                                                                                                           |
+| :--------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `XAC-01` First launch -> starter win -> home route                                       | Seed: deterministic starter seed loaded.<br>Profile: first-time player (`has_completed_starter_encounter = 0`, `starter_result_outcome = 'unplayed'`).<br>Encounter: no active snapshot at launch.                           | Cold launch -> first-time flow -> start starter encounter -> complete valid win -> dismiss result CTA.                                                                                  | Launch phases complete in canonical order (`app_init` -> `route_commit`) -> starter runtime enters `active` -> result transition commits first-time completion + reward transaction order.   | `Home` after starter win result confirmation.                                                                    | Launch/resume phase + route commit events, encounter start, cast/resolution stream, starter win/result commit, home route commit.                           | Create/update `player_profile_records`; write `encounter_result_records`; clear `active_encounter_snapshots`; update progression-unlock fields required by starter-complete contract.                            | `docs/screens-and-session-flow.md` §5.1, §5.3, §5.4, §18.5; `docs/implementation-contracts.md` §3.3, §9.1, §9.1.a, §9.1.c, §12.1; `docs/randomness-and-seeding-contract.md` §3.1, §5.1, §6.1. |
+| `XAC-02` Starter loss -> retry flow cue restoration                                      | Seed: deterministic starter seed chain available for retry behavior.<br>Profile: first-time player, starter not yet completed.<br>Encounter: active starter encounter ends in loss.                                          | Lose starter encounter -> open loss result -> tap retry -> re-enter starter encounter and observe cue replay eligibility.                                                               | Encounter transitions `active` -> `lost` -> retry initializes new active attempt with starter guidance restored under cue interruption/repetition rules.                                     | Retry returns to starter encounter battle route (not Home/progression).                                          | Loss result event, retry intent event, encounter restart event, cue-restoration/replay event(s).                                                            | Prior failed attempt committed to `encounter_result_records`; prior active snapshot replaced or reinitialized; cue state restored according to starter cue contract without corrupting profile completion flags. | `docs/screens-and-session-flow.md` §5.4, §17.1, §18.3; `docs/implementation-contracts.md` §9.3, §9.4, §12.1; `docs/randomness-and-seeding-contract.md` §3.2, §5.1, §6.2.                      |
+| `XAC-03` Warm resume during active encounter with pending cue                            | Seed: persisted RNG stream counters available in active snapshot.<br>Profile: existing player with in-progress encounter.<br>Encounter: active snapshot exists with pending starter/assist cue state.                        | Enter background during encounter -> warm resume -> restore snapshot -> continue interaction.                                                                                           | Resume-priority path restores exact active encounter state; pending cue remains pending/eligible per interruption rules; no duplicate transition replay.                                     | Battle route for restored active encounter.                                                                      | Resume lifecycle event, snapshot restore success event, cue pending/restored event, no duplicate terminal result event.                                     | Read and retain `active_encounter_snapshots`; no premature writes to `encounter_result_records`; RNG counters and cue state remain consistent with snapshot contract.                                            | `docs/screens-and-session-flow.md` §15.2, §16.1-§16.4; `docs/implementation-contracts.md` §3.2, §3.3, §7.5, §13.2, §13.3; `docs/randomness-and-seeding-contract.md` §6.1-§6.2.                |
+| `XAC-04` Spark Shuffle retry-cap -> emergency regeneration -> recoverable error fallback | Seed: shuffle stream seeded from encounter root seed.<br>Profile: any profile in active encounter.<br>Encounter: dead-board detected; configured retry cap reached.                                                          | Trigger dead-board -> execute Spark Shuffle retries until cap -> trigger emergency regeneration path -> if still invalid, present recoverable-error result overlay and fallback action. | Dead-board detection -> shuffle attempts consume deterministic stream -> emergency regeneration attempt -> recoverable-error terminal handling if non-playable persists.                     | Recoverable-error overlay/result route, then deterministic fallback target (retry/restart path).                 | Dead-board detected, shuffle attempt count events, retry-cap reached, emergency regeneration attempted, recoverable error surfaced, fallback action chosen. | Persist shuffle/recovery counters and latest valid snapshot; write recoverable-error result record when terminal; prevent silent state corruption between retries and fallback.                                  | `docs/screens-and-session-flow.md` §14.1-§14.2, §18.4, §18.6; `docs/implementation-contracts.md` §5.7, §5.8, §9.4, §12.1; `docs/randomness-and-seeding-contract.md` §5.5, §5.6, §7.           |
+| `XAC-05` Repeated-word reject (no move consumption)                                      | Seed: any deterministic encounter seed.<br>Profile: active encounter with at least one previously cast valid word recorded.<br>Encounter: player attempts previously accepted word in same encounter.                        | Submit word once successfully -> submit identical normalized word again in same encounter.                                                                                              | First submission follows valid cast resolution; second submission follows rejected-cast path with repeated-word reason and no move/board/countdown mutation.                                 | Stay on active battle route (no route change).                                                                   | First cast success events emitted; repeated-word rejection event emitted with explicit reason and no terminal/result event.                                 | No move decrement and no board mutation persisted for rejected cast; only rejection metadata/logging side effects allowed; active snapshot remains otherwise unchanged.                                          | `docs/screens-and-session-flow.md` §11.4; `docs/implementation-contracts.md` §5.2, §5.5, §5.8, §10.3, §12.1; `docs/randomness-and-seeding-contract.md` §5.2, §6.2.                            |
+| `XAC-06` Validation pin mismatch on launch (encounter restore disabled safely)           | Seed: existing persisted encounter seed/snapshot from previous validation pin version.<br>Profile: player has prior progress.<br>Encounter: active snapshot present but validation snapshot pin mismatches runtime contract. | Cold launch -> manifest/validation hydrate detects pin mismatch -> block unsafe encounter restore -> continue to safe route/state with clear recoverable messaging.                     | Launch phase reaches `manifest_validate`/`validation_hydrate` mismatch branch -> restore target derivation disables encounter restore -> route commit proceeds with safe non-restored state. | Safe non-encounter target (Home/first-time gate per profile), never directly into invalid restored battle state. | Validation pin mismatch event, restore-disabled safeguard event, route-commit fallback event.                                                               | Preserve prior snapshot records for diagnostics or migration; do not hydrate invalid active runtime state; write explicit safeguard marker/version state as defined by restore contract.                         | `docs/screens-and-session-flow.md` §4.2, §16.2, §16.5; `docs/implementation-contracts.md` §3.3 (Phase 3-6), §10.2-§10.4, §11.2, §12.1; `docs/randomness-and-seeding-contract.md` §6.3, §9.    |
 
 ---
 
@@ -309,16 +336,19 @@ Use this matrix as a mandatory acceptance checklist whenever a change can affect
 Before implementing milestone feature work, contributors must run this checklist and record outcomes in the PR description or final report.
 
 ### Required pre-coding gates
+
 1. Confirm the doc-precedence path for the touched feature area.
 2. Record unresolved questions as explicit assumptions.
 3. Apply a **"contract exists?"** gate for any persisted or runtime-critical behavior. If no contract exists, stop and define or request one before coding.
 4. Apply a **"milestone scope check"** gate to prevent feature creep beyond the approved milestone slice.
 
 ### Required decision-audit template
+
 Include this section in every milestone-feature PR/final report:
 
 ```md
 ## Ambiguities resolved this change
+
 - Ambiguity:
 - Chosen interpretation:
 - Why this is safe for player trust/fairness:
@@ -340,6 +370,7 @@ Words 'n Wands! should enforce strong separation between:
 - analytics/logging side effects
 
 ### Non-negotiable rules
+
 - UI must not become the hidden source of battle truth
 - move use, damage, countdown, spell resolution, and encounter end-state logic must not be duplicated across many layers
 - analytics, logs, experiments, and ads must never define gameplay semantics
@@ -349,6 +380,7 @@ Words 'n Wands! should enforce strong separation between:
 - dead-board recovery must not live only inside screen code
 
 ### Practical rule
+
 If the screen, a helper, and a shared package all contain versions of the same battle rule, that is already a warning sign.
 
 ---
@@ -358,6 +390,7 @@ If the screen, a helper, and a shared package all contain versions of the same b
 Words 'n Wands! should be strict about adding libraries.
 
 ### Rules for adding a dependency
+
 A dependency should only be added if it clearly provides real value such as:
 
 - saving significant implementation effort
@@ -367,6 +400,7 @@ A dependency should only be added if it clearly provides real value such as:
 - fitting naturally into the Expo / TypeScript / Android-first stack
 
 ### Words 'n Wands! should avoid
+
 - flashy libraries for convenience only
 - heavy state-management or architectural frameworks beyond what is needed
 - duplicate libraries that solve the same job
@@ -374,10 +408,13 @@ A dependency should only be added if it clearly provides real value such as:
 - packages that make AI-assisted maintenance harder
 
 ### Preferred rule
+
 Prefer first-party Expo-compatible choices where they are good enough.
 
 ### Special caution
+
 Any package that touches:
+
 - persistence
 - routing
 - content loading
@@ -395,6 +432,7 @@ should be treated as a serious long-term decision.
 Words 'n Wands! should use clear, boring, descriptive names.
 
 ### Preferred naming style
+
 Use names like:
 
 - `battleSessionState`
@@ -407,6 +445,7 @@ Use names like:
 - `resumeBattleService`
 
 Avoid names that are:
+
 - cute
 - vague
 - overly shortened
@@ -414,6 +453,7 @@ Avoid names that are:
 - clever for the sake of cleverness
 
 ### File and symbol naming rule
+
 A developer should be able to guess what a file, class, or function does from its name without opening it.
 
 If a name needs explanation, it is probably not a good Words 'n Wands! name.
@@ -425,6 +465,7 @@ If a name needs explanation, it is probably not a good Words 'n Wands! name.
 Words 'n Wands! should use comments carefully.
 
 ### Comment rules
+
 Comments should explain:
 
 - why something exists
@@ -440,6 +481,7 @@ Comments should not:
 - become stale and misleading
 
 ### Comments are especially important around
+
 - cast resolution ordering
 - collapse/refill sequencing
 - dead-board detection and spark shuffle recovery
@@ -458,6 +500,7 @@ Comments should not:
 Words 'n Wands! should keep useful logs without leaking unnecessary gameplay truth or drowning real issues in noise.
 
 ### Words 'n Wands! should log
+
 - technical errors
 - content-loading failures
 - validation snapshot mismatch problems
@@ -467,6 +510,7 @@ Words 'n Wands! should keep useful logs without leaking unnecessary gameplay tru
 - content version or schema mismatch problems
 
 ### Words 'n Wands! should avoid logging by default
+
 - giant board dumps in production logs unless truly needed
 - full validation lexicon dumps
 - raw internal content bundles when a summary would do
@@ -475,6 +519,7 @@ Words 'n Wands! should keep useful logs without leaking unnecessary gameplay tru
 - sensitive account/session payloads if online systems are added later
 
 ### Logging principle
+
 Logs should help diagnose problems without:
 
 - spoiling internal gameplay data unnecessarily
@@ -488,6 +533,7 @@ Logs should help diagnose problems without:
 Words 'n Wands! should handle errors in a player-friendly and engineering-usable way.
 
 ### User-facing behavior
+
 Players should see:
 
 - clear readable messages
@@ -495,15 +541,18 @@ Players should see:
 - practical next-step guidance when possible
 
 ### Technical behavior
+
 Technical detail belongs in logs, not in normal player UI.
 
 ### Words 'n Wands! should avoid
+
 - raw exception dumps in the app
 - vague “something went wrong” messages with no clue what to do
 - silent state corruption
 - resetting an encounter just because a non-critical side effect failed
 
 ### Important rule
+
 If analytics fails, gameplay continues.  
 If logging fails, gameplay continues.  
 If haptics or sound fail, gameplay continues.  
@@ -517,6 +566,7 @@ Do not invent battle truth to “smooth over” a failure.
 These tests are required for the most important battle-truth systems.
 
 ### Word validation and element assignment
+
 Required tests:
 
 - normalization behavior
@@ -528,6 +578,7 @@ Required tests:
 - version-pinned validation behavior
 
 ### Repeated-word handling
+
 Required tests:
 
 - valid word can be cast once
@@ -537,6 +588,7 @@ Required tests:
 - repeated word rejection does not change countdown state
 
 ### Board generation and refill
+
 Required tests:
 
 - initial board is playable
@@ -546,6 +598,7 @@ Required tests:
 - same seed produces stable outcomes if seeded generation is used
 
 ### Dead-board recovery
+
 Required tests:
 
 - no-playable-word state is detected correctly
@@ -554,6 +607,7 @@ Required tests:
 - recovery does not corrupt encounter state
 
 ### Damage and matchup
+
 Required tests:
 
 - base damage application
@@ -564,6 +618,7 @@ Required tests:
 - final damage is deterministic and explainable
 
 ### Countdown behavior
+
 Required tests:
 
 - countdown updates after successful casts
@@ -573,6 +628,7 @@ Required tests:
 - victory before countdown-triggered spell prevents post-win creature action
 
 ### Creature spell behavior
+
 Required tests:
 
 - each supported spell primitive applies correctly
@@ -582,6 +638,7 @@ Required tests:
 - spell result stays readable and deterministic
 
 ### Encounter result behavior
+
 Required tests:
 
 - win state creation
@@ -590,6 +647,7 @@ Required tests:
 - result state does not double-fire on restore
 
 ### Persistence and restore
+
 Required tests:
 
 - encounter snapshot serialization
@@ -628,6 +686,7 @@ If a change touches any of those systems and no new or updated tests were added 
 Words 'n Wands! should treat testing as essential from the start, but should focus effort where trust lives.
 
 ### Highest-priority automated test areas
+
 - shared battle engine
 - validation engine
 - dead-board detection and recovery
@@ -638,11 +697,13 @@ Words 'n Wands! should treat testing as essential from the start, but should foc
 - encounter state transitions
 
 ### Lower-priority early areas
+
 - minor cosmetic animation behavior
 - decorative visual polish details
 - non-critical presentational effects
 
 ### Manual testing is still required
+
 Automated tests are not enough.  
 Real Android manual testing is required for:
 
@@ -663,6 +724,7 @@ Real Android manual testing is required for:
 Words 'n Wands! should use CI to enforce boring correctness before merge.
 
 ### What CI checks must pass before merge?
+
 For code changes, these checks are mandatory:
 
 - format check passes
@@ -674,6 +736,7 @@ For code changes, these checks are mandatory:
 - Expo Doctor passes if app dependencies or config changed
 
 ### Minimum required CI gates
+
 - `format:check`
 - `lint`
 - `typecheck`
@@ -686,12 +749,14 @@ For code changes, these checks are mandatory:
 The exact script names can vary internally, but the behaviors above are mandatory.
 
 `battle-formula-version:check` requirement:
+
 - compare the canonical combat math formula version declared in `docs/implementation-contracts.md` against all battle-critical numeric references in:
   - `docs/game-rules.md`
   - `docs/word-validation-and-element-rules.md`
 - fail CI (blocking merge) if formula-version identifiers are missing or mismatched in any referenced battle-critical section
 
 ### Docs-only PRs
+
 Docs-only PRs do not need full app build validation, but they should still avoid breaking doc references, file names, or source-of-truth consistency.
 
 ---
@@ -701,6 +766,7 @@ Docs-only PRs do not need full app build validation, but they should still avoid
 Every Words 'n Wands! file should have a clear reason to exist.
 
 ### Rules
+
 - each file should have a focused purpose
 - each module should own a clearly defined area
 - do not mix UI rendering, persistence, and battle truth in one file
@@ -710,9 +776,11 @@ Every Words 'n Wands! file should have a clear reason to exist.
 - keep content data out of random screen components
 
 ### Asset/runtime rule
+
 The runtime app should depend on exported app-ready assets, not proprietary design-tool project formats.
 
 That means the app should consume formats like:
+
 - png / webp
 - svg where appropriate
 - audio exports
@@ -721,6 +789,7 @@ That means the app should consume formats like:
 The app should not require Adobe project files to function at runtime.
 
 ### Source-art rule
+
 If source design files are ever kept in the repo, they should be clearly separated from runtime assets and should not complicate ordinary developer setup.
 
 ---
@@ -730,6 +799,7 @@ If source design files are ever kept in the repo, they should be clearly separat
 Words 'n Wands! should never leave confusing half-built features exposed casually.
 
 ### Rules
+
 - unfinished features should be hidden or cleanly disabled in development-only paths
 - do not expose dead-end buttons
 - do not ship fake daily/weekly, async, journal, event, or store surfaces
@@ -758,6 +828,7 @@ Acceptable AI-generated code must:
 - not invent product behavior where the docs are explicit
 
 ### AI-generated code is not acceptable if it:
+
 - silently changes move rules, damage rules, countdown rules, spell rules, or encounter result rules
 - silently changes validation behavior
 - duplicates rule logic across multiple layers
@@ -768,6 +839,7 @@ Acceptable AI-generated code must:
 - treats “it ran once” as proof that the implementation is good
 
 ### Human review rule
+
 All AI-generated code that touches any of these must be reviewed carefully:
 
 - validation rules
@@ -783,13 +855,16 @@ All AI-generated code that touches any of these must be reviewed carefully:
 - app architecture
 
 ### Special rule for AI-generated content/tooling
+
 AI may assist with:
+
 - encounter scaffolding
 - typed content scaffolding
 - validation tooling scaffolding
 - review checklists
 
 AI must not be the final authority for:
+
 - fairness sign-off
 - battle-balance sign-off
 - family-friendly tone sign-off
@@ -802,6 +877,7 @@ AI must not be the final authority for:
 Reviews should focus on substance, not style nitpicks already enforced automatically.
 
 ### Reviewers should check
+
 - does this match the docs?
 - does this preserve battle truth and player trust?
 - does this create hidden behavior?
@@ -815,6 +891,7 @@ Reviews should focus on substance, not style nitpicks already enforced automatic
 - if battle-critical numeric docs are touched, do all referenced formula-version identifiers match the canonical version?
 
 ### Review principle
+
 A change should not be approved just because it technically passes if it makes the codebase harder to understand later.
 
 ---
@@ -875,25 +952,31 @@ This checklist is mandatory whenever battle-critical docs disagree, even if no c
 When a blocking source-of-truth conflict is identified, this governance flow is mandatory.
 
 #### Decision owner (single accountable approver)
+
 - Exactly one decision owner must be assigned per conflict.
 - The decision owner is the single accountable approver for the resolution outcome.
 - The decision owner must be named in the conflict-tracking entry and in the PR/final report.
 
 #### Turnaround SLA
+
 - Blocking spec conflicts require a resolution decision within **48 hours** of conflict identification.
 - If the 48-hour window is at risk, escalation must be recorded in the same conflict-tracking entry.
 
 #### Temporary implementation rule while blocked
+
 - While a blocking source-of-truth conflict remains unresolved, contributors must **freeze the affected feature branch scope**.
 - No merge is allowed for changes that depend on the disputed rule until the conflict is formally resolved.
 
 #### Required closure artifacts
+
 Every resolved conflict must include all of the following artifacts:
+
 - updated canonical doc section reflecting the approved interpretation
 - explicit version/date stamp in the updated canonical section
 - linked completed conflict-template entry (from Appendix A.3 checklist) documenting the decision
 
 #### Merge gate
+
 - **No merge is allowed with an unresolved source-of-truth conflict.**
 - A conflict is considered unresolved until the decision owner approves and all required closure artifacts are present in the PR.
 

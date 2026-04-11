@@ -35,6 +35,7 @@ export interface HeadlessEncounterDefinition {
   encounter_id: string;
   encounter_seed: string;
   board: Parameters<typeof createEncounterRuntimeState>[0]["board"];
+  letter_pool?: readonly string[];
   rng_stream_states?: Partial<EncounterRngStreamStates>;
   creature: Parameters<typeof createEncounterRuntimeState>[0]["creature"];
   move_budget_total: number;
@@ -198,6 +199,7 @@ export const runEncounterHeadless = ({
           refillBoard({
             board,
             rng_stream_states,
+            letter_pool: encounter.letter_pool,
           }),
         apply_bubble_rise: ({ board }) =>
           applyBubbleRise({

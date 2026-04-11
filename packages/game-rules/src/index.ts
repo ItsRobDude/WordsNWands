@@ -11,6 +11,7 @@ export * from "./contracts/index.js";
 export * from "./damage/damageModelV1.js";
 
 export * from "./board/createInitialBoard.js";
+export * from "./board/createAuthoredBoard.js";
 export * from "./board/collapseColumns.js";
 export * from "./board/consumeTiles.js";
 export * from "./board/refillBoard.js";

@@ -2,8 +2,11 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react-native",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
     "types": []
   },
-  "include": ["./App.tsx", "./**/*.d.ts"],
+  "include": ["./App.tsx", "./src/**/*.ts", "./**/*.d.ts"],
   "exclude": ["node_modules"]
 }

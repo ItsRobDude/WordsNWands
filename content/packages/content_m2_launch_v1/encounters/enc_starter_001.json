@@ -52,8 +52,15 @@
       },
       "starterBoardOpening": {
         "openingBoardSource": {
-          "mode": "authored_seed",
-          "authoredSeed": "starter_opening_script_v1"
+          "mode": "authored_board",
+          "authoredBoard": [
+            ["L", "E", "A", "F", "R", "I"],
+            ["S", "U", "N", "M", "O", "S"],
+            ["T", "O", "R", "C", "H", "A"],
+            ["P", "A", "T", "H", "W", "I"],
+            ["B", "L", "O", "O", "M", "D"],
+            ["R", "I", "V", "E", "R", "N"]
+          ]
         },
         "guaranteedGuidedFirstCastPath": [
           {
