@@ -175,6 +175,12 @@ Rules:
 - RNG stream: `spark_shuffle`
 - Seed label: `spark_shuffle`
 - Spark Shuffle must use Fisher–Yates shuffle with draws from this stream only.
+- Spark Shuffle retries are permutation-only operations over the current surviving tile set for that recovery cycle.
+- Spark Shuffle retries must preserve tile identity continuity:
+  - each shuffled board is a relocation of existing `tile_id` records, not tile recreation,
+  - each tile carries forward its pre-shuffle letter, `tile_state`, and `special_marker` unchanged,
+  - only board position (`row`, `col`) may change between retry attempts.
+- Spark Shuffle retries must not consume `board_init` or `board_refill` draws and must not mint any new tile letters.
 - Post-shuffle “board is playable” checks and any required re-shuffle attempts consume from this same stream.
 - `max_shuffle_retries_per_recovery_cycle` is a canonical v1 constant set to `3`.
 - Emergency-regeneration deterministic lineage is explicit:
@@ -209,6 +215,15 @@ Rules:
   1. regenerate board via deterministic emergency seed branch
   2. if still dead, end encounter safely in recoverable error state with retry CTA
 - Retry-cap fallback must preserve fairness: no additional move consumption and no countdown decrement/reset.
+
+Short deterministic trace (vowel-starved dead-board path):
+
+1. Dead-board detector enters Spark Shuffle recovery with surviving tiles containing only one vowel across the full board.
+2. Shuffle attempt 1 (`spark_shuffle` state `SS0`) permutes existing tiles only; board remains dead.
+3. Shuffle attempt 2 (`SS1`) permutes the same tile identities and states only; board remains dead.
+4. Shuffle attempt 3 (`SS2`) permutes the same tile identities and states only; board remains dead.
+5. Retry cap (`3`) is reached; Spark Shuffle branch stops without touching `board_init`/`board_refill`.
+6. Emergency regeneration begins from deterministic branch lineage rooted at `spark_shuffle` retry-cap state `SS3`, which is the first allowed branch that can construct fresh letters.
 
 ### 5.6 Worked deterministic trace example (quality retry + acceptance)
 
