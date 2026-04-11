@@ -1085,6 +1085,8 @@ Rules:
 - `starter_tutorial_last_interrupted_stage` stores interruption checkpointing for background/kill/resume recovery and should be `'none'` when no cue was active at interruption time.
 - `cosmetic_currency_balance` is the canonical spendable cosmetic soft-currency balance and must be a non-negative integer.
 - `cosmetic_unlock_records_json` stores owned cosmetic unlocks as canonical `CosmeticUnlockRecord[]` and is the profile-side source of truth for cosmetic ownership.
+- cosmetic spend deduction and append of a new owned unlock record must commit in one SQLite transaction (see `docs/technical-architecture.md` section 14 "Persistence Architecture" for trust-critical local persistence behavior).
+- if any step in that cosmetic spend/unlock write path fails, the transaction must roll back and persist neither currency deduction nor unlock append partial state.
 
 ### 7.2 `player_settings_records`
 
@@ -1682,6 +1684,9 @@ Rules:
 - spend invariant: cosmetic purchases/unlocks must fail pre-commit if `player_profile_records.cosmetic_currency_balance - cost_currency < 0`.
 - spend invariant: unlock handling must be idempotent by `unlock_id`; retrying an already-owned unlock must not decrement currency again.
 - spend invariant: profile ownership must not contain duplicate `unlock_id` records inside `cosmetic_unlock_records_json`.
+- spend invariant: cosmetic spend deduction plus unlock append must execute atomically in one SQLite transaction; partial writes are forbidden.
+- failure semantics: if any step in the spend+unlock transaction fails, the full transaction must roll back and leave persisted balance/ownership unchanged.
+- idempotency semantics: retrying an already-owned `unlock_id` must no-op without additional currency deduction and without writing duplicate ownership records.
 
 ### 8.5 Progression definition contract
 
