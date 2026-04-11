@@ -64,6 +64,7 @@ export interface BlueprintBalanceProfileOverride {
 }
 
 export interface RuntimeValidationFinding {
+  pass_id?: string;
   code: string;
   message: string;
   severity: 'info' | 'warn' | 'error';
