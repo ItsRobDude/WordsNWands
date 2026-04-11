@@ -21,6 +21,11 @@ This README is the current top-level source of truth for Words 'n Wands! product
 Focused documents under `docs/` exist to refine this overview with more exact gameplay, screen, balance, and engineering rules.  
 When a more specific document goes deeper than this README, the more specific document should win.
 
+## README maintenance
+- README is for routing and quickstart guidance, not a full design specification.
+- New long-form content should go in existing `docs/` files whenever those docs already cover the topic.
+- Any new README section must include a brief note on why it belongs in README instead of `docs/`.
+
 ---
 
 ## Current readiness snapshot
