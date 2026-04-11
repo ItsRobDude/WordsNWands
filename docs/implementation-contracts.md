@@ -1080,10 +1080,22 @@ export interface ActionQueueItem {
   source_event_id: string;
   source_sequence: number;
   action_type: UIActionType;
+  execution_mode: 'blocking' | 'non_blocking';
+  completion_signal:
+    | { required: 0 }
+    | { required: 1; token: string; callback_id?: string };
   enqueue_ts_utc: string;
   not_before_phase: EngineFramePhase;
   payload: Record<string, unknown>;
   effect_channel: 'visual' | 'audio' | 'haptic' | 'system';
+  gating_key:
+    | 'hp'
+    | 'countdown'
+    | 'phase_banner'
+    | 'cast_feedback'
+    | 'spell_fx'
+    | 'result_modal'
+    | 'checkpoint_io';
   dedupe_key: string; // recommended: `${session_id}:${source_event_id}:${action_type}`
 }
 ```
@@ -1096,6 +1108,10 @@ Rules:
 - `persist_event_checkpoint` must run after each consumed engine event to update `last_consumed_sequence`.
 - `show_restore_recap_banner` is restore-only and must be enqueued only from snapshot-derived launch/resume logic (never from live engine frame execution).
 - `show_restore_recap_banner` must be short-lived and non-blocking, and must not enqueue `persist_event_checkpoint` on its own.
+- queue-runner/service orchestration owns execution semantics (`execution_mode`, `completion_signal`, `effect_channel`, `gating_key`) and any channel-level overlap limits. These semantics must not be re-authored as canonical truth in `uiSlice`.
+- blocking serialized channels (`hp`, `countdown`, `phase_banner`) must gate later items on the same `gating_key` until completion signal requirements are satisfied.
+- micro-feedback channels (`cast_feedback`, short haptics/audio cues) may overlap when queue-runner concurrency limits allow, but must still preserve deterministic start order by (`source_sequence`, insertion order).
+- `completion_signal.required = 1` means queue progression for that item is explicitly blocked until the matching completion token/callback acknowledgment is received by the queue runner; missing acknowledgment must not be inferred from React render timing.
 
 Engine events -> required baseline UI action mapping:
 
@@ -2977,19 +2993,21 @@ export interface UiSliceState {
 Allowed write sources:
 
 - UI-only interaction and view lifecycle state
-- engine event reactions that map to presentation cues (`transient_banner`, `result_ack_pending`)
+- queue-runner/service acknowledgements that expose minimal UI-facing flags (`result_ack_pending`, transient banner payloads)
 
 Forbidden fields:
 
 - canonical encounter terminal outcome or persistence identifiers
 - board truth, creature truth, or deterministic RNG progression
 - duplicated starter-flow progression flags (`has_completed_starter_flow`, `starter_tutorial_cue_stage`)
+- queue orchestration ownership fields (`execution_mode`, channel gating policies, completion-token bookkeeping, overlap limits)
 
 Required actions and idempotency:
 
 - `uiSlice.setSwipePreview(path, word)` must accept empty-path resets and be idempotent for same preview payload
 - `uiSlice.showTransientBanner(kind)` must allow safe repeated calls without queue duplication side effects
 - `uiSlice.acknowledgeResultView()` must only clear UI acknowledgment flags and must not mutate encounter outcome truth
+- any queue-completion acknowledgment surfaced through `uiSlice` must remain minimal UI intent signaling and must not take over queue scheduling or channel gating decisions from the queue-runner/service layer
 
 Selector stability rules:
 
