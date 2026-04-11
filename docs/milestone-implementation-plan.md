@@ -244,6 +244,7 @@ Prepare the repo and app foundation so future work stays clean, boring, and main
 ### Definition of done
 Milestone 0 is done when:
 
+- the exact bootstrap file tree and artifacts defined in `docs/technical-architecture.md` section 27 are committed and validate successfully via `pnpm check`
 - the repo has an approved boring structure
 - the intended stack is clearly documented
 - there is no ambiguity about where battle logic, validation logic, and content logic should live

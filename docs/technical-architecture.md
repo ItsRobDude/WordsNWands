@@ -928,3 +928,147 @@ The architecture should stay:
 - maintainable by a solo owner with AI help
 
 If a future architecture idea makes the project harder to understand, harder to test, harder to resume reliably, or more operationally fragile before the game is proven fun, it should not be treated as an improvement.
+## 27. Bootstrap Artifacts (Milestone 0 Contract)
+
+To eliminate ambiguity for the first "Clean-room implementation path" phase, this section defines the exact required file tree and the minimum concrete file contents for the repository bootstrap.
+This is the required state of the codebase before Milestone 1 begins.
+
+### 27.1 Required Repository Structure
+
+```txt
+.
+├── package.json
+├── pnpm-workspace.yaml
+├── tsconfig.base.json
+├── apps/
+│   └── mobile/
+│       ├── app.json
+│       ├── package.json
+│       ├── tsconfig.json
+│       └── src/
+├── packages/
+│   ├── game-rules/
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── src/
+│   ├── validation/
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── src/
+│   ├── content/
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── src/
+│   └── utils/
+│       ├── package.json
+│       ├── tsconfig.json
+│       └── src/
+└── docs/
+```
+
+### 27.2 Root `package.json`
+
+This must enforce the pnpm validation contract.
+
+```json
+{
+  "name": "words-n-wands",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r exec tsc --noEmit",
+    "test": "pnpm -r exec jest",
+    "build": "pnpm -r run build",
+    "docs:check": "./scripts/check-all-docs.sh",
+    "check": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm docs:check",
+    "content:validate": "pnpm --filter @words-n-wands/content content:validate"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8"
+  }
+}
+```
+
+### 27.3 Root `pnpm-workspace.yaml`
+
+This explicitly defines the monorepo bounds.
+
+```yaml
+packages:
+  - "apps/*"
+  - "packages/*"
+```
+
+### 27.4 Base `tsconfig.base.json`
+
+This ensures strict TypeScript settings are shared across all workspaces.
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "module": "ESNext"
+  }
+}
+```
+
+### 27.5 Expo `app.json` (`apps/mobile/app.json`)
+
+This ensures the Android-first identity is established immediately.
+
+```json
+{
+  "expo": {
+    "name": "Words 'n Wands!",
+    "slug": "words-n-wands",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "android": {
+      "package": "com.wordsnwands.game"
+    }
+  }
+}
+```
+
+### 27.6 Minimum workspace package templates
+
+Each shared package (`packages/*/package.json`) must follow this structure:
+
+```json
+{
+  "name": "@words-n-wands/<package-name>",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
+```
+
+This ensures package boundaries are respected and the build/typecheck commands defined in `docs/engineering-standards.md` work locally.

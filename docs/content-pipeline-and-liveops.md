@@ -435,6 +435,90 @@ Normative determinism rules for this minimum package:
 - `manifest.json` package and version pins (`battle_rules_version`, `board_generator_version`, `validation_snapshot_version`) are validity checks, not hints; if any pin does not match runtime lock values, package load must fail closed.
 - Any missing file, duplicate ID target, or unresolved manifest reference makes the package invalid.
 
+#### 8.5.2 Canonical `manifest.json` example
+
+```json
+{
+  "schema_version": "manifest_schema_v1",
+  "content_version": "content_m2_launch_v1",
+  "battle_rules_version": "battle_rules_m2_launch_v1",
+  "board_generator_version": "board_generator_m2_launch_v1",
+  "validation_snapshot_version": "val_snapshot_m2_launch_v1",
+  "schemas": {
+    "manifest_schema": "content/schemas/manifest_schema_v1.json",
+    "creature_schema": "content/schemas/creature_schema_v1.json",
+    "encounter_schema": "content/schemas/encounter_schema_v1.json",
+    "validation_snapshot_schema": "content/schemas/validation_snapshot_schema_v1.json"
+  },
+  "asset_pack_version": null,
+  "created_at_utc": "2024-05-01T12:00:00Z",
+  "created_by": "core_team",
+  "status": "approved",
+  "payload_references": {
+    "creatures": ["creatures/creature.starter_friend_v1.json"],
+    "encounters": [
+      "encounters/enc_starter_001.json",
+      "encounters/enc_meadow_001.json",
+      "encounters/enc_meadow_002.json",
+      "encounters/enc_meadow_003.json"
+    ],
+    "progression": "progression/progression.progression_m2_chapter_linear_v1.json",
+    "validation_snapshot": "validation/snapshot.val_snapshot_m2_launch_v1.json"
+  }
+}
+```
+
+#### 8.5.3 Canonical Starter Creature Example
+
+```json
+{
+  "creature_id": "starter_friend_v1",
+  "displayName": "Dust Bunny",
+  "max_hp": 25,
+  "base_countdown": 4,
+  "weaknesses": ["storm"],
+  "resistances": [],
+  "phase_rules": [],
+  "spell_id": "spell_dust_bunny_tickle_v1"
+}
+```
+
+#### 8.5.4 Canonical Starter Encounter Example
+
+```json
+{
+  "encounter_id": "enc_starter_001",
+  "displayName": "A Dusty Greeting",
+  "encounterType": "standard",
+  "difficultyTier": "gentle",
+  "creature_id": "starter_friend_v1",
+  "moveBudgetTotal": 15,
+  "boardConfig": {
+    "boardProfileId": "board_profile_starter_onboarding_v1",
+    "columns": 5,
+    "rows": 6
+  },
+  "balanceMetadata": {
+    "expectedWinRate": 0.95,
+    "waivers": []
+  },
+  "contentVersion": "content_m2_launch_v1",
+  "damageModelVersion": "damage_model_v1",
+  "starPolicyVersion": "star_policy_v1_absolute",
+  "isStarterEncounter": true,
+  "starterTutorialScript": [
+    {
+      "stage": "cue_01_trace_word",
+      "text": "Swipe across the tiles to cast a spell!"
+    }
+  ],
+  "guidedFirstCast": {
+    "selectedPositions": [{"col": 2, "row": 3}, {"col": 2, "row": 2}, {"col": 3, "row": 2}],
+    "expectedElement": "storm"
+  }
+}
+```
+
 Required `manifest.json` fields for every package:
 
 - `package_id` (stable package identifier)

@@ -6,6 +6,20 @@ For high-level product identity and experience goals, use `README.md`.
 For domain truth (battle rules, validation, encounters, UX flow, architecture), use focused docs in `docs/`.
 
 ## Quick Start (read before coding)
+
+### Clean-room implementation path
+For a brand-new implementer starting from zero, this is the exact, short, ordered reading path that maps directly to the first working slice:
+1. `docs/project-identity.md` (identity)
+2. `docs/game-rules.md` (game rules)
+3. `docs/screens-and-session-flow.md` (screen/session flow)
+4. `docs/word-validation-and-element-rules.md` (word validation)
+5. `docs/creature-and-encounter-rules.md` (creature/encounter rules)
+6. `docs/technical-architecture.md` (technical architecture)
+7. `docs/implementation-contracts.md` (implementation contracts)
+8. `docs/early-content-lock.md` (milestone locks)
+9. `docs/first-shippable-content-pack.md` (first shippable content pack)
+
+### Daily tasks
 - Combat math / damage / turn order: open `docs/implementation-contracts.md` first, then `docs/game-rules.md`.
 - UX timing / input lock / interaction flow: open `docs/screens-and-session-flow.md` first.
 - RNG parity / seed determinism: open `docs/randomness-and-seeding-contract.md` first.
@@ -91,7 +105,7 @@ If a task does not touch one of these areas, do not pull in extra docs.
 
 Validation source of truth:
 - `docs/engineering-standards.md`, section **5.1 Operational Validation Commands (Contributor Contract)**.
-- Damage Model Consistency: Run `./scripts/check-damage-model-consistency.sh` if touching combat math, formulas, or balance documents.
+- Document Consistency: Run `./scripts/check-damage-model-consistency.sh`, `./scripts/check-starter-gate-consistency.sh`, `./scripts/check-chapter-linear-consistency.sh`, and `./scripts/check-early-content-pins-consistency.sh` (or `pnpm docs:check` if available) when changing their respective cross-doc rules.
 
 Use the canonical commands from that section (`pnpm format`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm check` when available) and follow milestone-specific requirements.
 

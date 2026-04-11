@@ -49,6 +49,17 @@ The M1–M2 lock is valid only when the following authored artifacts exist and a
   - `enc_meadow_002`
   - `enc_meadow_003`
 
+Required base payload structure for these locked encounters:
+
+```json
+{
+  "encounter_id": "<one_of_the_locked_ids>",
+  "contentVersion": "content_m2_launch_v1",
+  "damageModelVersion": "damage_model_v1",
+  "starPolicyVersion": "star_policy_v1_absolute"
+}
+```
+
 ### 2.2 Progression artifacts
 
 - Required exact progression artifact filename:
@@ -65,6 +76,8 @@ The M1–M2 lock is valid only when the following authored artifacts exist and a
   3. `enc_meadow_003`
 - No additional mainline encounter IDs may appear before, between, or after this locked sequence in the M1-M2 package.
 
+See `docs/progression-economy-and-monetization.md` section 9.5 for the canonical concrete JSON artifact example. This payload is referenced from `manifest.json` as specified in `docs/content-pipeline-and-liveops.md` section 8.5.2.
+
 ### 2.3 Validation artifacts
 
 - Required exact validation artifact filename:
@@ -72,6 +85,16 @@ The M1–M2 lock is valid only when the following authored artifacts exist and a
 - Required exact validation snapshot ID/version in payload:
   - `validation_snapshot_version = val_snapshot_m2_launch_v1`
 - Snapshot coverage must include all expected tutorial and chapter-1 intended-valid vocabulary used by authored onboarding/progression fixtures.
+
+Required exact validation payload structure:
+
+```json
+{
+  "validation_snapshot_version": "val_snapshot_m2_launch_v1",
+  "base_dictionary_hash": "<expected_hash>",
+  "valid_words": ["<words>", "..."]
+}
+```
 
 ### 2.4 Deterministic fixture artifacts
 

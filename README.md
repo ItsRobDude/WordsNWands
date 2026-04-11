@@ -40,6 +40,7 @@ When docs conflict, resolve deliberately and document the decision with the conf
 ## Reading paths
 
 - **60-second overview** (`README.md`): project purpose + core constraints (docs-first phase, deterministic/fair gameplay focus, Android-first foundation).
+- **Clean-room implementation path**: If you are implementing from zero, see the "Clean-room implementation path" section at the top of `AGENTS.md` for the exact reading order.
 - **Contributor quick path** (`README.md`, `AGENTS.md`, `docs/engineering-standards.md`): execution rules, doc-routing discipline, and canonical validation command contract.
 - **Release-readiness/content polish path** (`docs/first-shippable-content-pack.md`, `docs/milestone-implementation-plan.md`, `docs/milestone-locked-constants.md`): external-quality content composition, milestone ship checks, and locked runtime constants.
 - **Deep reference** (read only the area you are changing): `docs/game-rules.md`, `docs/word-validation-and-element-rules.md`, `docs/screens-and-session-flow.md`, `docs/implementation-contracts.md`, `docs/randomness-and-seeding-contract.md`, `docs/technical-architecture.md`, `docs/milestone-implementation-plan.md`, `docs/first-shippable-content-pack.md`, `docs/challenge-and-boss-layer.md`, `docs/async-competition-rules.md`.

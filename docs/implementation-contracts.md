@@ -1561,6 +1561,12 @@ Rules:
 
 These interfaces define the stable runtime shapes for bundled encounter content.
 
+### 8.0.c Player-Invoked Clues Contract [Reserved for M3+]
+
+- This contract is currently disabled in M1–M2.
+- Player-invoked clue behavior logic will be fully specified here before M3 implementation begins.
+
+
 ### 8.0 Content package manifest load contract (required fields)
 
 Runtime content loaders must require and validate these manifest fields before any creature/encounter/validation payload is activated:
@@ -1861,9 +1867,9 @@ Rules:
 - `boss` and `event` encounters must explicitly author `starPolicyVersion` (no implied inheritance from standard defaults)
 - omission of `starPolicyVersion` for `boss`/`event` content is an authoring/validation failure and runtime must not silently fall back
 - `starPolicyVersion` routing and defaults must align with `docs/game-rules.md` section 13 ("Current star-rating direction" and "Boss/event star-policy routing rule")
-- `hiddenBonusWordPolicy` is optional and encounter-bound; when present it must select from a themed lexicon subset using deterministic seeded selection for that encounter only
-- `hiddenBonusWordPolicy.maxClaimsPerEncounter` is locked to `1`; runtime must guard against multiple claims in the same encounter session
-- hidden bonus discovery is reward-side flavor only and must not alter damage, move consumption, creature countdown behavior, or board mutation/collapse/refill semantics
+- `hiddenBonusWordPolicy` is optional and encounter-bound; when present it must select from a themed lexicon subset using deterministic seeded selection for that encounter only [Reserved for post-M2]
+- `hiddenBonusWordPolicy.maxClaimsPerEncounter` is locked to `1`; runtime must guard against multiple claims in the same encounter session [Reserved for post-M2]
+- hidden bonus discovery is reward-side flavor only and must not alter damage, move consumption, creature countdown behavior, or board mutation/collapse/refill semantics [Reserved for post-M2]
 - `RuntimeEncounterDefinition` intentionally has no Spark Shuffle countdown/move override field in v1; runtime must apply the global Spark Shuffle pressure rule from section 5.6 without per-encounter guessing
 - `balanceMetadata.waivers` is required and must be present even when empty (`[]`)
 - any authored out-of-band balance value with `warn` severity requires an active waiver entry
@@ -2177,7 +2183,7 @@ Migration note for authored encounters:
 - Existing content keeps current behavior by default: authored/runtime records that omit `maxConcurrentWands` should be treated as `null` (legacy uncapped) during migration and compatibility loading.
 - Encounter authors must set a non-null `maxConcurrentWands` explicitly to opt into capped Wand concurrency behavior.
 
-### 8.4 Reward contract
+### 8.4 Reward contract [Reserved for M3+]
 
 ```ts
 export interface RuntimeRewardDefinition {
@@ -2242,7 +2248,7 @@ Rules:
 - boss encounters may appear in mainline chapter order
 - event encounters do not gate mainline progression by default in Milestone 2
 
-### 8.6 Phase rule contract
+### 8.6 Phase rule contract [Reserved for M3+]
 
 ```ts
 export interface RuntimePhaseRule {
@@ -2262,7 +2268,7 @@ Rules:
 - the current product direction expects very little or no use of matchup shifts in v1 ordinary content
 - `changesWeaknessTo` and `changesResistanceTo` must not be random
 
-### 8.7 Post-M2 challenge and competition runtime contracts
+### 8.7 Post-M2 challenge and competition runtime contracts [Reserved for M3+]
 
 ```ts
 export interface RuntimeChallengeDefinition {
@@ -2647,20 +2653,20 @@ export type CanonicalAnalyticsEventName =
   | 'encounter.creature_spell_triggered'
   | 'encounter.dead_board_recovered'
   | 'encounter.spark_shuffle_retry_cap_hit'
-  | 'encounter.clue_used'
-  | 'encounter.clue_denied'
-  | 'encounter.hidden_bonus_word_discovered'
+  | 'encounter.clue_used' // [Reserved for M3+]
+  | 'encounter.clue_denied' // [Reserved for M3+]
+  | 'encounter.hidden_bonus_word_discovered' // [Reserved for post-M2]
   | 'encounter.won'
   | 'encounter.lost'
   | 'encounter.result_viewed'
-  | 'challenge.viewed'
-  | 'challenge.started'
-  | 'challenge.completed'
-  | 'challenge.expired'
-  | 'competition.joined'
-  | 'competition.seed_locked'
-  | 'competition.result_submitted'
-  | 'competition.rank_viewed'
+  | 'challenge.viewed' // [Reserved for M3+]
+  | 'challenge.started' // [Reserved for M3+]
+  | 'challenge.completed' // [Reserved for M3+]
+  | 'challenge.expired' // [Reserved for M3+]
+  | 'competition.joined' // [Reserved for M5+]
+  | 'competition.seed_locked' // [Reserved for M5+]
+  | 'competition.result_submitted' // [Reserved for M5+]
+  | 'competition.rank_viewed' // [Reserved for M5+]
   | 'progression.encounter_unlocked'
   | 'settings.updated';
 ```
@@ -2741,13 +2747,13 @@ Required behavior:
 - event transport failures must be non-blocking for gameplay and persistence
 - `encounter.spark_shuffle_retry_cap_hit` is required whenever Spark Shuffle reaches retry cap (even if deterministic emergency regeneration succeeds)
 - when `boardQualityPolicy` is enabled, board-generation/refill analytics events must include `board_init_quality_retry_count` and `board_refill_quality_retry_count` so tuning and fairness audits can reconstruct acceptance/retry behavior.
-- `encounter.clue_used` is required for every successful clue action commit and must include `clue_action_type`, `clue_charges_available`, and `clue_uses_total`.
-- `encounter.clue_denied` is required for clue-use attempts rejected by gating, cooldown, or budget constraints and must include `clue_use_deny_reason`.
-- `encounter.hidden_bonus_word_discovered` is required when an encounter-hidden bonus word is first discovered and must include `encounter_id`, `encounter_session_id`, `validation_snapshot_version_pin`, `reward_constants_version_pin`, and `hidden_bonus_reward_granted`.
+- `encounter.clue_used` is required for every successful clue action commit and must include `clue_action_type`, `clue_charges_available`, and `clue_uses_total`. [Reserved for M3+]
+- `encounter.clue_denied` is required for clue-use attempts rejected by gating, cooldown, or budget constraints and must include `clue_use_deny_reason`. [Reserved for M3+]
+- `encounter.hidden_bonus_word_discovered` is required when an encounter-hidden bonus word is first discovered and must include `encounter_id`, `encounter_session_id`, `validation_snapshot_version_pin`, `reward_constants_version_pin`, and `hidden_bonus_reward_granted`. [Reserved for post-M2]
 - `encounter_terminal_reason_code = 'spark_shuffle_retry_cap_unrecoverable'` is required on terminal analytics events emitted from a `recoverable_error` encounter end
-- all `challenge.*` events must include `challenge_id`; if emitted from a bundle context they must also include `challenge_bundle_id`
-- all `competition.*` events must include `competition_id`, ranking dimensions (`ranking_dimension_primary`, `ranking_dimension_secondary`), and final rank/tie fields when available
-- competition analytics payloads must always preserve `content_version_pin`, `validation_snapshot_version_pin`, `battle_rules_version_pin`, `board_generator_version_pin`, `reward_constants_version_pin`, and `competition_shared_seed` for fairness audits
+- all `challenge.*` events must include `challenge_id`; if emitted from a bundle context they must also include `challenge_bundle_id` [Reserved for M3+]
+- all `competition.*` events must include `competition_id`, ranking dimensions (`ranking_dimension_primary`, `ranking_dimension_secondary`), and final rank/tie fields when available [Reserved for M5+]
+- competition analytics payloads must always preserve `content_version_pin`, `validation_snapshot_version_pin`, `battle_rules_version_pin`, `board_generator_version_pin`, `reward_constants_version_pin`, and `competition_shared_seed` for fairness audits [Reserved for M5+]
 
 ---
 

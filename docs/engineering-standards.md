@@ -183,6 +183,7 @@ The repo/workspace must expose these command names:
 - `test`
 - `build`
 - `check` (aggregated validation: `lint` + `typecheck` + `test` + `build`)
+- `docs:check` (aggregated validation for all documentation-consistency bash scripts in `scripts/`)
 
 ### Requirement vs enforcement state
 A requirement is normative as soon as it appears in this document.  
@@ -196,6 +197,7 @@ Lack of automation does not make the requirement optional; it only changes wheth
 | Testing | `pnpm test` | M0 | Manual / Unavailable until scripts exist | No |
 | Building | `pnpm build` | M0 | Manual / Unavailable until scripts exist | No |
 | All checks | `pnpm check` | M0 | Manual / Unavailable until scripts exist | No |
+| Doc Consistency | `pnpm docs:check` | M0 | Manual (run shell scripts in `scripts/` individually until script exists) | Yes |
 
 During the docs-first phase, enforcement is mostly manual.  
 Automated scripts and CI should become blocking once workspace scaffolding is introduced.
