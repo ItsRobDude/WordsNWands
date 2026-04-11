@@ -1,0 +1,19 @@
+{
+  "name": "@words-n-wands/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "main": "expo/AppEntry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "lint": "prettier --check \"{App.tsx,tsconfig.json}\" && tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test",
+    "build": "expo export --platform android"
+  },
+  "dependencies": {
+    "expo": "~54.0.0",
+    "react": "19.1.0",
+    "react-native": "0.81.4"
+  }
+}
