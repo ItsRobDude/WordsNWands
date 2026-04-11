@@ -245,6 +245,15 @@ Practical rule: `content:validate` should fail if schema validation fails, if re
 
 Before merge, always run repo-wide checks from root or the CI-equivalent command path.
 
+Performance-budget reporting rule for validation lookup complexity changes:
+
+- if a change alters `ValidationSnapshotLookup` or hydration data-structure complexity, attach a profiling report in the PR/final report with:
+  - representative low-end Android device profile used
+  - cold-start hydration latency percentiles (p50/p95/p99)
+  - incremental memory delta (mean + max)
+  - sample size and measurement method/tool
+  - recommendation outcome (`keep_simple` vs `authorize_optimization`) tied to the budgets in `docs/implementation-contracts.md` section 10.4
+
 ### When to run each command
 - `format`: after edits and before opening or merging PRs
 - `lint`: on every feature, fix, or code-touching docs update before commit
