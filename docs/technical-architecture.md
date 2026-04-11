@@ -804,11 +804,31 @@ Introduce only when justified:
 
 ---
 
-## 22. Testing-Oriented Architecture Rules
+## 22. Contract Ownership Map (M1/M2)
+
+This map anchors implementation-contract ownership to concrete module/package targets for Milestones 1 and 2.
+
+All rows below are normative for M1/M2 implementation:
+- contract-owned logic must live in the listed package/module targets
+- UI components may render state and dispatch intent, but must not re-implement contract logic
+- if a row spans app + package code, the app side is orchestration/adaptation only
+
+| Contract group | Contract section reference (`docs/implementation-contracts.md`) | Target package/module path convention (M1/M2) | UI layer prohibition |
+| --- | --- | --- | --- |
+| Encounter state transitions and reducer ownership | 3.1 `Canonical encounter transition rules`; 13.2 `sessionSlice` contract; 13.3 `encounterSlice` contract | `packages/game-rules/encounter/**` for transition legality + reducer helpers; `apps/mobile/session/store/**` for wiring reducers into app store | Must not be implemented in UI component layer (`apps/mobile/**/components/**`); components dispatch typed actions only. |
+| Word validation lookup ownership | 10.3 `Runtime validation lookup contract`; 10.4 `Validation snapshot provider contract` | `packages/validation/lookup/**` and `packages/validation/provider/**`; app integration in `apps/mobile/validation/**` | Must not be implemented in UI component layer; screens must call lookup/provider adapters rather than embedding lexicon or normalization logic. |
+| RNG substream manager ownership | 4.2 `Board snapshot contract` (`rng_stream_states`); 7.5 `active_encounter_snapshots`; 5.7 `Spark shuffle resolution contract` | `packages/game-rules/rng/**` for substream lifecycle and deterministic advancement; persistence bridge in `apps/mobile/session/persistence/**` | Must not be implemented in UI component layer; UI must never advance RNG streams directly. |
+| Snapshot persistence read/write ownership | 7.5 `active_encounter_snapshots`; 3.2 `Encounter route restoration contract` | `apps/mobile/session/persistence/**` for SQLite repository adapters; domain shape mappers in `packages/game-rules/session-snapshot/**` | Must not be implemented in UI component layer; components must not read/write snapshot tables directly. |
+| Launch/resume phase orchestrator ownership | 3.3 `Launch/resume phase contract`; 3.2 `Encounter route restoration contract` | `apps/mobile/session/orchestration/launch-resume/**` for phase runner + restore target derivation; pure helpers in `packages/game-rules/session-restore/**` | Must not be implemented in UI component layer; components may observe phase state but cannot sequence restore phases. |
+| Telemetry event adapter ownership | 12.1 `Canonical event names`; 12.2 `Base required analytics properties`; 12.3 `Gameplay analytics fields`; 12.4 `Redaction/privacy contract` | `packages/analytics/contracts/**` (when package exists) or `apps/mobile/telemetry/adapters/**` in M1 fallback | Must not be implemented in UI component layer; components emit semantic intents only, never construct raw analytics payloads. |
+
+---
+
+## 23. Testing-Oriented Architecture Rules
 
 This document does not replace the engineering standards, but architecture should support testing naturally.
 
-### 22.1 High-value test targets
+### 23.1 High-value test targets
 The architecture should make it easy to test:
 
 - cast resolution
@@ -821,16 +841,16 @@ The architecture should make it easy to test:
 - session save/restore
 - validation and element lookup
 
-### 22.2 Testability rule
+### 23.2 Testability rule
 If battle truth can only be tested through the full UI, the architecture is probably wrong.
 
 Core battle logic should be testable without rendering screens.
 
 ---
 
-## 23. Error Handling Architecture
+## 24. Error Handling Architecture
 
-### 23.1 Player-facing failure rule
+### 24.1 Player-facing failure rule
 If supporting systems fail, the app should degrade gracefully.
 
 Examples:
@@ -839,7 +859,7 @@ Examples:
 - if a non-critical asset fails, the screen should remain usable where possible
 - if persistence temporarily fails, the player should get a calm recoverable state rather than corrupted play
 
-### 23.2 No invented truth rule
+### 24.2 No invented truth rule
 If content or validation cannot be loaded correctly, the app should not invent replacement gameplay truth on the fly.
 
 Prefer:
@@ -852,7 +872,7 @@ over silent improvisation.
 
 ---
 
-## 24. Early Implementation Recommendation
+## 25. Early Implementation Recommendation
 
 For this specific project, the best early implementation strategy is:
 
@@ -889,7 +909,7 @@ This is the lowest-risk path for a mostly AI-assisted project.
 
 ---
 
-## 25. What This Architecture Deliberately Avoids Early
+## 26. What This Architecture Deliberately Avoids Early
 
 This architecture intentionally avoids early dependence on:
 
@@ -907,7 +927,7 @@ That restraint is a strength, not a limitation.
 
 ---
 
-## 26. Summary Rule
+## 27. Summary Rule
 
 Words 'n Wands! should be built as:
 
