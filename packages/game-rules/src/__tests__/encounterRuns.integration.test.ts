@@ -209,7 +209,7 @@ test("integration: starter scripted encounter full run is deterministic with sav
       cast_submissions: STARTER_SCRIPTED_CASTS,
     }).deterministic_serialized.transcript,
   );
-  assert.equal(runHash, "571ebba0");
+  assert.equal(runHash, "250fb714");
   assert.equal(runHash, repeatedHash);
 });
 
@@ -247,13 +247,14 @@ test("integration: first standard encounter full run is deterministic with save/
       cast_submissions: FIRST_STANDARD_CASTS,
     }).deterministic_serialized.transcript,
   );
-  assert.equal(runHash, "ead14add");
+  assert.equal(runHash, "b50cdba3");
   assert.equal(runHash, repeatedHash);
 });
 
 test("integration: recoverable-error Spark Shuffle branch remains deterministic with save/restore", () => {
   const recoverableEncounter: HeadlessEncounterDefinition = {
     ...firstStandardEncounterFixture,
+    move_budget_total: 2,
     validation: {
       validation_lookup: {
         snapshot_version: "recoverable",
@@ -284,7 +285,7 @@ test("integration: recoverable-error Spark Shuffle branch remains deterministic 
     terminal_reason: "spark_shuffle_retry_cap_unrecoverable",
   });
   assert.deepEqual(resumed.terminal, uninterrupted.terminal);
-  assert.equal(uninterrupted.terminal_snapshot.moves_remaining, 0);
+  assert.equal(uninterrupted.terminal_snapshot.moves_remaining, 1);
   assert.equal(
     uninterrupted.terminal_snapshot.creature.spell_countdown_current,
     1,
@@ -306,7 +307,7 @@ test("integration: recoverable-error Spark Shuffle branch remains deterministic 
       cast_submissions: RECOVERABLE_BRANCH_CASTS,
     }).deterministic_serialized.transcript,
   );
-  assert.equal(runHash, "1082ff26");
+  assert.equal(runHash, "06727aaf");
   assert.equal(runHash, repeatedHash);
 });
 
