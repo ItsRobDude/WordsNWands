@@ -4,11 +4,11 @@
   "type": "module",
   "scripts": {
     "content:generate:encounters": "node packages/content/src/generation/cli/generateEncounters.js",
-    "lint": "node scripts/check-syntax-from-tsconfig.mjs",
-    "test": "node scripts/run-tests-from-vitest-config.mjs",
-    "typecheck": "node scripts/check-syntax-from-tsconfig.mjs",
-    "build": "node scripts/check-syntax-from-tsconfig.mjs",
-    "format": "echo 'No formatter configured yet'",
+    "lint": "pnpm -r --if-present run lint",
+    "test": "pnpm -r --if-present run test",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "build": "pnpm -r --if-present run build",
+    "format": "pnpm -r --if-present run format",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   }
 }
