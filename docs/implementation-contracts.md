@@ -187,6 +187,128 @@ Rules:
 - if no active encounter exists and the player has not completed starter flow, restore should prefer `starter_flow`
 - otherwise restore should prefer `home`
 
+### 3.3 Launch/resume phase contract
+
+This contract defines the required blocking startup/restore sequence for warm resume and cold launch.
+
+Anchor references:
+
+- section 3.2 restore-priority routing rules in this document
+- section 7.5 `active_encounter_snapshots` restore payload requirements in this document
+- section 8.0 manifest load/validation gating rules in this document
+- `docs/technical-architecture.md` section 14 (Persistence Architecture) and section 15 (Session Restore Architecture)
+
+```ts
+export type LaunchResumePhase =
+  | 'app_init'
+  | 'profile_load'
+  | 'manifest_validate'
+  | 'validation_hydrate'
+  | 'active_snapshot_load'
+  | 'restore_target_derive'
+  | 'route_commit';
+
+export interface LaunchResumeTransitionState {
+  phase: LaunchResumePhase;
+  attempt_id: string;
+  started_at_utc: string;
+  completed_phases: LaunchResumePhase[];
+  restore_target: EncounterRestoreTarget | null;
+}
+```
+
+#### Phase 1: `app_init`
+
+- Inputs: process start or foreground resume signal; last-known app version/build metadata.
+- Outputs: initialized startup context (`attempt_id`, timestamps, startup reason).
+- Blocking conditions: startup context initialization must complete before persistence/content reads begin.
+- Failure modes + fallback routes:
+  - startup context build fails => route to safe `home` shell with no encounter auto-restore and emit recoverable startup error surface.
+- Telemetry hooks (non-blocking): `session.resume` with `phase='app_init'`, reason (`cold_launch`/`warm_resume`), and `attempt_id`.
+- Atomicity boundary: no SQLite read transaction required in this phase.
+- Timeout/retry boundary: single retry permitted for transient bootstrapping failures; after retry failure, continue to safe `home`.
+- Duplicate-resolution invariant: this phase must not read or mutate encounter state.
+
+#### Phase 2: `profile_load` (SQLite)
+
+- Inputs: startup context from phase 1, SQLite connection.
+- Outputs: persisted settings/profile/tutorial gate snapshot required for `starter_flow` vs `home` decisions.
+- Blocking conditions: restore routing cannot be finalized without profile/tutorial gate truth.
+- Failure modes + fallback routes:
+  - SQLite unavailable/corrupt => fall back to conservative default profile state and route to `starter_flow` gate path, never directly into active encounter.
+- Telemetry hooks (non-blocking): phase duration metric, load status (`ok`/`fallback_default`), SQLite error category.
+- Atomicity boundary: read settings/profile rows in one read transaction so gate decisions come from one consistent snapshot.
+- Timeout/retry boundary: bounded retries for opening DB handle; no unbounded polling loops.
+- Duplicate-resolution invariant: profile load is read-only and cannot advance encounter/session transitions.
+
+#### Phase 3: `manifest_validate`
+
+- Inputs: runtime content package manifest candidate(s), active runtime version pins.
+- Outputs: validated active manifest reference with matching `content_version`, `validation_snapshot_version`, `battle_rules_version`, and `board_generator_version`.
+- Blocking conditions: manifest validation must pass before loading encounter definitions or validation snapshot data (section 8.0).
+- Failure modes + fallback routes:
+  - `schema_invalid` or `version_pin_mismatch` => fail closed for encounter restore; route to non-encounter safe surface (`home` or startup error panel) with encounter launch disabled.
+- Telemetry hooks (non-blocking): manifest id/version, failure code, pin mismatch fields.
+- Atomicity boundary: manifest selection + validation decision must be committed as one in-memory decision unit (no partial activation).
+- Timeout/retry boundary: retry once for transient local read failure; no retries for deterministic schema/pin errors.
+- Duplicate-resolution invariant: no encounter snapshot is interpreted against an unvalidated manifest.
+
+#### Phase 4: `validation_hydrate`
+
+- Inputs: validated manifest and `validation_snapshot_version` pin from phase 3.
+- Outputs: process-global in-memory `ValidationSnapshotLookup` bound to the active snapshot version (section 9.4).
+- Blocking conditions: encounter restore is blocked until validation lookup hydration succeeds.
+- Failure modes + fallback routes:
+  - hydration/read failure => skip encounter restore and route to non-encounter safe surface (`home`/error), preserving persisted encounter data for later retry.
+- Telemetry hooks (non-blocking): hydration latency, snapshot version, load result.
+- Atomicity boundary: hydration publishes lookup only after full successful load; partial lookup instances must not be exposed.
+- Timeout/retry boundary: bounded retry for transient read/decode errors; abort phase after retry cap.
+- Duplicate-resolution invariant: dead-board/cast replay parity rules require one active lookup instance; mixed snapshot-version lookups in one attempt are forbidden.
+
+#### Phase 5: `active_snapshot_load`
+
+- Inputs: SQLite handle, validated pins, hydrated validation lookup handle.
+- Outputs: zero-or-one canonical `active_encounter_snapshots` restore candidate plus optional terminal result reference.
+- Blocking conditions: restore target derivation cannot run until snapshot query completes.
+- Failure modes + fallback routes:
+  - missing snapshot => continue with no active encounter and derive `starter_flow`/`home`.
+  - corrupted snapshot payload => treat as unusable restore candidate; do not attempt partial reconstruction; fall back to `home` or `starter_flow`.
+  - pin mismatch between snapshot and active runtime => do not restore encounter; route to safe non-encounter surface.
+- Telemetry hooks (non-blocking): snapshot presence flag, session state, rejection reason.
+- Atomicity boundary: read restore-critical snapshot/profile rows under one SQLite read transaction so route derivation uses a coherent point-in-time view.
+- Timeout/retry boundary: bounded read retries for locked DB/transient I/O only.
+- Duplicate-resolution invariant: this phase is strictly read-only; it must not re-run pending battle-resolution steps.
+
+#### Phase 6: `restore_target_derive`
+
+- Inputs: profile gate state, optional snapshot candidate, optional result row, section 3.2 restore priority.
+- Outputs: one `EncounterRestoreTarget` decision.
+- Blocking conditions: route commit is blocked until exactly one restore target is produced.
+- Failure modes + fallback routes:
+  - ambiguous/corrupt state graph => choose conservative fallback (`starter_flow` if gate incomplete, else `home`) and mark restore as degraded.
+- Telemetry hooks (non-blocking): chosen surface, decision path (`terminal_result`, `active_encounter`, `starter_flow`, `home`), degraded flag.
+- Atomicity boundary: pure derivation; no persistence writes.
+- Timeout/retry boundary: no retries required for deterministic derivation.
+- Duplicate-resolution invariant: terminal sessions (`won`/`lost`/`recoverable_error`) must map to `result`; unresolved sessions map to `encounter`; no branch may perform game-state mutation.
+
+#### Phase 7: `route_commit`
+
+- Inputs: finalized `EncounterRestoreTarget`.
+- Outputs: exactly one initial route transition committed to router state.
+- Blocking conditions: input acceptance remains locked until route commit result is known.
+- Failure modes + fallback routes:
+  - router commit failure => fallback commit to `home` and keep encounter state unchanged for later manual resume.
+- Telemetry hooks (non-blocking): route commit outcome, target surface, commit latency.
+- Atomicity boundary: commit exactly one initial route transition; avoid multi-commit race on same `attempt_id`.
+- Timeout/retry boundary: one immediate retry permitted for transient router readiness, then fallback to `home`.
+- Duplicate-resolution invariant: once a route is committed for an `attempt_id`, additional commits are no-op; restore flow must be idempotent per launch/resume attempt.
+
+Global invariants for all phases:
+
+- restore orchestration is read-then-route; it must not replay cast resolution, reapply damage, consume moves, or retrigger creature actions (`docs/technical-architecture.md` section 15.3).
+- restore is authoritative from persisted state, not last rendered screen history (`docs/technical-architecture.md` sections 15.1-15.2).
+- persisted state consumed for restore must represent safe checkpoints, not half-animation state (`docs/technical-architecture.md` section 14.5).
+
 ---
 
 ## 4. Board and Battle Runtime Contracts
