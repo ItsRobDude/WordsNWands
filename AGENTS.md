@@ -82,6 +82,7 @@ Baseline for all code tasks:
 | analytics, telemetry, experiments, funnel measurement | `docs/analytics-and-experimentation.md` |
 | async competition fairness policy, constraints, and result-comparison rules | `docs/async-competition-rules.md`, `docs/analytics-and-experimentation.md` |
 | deciding what should be built next | `docs/milestone-implementation-plan.md` |
+| hint/clue behavior, assist action limits, cooldowns, star-cap penalties, or clue economy safety | `docs/hint-and-clue-mechanics.md`, `docs/progression-economy-and-monetization.md`, `docs/milestone-locked-constants.md`, `docs/implementation-contracts.md` |
 
 If a task does not touch one of these areas, do not pull in extra docs.
 
