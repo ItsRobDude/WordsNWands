@@ -1,5 +1,10 @@
 export function renderReviewMarkdown(artifact) {
   const summary = artifact.review_summary;
+  const findingsSummary = artifact.balance_report.validator_findings.length === 0
+    ? 'No findings.'
+    : artifact.balance_report.validator_findings
+      .map((finding) => `[${finding.severity}] ${finding.code}: ${finding.message}`)
+      .join(' | ');
   return [
     `# Encounter Draft Review: ${artifact.draft_id}`,
     '',
@@ -14,7 +19,7 @@ export function renderReviewMarkdown(artifact) {
     `- **Spell summary:** ${summary.spell_identity}`,
     `- **Board profile ID:** ${artifact.encounter_definition.board_profile_id}`,
     `- **Expected pacing summary:** ${artifact.balance_report.derived_values.target_casts_to_defeat.toFixed(2)} casts target`,
-    `- **Guardrail findings summary:** ${artifact.balance_report.guardrail_status}`,
+    `- **Guardrail findings summary:** ${artifact.balance_report.guardrail_status} — ${findingsSummary}`,
     '',
     '## Why this should feel fair',
     summary.why_it_should_feel_fair,
