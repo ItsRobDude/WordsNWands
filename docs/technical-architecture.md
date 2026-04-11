@@ -590,6 +590,17 @@ For each accepted in-battle player action, the runtime order is:
 
 This ordering must align with the interaction lock behavior in `docs/screens-and-session-flow.md` and with the canonical event/action contracts in `docs/implementation-contracts.md`.
 
+### 15.5.a Encounter action lifecycle contract (canonical terms)
+Use the following lifecycle terms and sequence as the implementation contract:
+
+1. UI submits player action to `packages/game-rules`.
+2. Engine returns next `EncounterRuntimeState` plus ordered `EngineEvent[]`.
+3. App writes SQLite snapshot at a stable checkpoint.
+4. App updates Zustand with the canonical runtime state.
+5. App derives `ActionQueueItem[]` from ordered `EngineEvent[]`.
+6. UI consumes the action queue strictly in order.
+7. Input unlocks only after the final lock-window phase completes.
+
 ---
 
 ## 16. Board Generation Architecture
