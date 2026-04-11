@@ -33,6 +33,7 @@ Then read only the focused docs for your task area (battle rules, RNG, UX, econo
 Implementation and runtime boundaries: `docs/implementation-contracts.md` + `docs/technical-architecture.md`.
 Gameplay and validation semantics: `docs/game-rules.md` + `docs/word-validation-and-element-rules.md`.
 Encounter generation governance: use `docs/structured-encounter-generation.md` for product policy and `docs/encounter-generator-implementation.md` for engineering/tool construction details.
+Milestone-specific required behavior docs: `docs/first-shippable-content-pack.md` (M2 external-quality content readiness), `docs/challenge-and-boss-layer.md` (M3 challenge/boss behavior constraints), and `docs/async-competition-rules.md` (M5 async competition policy).
 When docs conflict, resolve deliberately and document the decision with the conflict template from `AGENTS.md`.
 
 
@@ -40,7 +41,7 @@ When docs conflict, resolve deliberately and document the decision with the conf
 
 - **60-second overview** (`README.md`): project purpose + core constraints (docs-first phase, deterministic/fair gameplay focus, Android-first foundation).
 - **Contributor quick path** (`README.md`, `AGENTS.md`, `docs/engineering-standards.md`): execution rules, doc-routing discipline, and canonical validation command contract.
-- **Deep reference** (read only the area you are changing): `docs/game-rules.md`, `docs/word-validation-and-element-rules.md`, `docs/screens-and-session-flow.md`, `docs/implementation-contracts.md`, `docs/randomness-and-seeding-contract.md`, `docs/technical-architecture.md`, `docs/milestone-implementation-plan.md`.
+- **Deep reference** (read only the area you are changing): `docs/game-rules.md`, `docs/word-validation-and-element-rules.md`, `docs/screens-and-session-flow.md`, `docs/implementation-contracts.md`, `docs/randomness-and-seeding-contract.md`, `docs/technical-architecture.md`, `docs/milestone-implementation-plan.md`, `docs/first-shippable-content-pack.md`, `docs/challenge-and-boss-layer.md`, `docs/async-competition-rules.md`.
 
 
 

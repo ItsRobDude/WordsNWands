@@ -404,6 +404,7 @@ Milestone 2 enables the middle assist tier but keeps strongest assists off:
 - `docs/technical-architecture.md` finalized enough for shared package boundaries
 - `docs/implementation-contracts.md` expanded for progression and encounter records if needed
 - `docs/milestone-locked-constants.md` reviewed and updated for M2 locks before implementation
+- `docs/first-shippable-content-pack.md` required before implementation begins for first external-quality content slice and ship-no-apology readiness criteria
 
 ### Definition of done
 Milestone 2 is done when:
@@ -469,6 +470,7 @@ Milestone 3 and later use the full fail-soft contract:
 ### Docs required before Milestone 3 begins
 - all Milestone 2 docs
 - `docs/content-pipeline-and-liveops.md`
+- `docs/challenge-and-boss-layer.md` required before implementation begins for challenge/boss behavior constraints
 - `docs/progression-economy-and-monetization.md` if rewards become meaningful enough to require clear boundaries
 - `docs/analytics-and-experimentation.md` if challenge behavior is instrumented in a serious way
 
@@ -542,7 +544,7 @@ Async competition must not redefine the solo battle loop or make solo play feel 
 
 ### Docs required before Milestone 5 begins
 - all Milestone 4 docs
-- dedicated async competition rules doc if the system becomes real
+- `docs/async-competition-rules.md` required before implementation begins for async competition policy and fairness constraints
 - `docs/technical-architecture.md` updated for any online/service additions
 
 ### Definition of done
