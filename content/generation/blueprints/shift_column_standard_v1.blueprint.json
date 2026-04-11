@@ -1,0 +1,29 @@
+{
+  "blueprint_id": "shift_column_standard_v1",
+  "display_label": "Shift Column Standard Reorder",
+  "allowed_tiers": ["standard"],
+  "encounter_type": "standard",
+  "pressure_style": "board_reorder",
+  "spell_identity": "shift_column",
+  "allowed_spell_payloads": [
+    {
+      "template_id": "shift_column_single_step_standard_v1",
+      "primitive_kind": "shift_column"
+    }
+  ],
+  "allowed_matchup_pair_pool_ids": ["pair_pool_shift_column_standard_v1"],
+  "allowed_habitat_tags": ["meadow", "brook", "grove", "soft_nature"],
+  "profile_overrides": {
+    "weakness_hit_rate_delta": -0.01,
+    "wand_incidence_delta": 0,
+    "soot_exposure_delta": -0.15,
+    "target_casts_to_defeat_delta": 0.1,
+    "target_spell_count_on_win_delta": 0.2
+  },
+  "prohibited_combination_flags": [
+    "no_secondary_tile_state",
+    "no_chained_spell_templates",
+    "no_countdown_below_4",
+    "no_matchup_shifting"
+  ]
+}
