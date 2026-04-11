@@ -121,9 +121,7 @@ test("parity: repeated-word rejection matches canonical lookup acceptance", () =
 
   assert.equal(lookup.hasWord("cab"), true);
   assert.equal(result.cast_resolution.submission_kind, "repeated");
-  if (result.cast_resolution.submission_kind !== "valid") {
-    assert.equal(result.cast_resolution.rejection_reason, "repeated_word");
-  }
+  assert.equal(result.cast_resolution.rejection_reason, "repeated_word");
 });
 
 test("parity: element resolution uses validation entry lookup", () => {
@@ -180,9 +178,10 @@ test("parity: element resolution uses validation entry lookup", () => {
   });
 
   assert.equal(result.cast_resolution.submission_kind, "valid");
-  if (result.cast_resolution.submission_kind === "valid") {
-    assert.equal(result.cast_resolution.element, "bloom");
+  if (result.cast_resolution.submission_kind !== "valid") {
+    throw new Error("Expected validation parity cast to resolve as valid.");
   }
+  assert.equal(result.cast_resolution.element, "bloom");
 });
 
 test("parity: dead-board detection mirrors canonical validation helper", () => {

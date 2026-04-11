@@ -108,9 +108,7 @@ test("validateCastSubmission returns repeated for repeated words", () => {
   });
 
   assert.equal(result.cast_resolution.submission_kind, "repeated");
-  if (result.cast_resolution.submission_kind !== "valid") {
-    assert.equal(result.cast_resolution.rejection_reason, "repeated_word");
-  }
+  assert.equal(result.cast_resolution.rejection_reason, "repeated_word");
 });
 
 test("validateCastSubmission deterministic valid output and no mutation", () => {
@@ -139,10 +137,11 @@ test("validateCastSubmission deterministic valid output and no mutation", () => 
   assert.deepEqual({ encounter_state, submission }, before);
   assert.deepEqual(first, second);
   assert.equal(first.cast_resolution.submission_kind, "valid");
-  if (first.cast_resolution.submission_kind === "valid") {
-    assert.equal(first.cast_resolution.matchup_result, "weakness");
-    assert.equal(first.cast_resolution.countdown_decremented, 0);
+  if (first.cast_resolution.submission_kind !== "valid") {
+    throw new Error("Expected deterministic cast to resolve as valid.");
   }
+  assert.equal(first.cast_resolution.matchup_result, "weakness");
+  assert.equal(first.cast_resolution.countdown_decremented, 0);
 });
 
 test("validateCastSubmission recomputes committed word from selected tiles instead of trusting caller text", () => {
@@ -166,9 +165,10 @@ test("validateCastSubmission recomputes committed word from selected tiles inste
 
   assert.equal(result.normalized_word, "cab");
   assert.equal(result.cast_resolution.submission_kind, "valid");
-  if (result.cast_resolution.submission_kind === "valid") {
-    assert.equal(result.cast_resolution.normalized_word, "cab");
+  if (result.cast_resolution.submission_kind !== "valid") {
+    throw new Error("Expected board-derived cast to resolve as valid.");
   }
+  assert.equal(result.cast_resolution.normalized_word, "cab");
 });
 
 test("validateCastSubmission rejects selections that do not map to active board tiles", () => {
@@ -187,7 +187,5 @@ test("validateCastSubmission rejects selections that do not map to active board 
   });
 
   assert.equal(result.cast_resolution.submission_kind, "invalid");
-  if (result.cast_resolution.submission_kind !== "valid") {
-    assert.equal(result.cast_resolution.rejection_reason, "illegal_path");
-  }
+  assert.equal(result.cast_resolution.rejection_reason, "illegal_path");
 });

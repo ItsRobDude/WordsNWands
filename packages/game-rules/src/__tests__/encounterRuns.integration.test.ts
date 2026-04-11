@@ -394,6 +394,7 @@ test("integration: authored starter script preserves guided leaf cast and immedi
   });
 
   const guidedEntry = result.transcript[0];
+  const guidedResolution = guidedEntry?.cast_resolution;
   const sunTarget =
     starterScript?.starterBoardOpening.postFirstSpellWeaknessTeachingTarget;
   const sunPath = findWordPath(
@@ -409,9 +410,12 @@ test("integration: authored starter script preserves guided leaf cast and immedi
     guidedEntry?.submission.selected_positions,
     starterScript?.guidedFirstCast.selectedPositions,
   );
-  assert.equal(guidedEntry?.cast_resolution.submission_kind, "valid");
-  assert.equal(guidedEntry?.cast_resolution.normalized_word, "leaf");
-  assert.equal(guidedEntry?.cast_resolution.element, "bloom");
+  assert.equal(guidedResolution?.submission_kind, "valid");
+  if (!guidedResolution || guidedResolution.submission_kind !== "valid") {
+    throw new Error("Expected guided starter cast to resolve as valid.");
+  }
+  assert.equal(guidedResolution.normalized_word, "leaf");
+  assert.equal(guidedResolution.element, "bloom");
   assert.equal(
     resolveElementForWord(
       sunTarget?.normalizedWord ?? "sun",
@@ -512,13 +516,17 @@ test("integration: authored Cinder Cub payload resets countdown and applies soot
   });
 
   const entry = result.transcript[0];
+  const castResolution = entry?.cast_resolution;
   const sootedTiles = result.terminal_snapshot.board.tiles.filter(
     (tile) => tile.state === "sooted",
   );
 
   assert.notEqual(entry, undefined);
-  assert.equal(entry?.cast_resolution.submission_kind, "valid");
-  assert.equal(entry?.cast_resolution.matchup_result, "neutral");
+  assert.equal(castResolution?.submission_kind, "valid");
+  if (!castResolution || castResolution.submission_kind !== "valid") {
+    throw new Error("Expected Meadow cast to resolve as valid.");
+  }
+  assert.equal(castResolution.matchup_result, "neutral");
   assert.equal(
     result.terminal_snapshot.creature.spell_countdown_current,
     MEADOW_PAYLOAD.creature.baseCountdown,
