@@ -412,11 +412,18 @@ Path growth rules:
 - legal transition requirement: every newly appended tile must be adjacent to the current tail tile, where adjacency includes horizontal, vertical, and diagonal (Chebyshev distance `<= 1`)
 - non-adjacent jumps are disallowed and ignored for growth; trace remains at last legal tail tile
 - tile reuse is disallowed within one submission candidate (no de-dup append of prior non-tail tiles)
+- visual/geometric path crossing of rendered trace segments is allowed
+- legality depends only on snapped tile sequence constraints (adjacency, no disallowed reuse, deterministic backtracking/no-op rules), not on segment-intersection geometry
 - backtracking behavior is deterministic:
   - if the newly snapped tile equals the immediate predecessor of the current tail tile, pop the current tail tile (single-step rewind)
   - repeated backtrack samples may continue popping one tile per predecessor match
   - backtracking never inserts new duplicates; it only shortens the candidate path
 - selecting a previously used non-predecessor tile does not mutate the path (remains no-op)
+
+Deterministic contract example (path crossing vs. tile reuse):
+
+- crossing rendered trace lines without selecting any tile twice remains legal
+- any case that reselects a previously used non-predecessor tile remains no-op as defined above
 
 Submission/cancel lifecycle:
 
