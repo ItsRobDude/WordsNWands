@@ -213,6 +213,13 @@ Use this shortcut when available:
 
 - `pnpm check`
 
+Run doc-consistency validators when touched scope includes their linked docs:
+
+- `./scripts/check-damage-model-consistency.sh`
+- `./scripts/check-starter-gate-routing-consistency.sh`
+- `./scripts/check-chapter-linear-unlock-consistency.sh`
+- `./scripts/check-early-content-version-pin-consistency.sh`
+
 ### Package-scoped usage during iteration
 For faster local loops, run checks only for touched package(s):
 
