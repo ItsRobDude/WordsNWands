@@ -327,7 +327,7 @@ It should not force journal/currency/bonus-reward UI before those layers are rea
 - `balanceMetadata`:
   - `authoredFailRateBand = low`
   - `waivers = []`
-  - `shippabilityStatus = shippable`
+  - `shippabilityStatus = candidate-shippable`
 
 ### Starter board-profile rules
 
@@ -410,7 +410,7 @@ Never framed as a “real enemy.”
 - `balanceMetadata`:
   - `authoredFailRateBand = low`
   - `waivers = []`
-  - `shippabilityStatus = shippable`
+  - `shippabilityStatus = candidate-shippable`
 
 ### Encounter purpose
 
@@ -467,7 +467,7 @@ The player should leave thinking:
 - `balanceMetadata`:
   - `authoredFailRateBand = low`
   - `waivers = []`
-  - `shippabilityStatus = shippable`
+  - `shippabilityStatus = candidate-shippable`
 
 ### Encounter purpose
 
@@ -528,7 +528,7 @@ The first ship should reward learning recognizable patterns.
 - `balanceMetadata`:
   - `authoredFailRateBand = medium`
   - `waivers = []`
-  - `shippabilityStatus = shippable`
+  - `shippabilityStatus = candidate-shippable`
 
 ### Encounter purpose
 
