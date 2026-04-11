@@ -741,6 +741,16 @@ export interface RejectedCastResolution {
 }
 ```
 
+Normative candidate-cast rejection order contract (must run in this exact sequence):
+
+1. **Tile-state unselectable check** → reject with `blocked_by_tile_state`.
+2. **Lexicon validity check** → reject with `not_in_lexicon`.
+3. **Repeated-word check** → reject with `repeated_word`.
+
+Ordering is mandatory for deterministic reason-code parity across gameplay, UI messaging, and analytics event emission.
+
+Alignment lock: this ordering must stay consistent with `docs/hint-and-clue-mechanics.md` section **3.5.2** so cast rejection and clue candidate filtering apply the same precedence.
+
 ### 5.5 Unified cast resolution contract
 
 ```ts
