@@ -688,6 +688,29 @@ Determinism rule:
 - Dead-board checks must use the exact same normalized-word pipeline as cast validation (same normalization function and ordering).
 - Dead-board checks must use the same pinned `validation_snapshot_version_pin` and in-memory lookup instance as cast validation for the active encounter.
 - Implementations must not mix snapshot versions or fallback to alternate lexicon sources during the same encounter.
+- `hasPlayableWord(...)` is the hard safety gate for board acceptance/recovery decisions.
+
+Optional additive quality predicate (generation/refill only):
+
+```ts
+export interface BoardQualityPredicateInput {
+  boardSnapshot: BoardSnapshot;
+  vowelClassProfileVersion: string;
+  vowelClassIncludesY: boolean;
+  minVowelClassCount: number;
+}
+
+export function passesBoardQualityPredicate(input: BoardQualityPredicateInput): boolean;
+```
+
+Quality-predicate rules:
+
+- `passesBoardQualityPredicate(...)` is an optional acceptance filter for initial generation/refill candidate boards and must never replace `hasPlayableWord(...)`.
+- Acceptance ordering is strict when quality filtering is enabled:
+  1. require `hasPlayableWord(...) = true` (hard safety),
+  2. then apply `passesBoardQualityPredicate(...)` (quality/tuning gate).
+- Vowel-class counting for the predicate uses runtime board letters after normalization and must use the pinned fields from section 8.3 (`vowelClassProfileVersion`, `vowelClassIncludesY`).
+- Dead-board trigger/recovery semantics remain tied to `hasPlayableWord(...)`; a board that fails only quality criteria is not a “dead board.”
 
 Performance requirements (correctness-preserving):
 
@@ -1523,6 +1546,14 @@ export interface RuntimeBoardConfig {
   letterDistributionProfileId: string; // e.g. `letter_distribution_v1`
   letterWeightEntries: RuntimeLetterWeightEntry[]; // canonical weighted A-Z entries for this runtime config
   namedLetterPoolId: string | null; // optional named pool alias, e.g. `v1_default_pool`
+  vowelClassProfileVersion: string; // versioned vowel-class profile id, e.g. `vowel_class_v1`
+  vowelClassIncludesY: boolean; // pinned by `vowelClassProfileVersion`; false => A/E/I/O/U, true => A/E/I/O/U/Y
+  boardQualityPolicy: RuntimeBoardQualityPolicy | null; // optional additive quality gate for generation/refill acceptance
+}
+
+export interface RuntimeBoardQualityPolicy {
+  qualityPolicyVersion: string; // versioned profile id, e.g. `board_quality_v1`
+  minVowelClassCount: number; // inclusive threshold over generated/refilled board under active vowel-class profile
 }
 
 export interface RuntimeLetterWeightEntry {
@@ -1535,6 +1566,14 @@ Rules:
 
 - `letterDistributionProfileId` is required and versioned so balancing can evolve additively (for example, `letter_distribution_v1`) without changing RNG semantics.
 - `namedLetterPoolId` is optional metadata for authored presets and does not change draw algorithm behavior by itself.
+- `vowelClassProfileVersion` and `vowelClassIncludesY` together define the canonical vowel class used by board-quality checks:
+  - base class is always `A`, `E`, `I`, `O`, `U`
+  - include `Y` only when `vowelClassIncludesY = true`
+  - both fields are version-pinned runtime data and must not be inferred ad hoc from locale/device settings.
+- `boardQualityPolicy` is an optional additive acceptance filter for board generation/refill outputs:
+  - `null` disables quality filtering (only hard safety gate applies).
+  - non-null requires finite integer `minVowelClassCount` in inclusive range `[0, rows * cols]`.
+  - `qualityPolicyVersion` is required so tuning can evolve additively without retroactively changing old fixtures.
 - `wandSpawnRate` is required and is the canonical runtime-authored wand incidence representation used by encounter balance parity validators.
 - `wandSpawnRate` must be finite and clamped to inclusive range `[0, 1]`; runtime/content validators must fail values outside this range (no silent coercion).
 - if `allowWandTiles = false`, `wandSpawnRate` must be exactly `0`; any non-zero value is invalid.
@@ -2057,6 +2096,8 @@ export interface CanonicalGameplayAnalyticsFields {
   spark_shuffle_retries_attempted: number | null;
   spark_shuffle_retry_cap: number | null;
   spark_shuffle_fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end' | null;
+  board_init_quality_retry_count: number | null;
+  board_refill_quality_retry_count: number | null;
   clue_action_type: ClueActionType | null;
   clue_use_deny_reason: ClueUseDenyReason | null;
   clue_charges_available: number | null;
@@ -2087,6 +2128,7 @@ Required behavior:
 - analytics must not send full board snapshots by default
 - event transport failures must be non-blocking for gameplay and persistence
 - `encounter.spark_shuffle_retry_cap_hit` is required whenever Spark Shuffle reaches retry cap (even if deterministic emergency regeneration succeeds)
+- when `boardQualityPolicy` is enabled, board-generation/refill analytics events must include `board_init_quality_retry_count` and `board_refill_quality_retry_count` so tuning and fairness audits can reconstruct acceptance/retry behavior.
 - `encounter.clue_used` is required for every successful clue action commit and must include `clue_action_type`, `clue_charges_available`, and `clue_uses_total`.
 - `encounter.clue_denied` is required for clue-use attempts rejected by gating, cooldown, or budget constraints and must include `clue_use_deny_reason`.
 - `encounter.hidden_bonus_word_discovered` is required when an encounter-hidden bonus word is first discovered and must include `encounter_id`, `encounter_session_id`, `validation_snapshot_version_pin`, `reward_constants_version_pin`, and `hidden_bonus_reward_granted`.

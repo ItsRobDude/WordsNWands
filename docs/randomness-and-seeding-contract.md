@@ -117,6 +117,10 @@ Rules:
   - if `maxConcurrentWands` is configured and the active board already has `maxConcurrentWands` Wand markers, the Wand roll result is still consumed but marker assignment is suppressed for that slot.
   - when `allowWandTiles = false`, Wand assignment is skipped and consumes no draw.
 - `board_init` state is persisted after initial generation.
+- Initial-generation acceptance gates are ordered and deterministic:
+  1. hard safety gate: `hasPlayableWord(...)` must be `true`,
+  2. optional quality gate: if `RuntimeBoardConfig.boardQualityPolicy` is non-null, candidate must also satisfy `passesBoardQualityPredicate(...)` (for example `minVowelClassCount` under pinned vowel-class profile).
+- Quality-gate retry attempts must consume additional draws from `board_init` only (same substream lineage as the initial attempt); implementations must not reset/reseed or borrow another stream for retries.
 
 ### 5.2 Refill generation after cast
 
@@ -144,6 +148,10 @@ Rules:
 - If safety validation fails before any draw attempt, refill must reject the active config and switch to deterministic failure handling (no silent fallback profile substitution).
 - If post-refill board-level safety checks fail (for example, dead-board detection under current fairness rules), refill retry attempts are allowed and must consume additional draws from `board_refill` only.
 - Retry behavior must preserve deterministic parity: same seed + same cast sequence + same profile/version must produce identical accepted/rejected refill attempt sequence.
+- Refill acceptance gates are ordered and deterministic:
+  1. hard safety gate: `hasPlayableWord(...)` must be `true`,
+  2. optional quality gate: if `RuntimeBoardConfig.boardQualityPolicy` is non-null, candidate must also satisfy `passesBoardQualityPredicate(...)` (for example `minVowelClassCount` under pinned vowel-class profile).
+- Quality-gate retries must stay in the same `board_refill` lineage: each reject/regen attempt advances the same substream snapshot chain and must be replay-identical for the same seed/cast/profile/version inputs.
 
 ### 5.3 Creature spell random targeting
 
@@ -190,11 +198,37 @@ Rules:
   - `emergency_regen_attempt_count`
   - `emergency_regen_acceptance_result`
   - `validation_snapshot_version_pin`
+- Required telemetry for board quality retries (when `boardQualityPolicy` is enabled) must include:
+  - `board_init_quality_retry_count`
+  - `board_refill_quality_retry_count`
+  - `board_quality_policy_version`
+  - `vowel_class_profile_version`
+  - `vowel_class_includes_y`
 - If product wants “guaranteed anchor words,” anchors must be a versioned content artifact pinned to validation snapshot versions; implicit external frequency lists (for example ad-hoc “top-1000” lists) are forbidden in runtime recovery logic.
 - If retry cap is reached and board is still dead, fallback sequence is mandatory:
   1. regenerate board via deterministic emergency seed branch
   2. if still dead, end encounter safely in recoverable error state with retry CTA
 - Retry-cap fallback must preserve fairness: no additional move consumption and no countdown decrement/reset.
+
+### 5.6 Worked deterministic trace example (quality retry + acceptance)
+
+Given fixed runtime pins:
+
+- `encounter_seed = "0f4c9a1b2d3e4f5061728394a5b6c7d8"`
+- `board_refill` substream restored state before refill: `S0`
+- `boardQualityPolicy = { qualityPolicyVersion: "board_quality_v1", minVowelClassCount: 8 }`
+- vowel profile pins: `vowelClassProfileVersion = "vowel_class_v1"`, `vowelClassIncludesY = false` (`A/E/I/O/U` only)
+
+Deterministic attempt sequence:
+
+1. Attempt 0 starts from `S0`, consumes deterministic refill draws, produces candidate board `B0`.
+2. `hasPlayableWord(B0, ...) = true` (hard safety passes).
+3. `passesBoardQualityPredicate(B0, ...) = false` because vowel-class count is `6 < 8`; reject attempt 0.
+4. Attempt 1 continues from advanced `board_refill` state `S1` (same lineage; no reseed), consumes next deterministic draws, produces `B1`.
+5. `hasPlayableWord(B1, ...) = true` and `passesBoardQualityPredicate(B1, ...) = true` (vowel-class count `9 >= 8`); accept attempt 1.
+6. Persist accepted board plus final `board_refill` state `S2`; emit `board_refill_quality_retry_count = 1`.
+
+Replay guarantee: rerunning the same encounter seed, cast history, version pins, and profile values must reproduce the same `B0 reject -> B1 accept` trace and identical persisted `S2` state.
 
 ---
 
