@@ -2774,6 +2774,7 @@ export interface CanonicalGameplayAnalyticsFields {
   clue_uses_total: number | null;
   clue_star_cap_from_usage: 0 | 1 | 2 | 3 | null;
   ranking_dimension_primary: 'stars' | 'moves_remaining' | 'successful_casts_used' | 'completion_time_ms' | null;
+  // `completion_time_ms` is telemetry-only for `mirror_competition_v1` and must never imply competitive ordering.
   ranking_dimension_secondary: 'moves_remaining' | 'successful_casts_used' | 'completion_time_ms' | 'none' | null;
   rank_ordinal: number | null;
   tie_state: 'none' | 'exact_tie' | 'shared_rank' | null;
@@ -2805,6 +2806,8 @@ Required behavior:
 - `encounter_terminal_reason_code = 'spark_shuffle_retry_cap_unrecoverable'` is required on terminal analytics events emitted from a `recoverable_error` encounter end
 - all `challenge.*` events must include `challenge_id`; if emitted from a bundle context they must also include `challenge_bundle_id`
 - all `competition.*` events must include `competition_id`, ranking dimensions (`ranking_dimension_primary`, `ranking_dimension_secondary`), and final rank/tie fields when available
+- for `mirror_competition_v1`, analytics must encode only supported competitive ordering dimensions: primary `stars`; secondary `moves_remaining` or `successful_casts_used`; ties must remain ties (`tie_state = 'exact_tie'` or `tie_state = 'shared_rank'` as appropriate)
+- for `mirror_competition_v1`, `completion_time_ms` is allowed only as telemetry for difficulty/flow analysis and must not appear as an active ranking or tie-break dimension in analytics semantics
 - competition analytics payloads must always preserve `content_version_pin`, `validation_snapshot_version_pin`, `battle_rules_version_pin`, `board_generator_version_pin`, `reward_constants_version_pin`, and `competition_shared_seed` for fairness audits
 
 ---
