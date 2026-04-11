@@ -578,6 +578,18 @@ Restore logic must not:
 ### 15.4 Lifecycle principle
 Battle truth should be durable enough that app lifecycle interruptions do not create fairness bugs.
 
+### 15.5 State/persistence/session orchestration order (required)
+For each accepted in-battle player action, the runtime order is:
+
+1. UI submits the action to `packages/game-rules`.
+2. The engine returns the canonical next state plus ordered events.
+3. The app writes a stable SQLite snapshot/checkpoint.
+4. Zustand commits the canonical runtime state.
+5. Action queue entries are derived from the ordered events and consumed in order.
+6. Input unlock occurs only after the interaction lock window completes.
+
+This ordering must align with the interaction lock behavior in `docs/screens-and-session-flow.md` and with the canonical event/action contracts in `docs/implementation-contracts.md`.
+
 ---
 
 ## 16. Board Generation Architecture
