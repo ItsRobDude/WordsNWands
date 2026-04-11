@@ -572,6 +572,12 @@ On a successful cast, the player should be able to see:
 ### Control-return rule
 Once resolution is complete, the player should clearly feel that control is theirs again.
 
+Normative interaction lock rule (valid-cast window):
+
+- board interactivity remains disabled for the full valid-cast resolution window (steps 1–9)
+- board interactivity returns only at step 10 (**player regains control**)
+- gestures that begin during the lock window are ignored/discarded; do not queue or auto-submit them when control returns
+
 ---
 
 ## 13. Creature Spell Resolution Flow
@@ -589,6 +595,12 @@ If the countdown reaches zero and the creature survives the player’s cast:
 Terminal-result ordering lock:
 
 - A move-budget loss triggered by the same cast does not bypass this sequence. The spell presentation/effect completes first, then the game transitions to the loss result.
+
+Normative interaction lock rule (creature-spell window):
+
+- board interactivity remains disabled for the full creature-spell sequence (steps 1–5)
+- board interactivity returns only at step 6 (**player regains control**)
+- gestures captured during this lock window are ignored/discarded; do not queue or auto-submit them after control returns
 
 ### Readability rule
 The player must be able to understand:

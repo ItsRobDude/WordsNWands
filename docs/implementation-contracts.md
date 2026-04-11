@@ -427,6 +427,18 @@ Submission/cancel lifecycle:
 - partial trace representation:
   - during `start`/`move`, keep candidate `selected_positions` as UI-transient only
   - partial candidate is never persisted as canonical cast history until a committed release occurs
+- resolution-lock input discard rule (normative):
+  - while encounter UI/runtime is in a **valid-cast resolution lock window** (from valid submission acceptance through section 5.3 step 19 finalize) or **creature-spell resolution lock window** (section 5.6 flow active), all incoming board-input trace payloads (`start`/`move`/`end`/`cancel`) must be ignored and discarded
+  - lock-window traces must not create or mutate a candidate path, must not emit `CastSubmission`, and must not be buffered for later replay
+  - when control returns after lock completion, input handling resumes from a clean idle state; no deferred auto-submit from previously discarded lock-window gestures is allowed
+
+Deterministic contract example (lock-window gesture discard):
+
+- scenario: board is mid-resolution after a valid cast (collapse/refill active), player begins a swipe gesture and releases before control returns
+- expected binding/result:
+  - no candidate path is retained after lock window
+  - no `CastSubmission` is emitted for that swipe
+  - no queued/deferred submission fires when board returns to `battle_input_ready`
 
 Normalization coupling rules:
 
@@ -592,6 +604,7 @@ Rules:
 - invalid or repeated casts must not change countdown state
 - `did_win` and `did_lose` must never both be true
 - the UI should not infer win/loss from HP alone if the gameplay engine already returned a terminal result
+- during valid-cast resolution or creature-spell resolution lock windows, incoming board input must be ignored/discarded and must not queue deferred submission work
 
 ### 5.6 Creature spell resolution contract
 
