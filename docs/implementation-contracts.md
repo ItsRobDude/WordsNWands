@@ -1684,6 +1684,59 @@ Content ID mapping guidance:
 - auxiliary UI or audio associations should follow explicit namespace prefixes (`ui_icon:*`, `audio_sfx:*`, etc.)
 - content IDs and asset IDs must stay logical identifiers, never file paths
 
+Example `AssetManifest` snippet (JSON):
+
+```json
+{
+  "manifest_id": "starter_pack_assets_v1",
+  "asset_pack_version": "1.0.0",
+  "entries": [
+    {
+      "namespace": "creature",
+      "id": "ember_drake",
+      "variants": {
+        "theme=starter|density=xhdpi|locale=en-US": "creature_ember_drake_starter_xhdpi_en_us",
+        "theme=starter|density=xhdpi|locale=default": "creature_ember_drake_starter_xhdpi_default",
+        "theme=starter|density=default|locale=default": "creature_ember_drake_starter_default_default",
+        "theme=default|density=default|locale=default": "creature_ember_drake_default_default_default"
+      },
+      "fallback_keys": {
+        "required_default": "theme=default|density=default|locale=default",
+        "theme_default": "theme=default|density=default|locale=default",
+        "density_default": "theme=starter|density=default|locale=default",
+        "locale_default": "theme=starter|density=xhdpi|locale=default"
+      }
+    },
+    {
+      "namespace": "spell",
+      "id": "arc_burst",
+      "variants": {
+        "theme=starter|density=xhdpi|locale=default": "spell_arc_burst_starter_xhdpi_default",
+        "theme=default|density=default|locale=default": "spell_arc_burst_default_default_default"
+      },
+      "fallback_keys": {
+        "required_default": "theme=default|density=default|locale=default",
+        "theme_default": "theme=default|density=default|locale=default",
+        "density_default": "theme=starter|density=default|locale=default",
+        "locale_default": "theme=starter|density=xhdpi|locale=default"
+      }
+    }
+  ]
+}
+```
+
+App-side static binding example (logical key -> static module key):
+
+```ts
+const ASSET_STATIC_BINDINGS = {
+  'creature:ember_drake': {
+    'theme=starter|density=xhdpi|locale=en-US': 'creature_ember_drake_starter_xhdpi_en_us',
+  },
+} as const;
+```
+
+Runtime resolves logical registry keys through this static map only; content files never contain bundler import paths.
+
 ### 8.1 Creature definition contract
 
 ```ts
