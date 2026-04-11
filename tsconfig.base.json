@@ -15,8 +15,12 @@
   },
   "include": [
     "vitest.config.ts",
+    "apps/mobile/**/*.ts",
+    "apps/mobile/**/*.d.ts",
     "packages/**/*.js",
-    "packages/**/*.ts"
+    "packages/**/*.ts",
+    "scripts/**/*.js",
+    "scripts/**/*.mjs"
   ],
   "exclude": ["node_modules"]
 }
