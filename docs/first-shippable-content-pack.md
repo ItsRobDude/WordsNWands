@@ -126,6 +126,8 @@ Required pinned identifiers:
 - `starter_board_profile_id`: `board_profile_starter_onboarding_v1`
 - `core_board_profile_id`: `board_profile_core_mainline_v1`
 
+The `starter_board_profile_id` and `core_board_profile_id` entries are editorial/profile references only; shipped runtime encounter payloads must inline `RuntimeBoardConfig`, and runtime must not perform dynamic board profile-ID resolution in M1-M2.
+
 Runtime/manifest rule:
 
 - do **not** invent new `battle_rules_version`, `board_generator_version`, or `reward_constants_version` identifiers in content docs or package manifests
@@ -279,6 +281,14 @@ It should not force journal/currency/bonus-reward UI before those layers are rea
   - `guidedFirstCast.normalizedWord = "leaf"`
   - `guidedFirstCast.selectedPositions = [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 2 }, { row: 0, col: 3 }]`
   - `guidedFirstCast.expectedElement = "bloom"`
+  - `starterBoardOpening.openingBoardSource.mode = "authored_seed"`
+  - `starterBoardOpening.openingBoardSource.authoredSeed = "starter_opening_script_v1"`
+  - `starterBoardOpening.guaranteedGuidedFirstCastPath = guidedFirstCast.selectedPositions`
+  - `starterBoardOpening.postFirstSpellWeaknessTeachingTarget.normalizedWord = "sun"`
+  - `starterBoardOpening.postFirstSpellWeaknessTeachingTarget.expectedElement = "light"`
+  - `starterBoardOpening.postFirstSpellWeaknessTeachingTarget.availabilityRule = "required_immediately_after_first_creature_spell"`
+  - `starterBoardOpening.transitionToOrdinaryFlow.trigger = "after_guided_first_cast_and_first_creature_spell"`
+  - `starterBoardOpening.transitionToOrdinaryFlow.continueWithStandardEncounterRules = true`
   - `weaknessTeachingWord = "sun"`
   - `mustShowCreatureSpellBeforeWin = true`
 - `introFlavorText`: `A little Puddle Puff is splashing magic across the path. Settle it with clever words.`

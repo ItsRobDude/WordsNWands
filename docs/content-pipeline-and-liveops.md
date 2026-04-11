@@ -475,69 +475,11 @@ Structural `manifest.json` example (complete JSON; placeholder IDs illustrate re
 }
 ```
 
-Structural creature file example (`content/packages/content_m2_launch_v1/creatures/creature.placeholder_starter_creature.json`):
+Authority boundary for this subsection:
 
-```json
-{
-  "id": "placeholder_starter_creature_v1",
-  "displayName": "Placeholder Starter Creature",
-  "encounterType": "standard",
-  "difficultyTier": "intro_placeholder",
-  "maxHp": 1,
-  "weakness": "arcane",
-  "resistance": "arcane",
-  "baseCountdown": 1,
-  "spellIdentity": "placeholder_spell_identity_v1",
-  "spellPrimitives": [],
-  "phaseRules": [],
-  "contentVersion": "content_m2_launch_v1"
-}
-```
-
-Structural starter encounter file example (`content/packages/content_m2_launch_v1/encounters/enc_starter_001.json`):
-
-```json
-{
-  "id": "enc_starter_001",
-  "creatureId": "placeholder_starter_creature_v1",
-  "moveBudget": 1,
-  "starPolicyVersion": "star_policy_v1_absolute",
-  "isStarterEncounter": true,
-  "starterTutorialScript": null,
-  "introFlavorText": "Placeholder intro flavor text.",
-  "damageModelVersion": "damage_model_v1",
-  "rewardDefinition": {
-    "grantsProgressUnlock": 0,
-    "grantsJournalProgress": 0,
-    "grantsCosmeticCurrency": 0
-  },
-  "hiddenBonusWordPolicy": null,
-  "boardConfig": {
-    "rows": 1,
-    "cols": 1,
-    "seedMode": "generated",
-    "fixedSeed": null,
-    "allowWandTiles": false,
-    "wandSpawnRate": 0,
-    "maxConcurrentWands": 0,
-    "letterDistributionProfileId": "placeholder_letter_distribution_v1",
-    "letterWeightEntries": [],
-    "namedLetterPoolId": "placeholder_pool_v1",
-    "vowelClassProfileVersion": "placeholder_vowel_class_v1",
-    "vowelClassIncludesY": false,
-    "boardQualityPolicy": {
-      "qualityPolicyVersion": "placeholder_quality_policy_v1",
-      "minVowelClassCount": 0
-    }
-  },
-  "balanceMetadata": {
-    "authoredFailRateBand": "low",
-    "shippabilityStatus": "candidate-shippable",
-    "waivers": []
-  },
-  "contentVersion": "content_m2_launch_v1"
-}
-```
+- this subsection is authoritative only for package layout and manifest/reference integrity
+- canonical legal creature/encounter payload contracts come from `docs/implementation-contracts.md` sections 8.1-8.5
+- canonical first-pack authored values come from `docs/first-shippable-content-pack.md`
 
 Normative determinism rules for this minimum package:
 
