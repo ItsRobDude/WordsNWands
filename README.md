@@ -21,6 +21,12 @@ This README is the current top-level source of truth for Words 'n Wands! product
 Focused documents under `docs/` exist to refine this overview with more exact gameplay, screen, balance, and engineering rules.  
 When a more specific document goes deeper than this README, the more specific document should win.
 
+## Reading paths
+
+- **60-second overview** (`README.md`): project purpose + core constraints (docs-first phase, deterministic/fair gameplay focus, Android-first foundation).
+- **Contributor quick path** (`README.md`, `AGENTS.md`, `docs/engineering-standards.md`): execution rules, doc-routing discipline, and canonical validation command contract.
+- **Deep reference** (read only the area you are changing): `docs/game-rules.md`, `docs/word-validation-and-element-rules.md`, `docs/screens-and-session-flow.md`, `docs/implementation-contracts.md`, `docs/randomness-and-seeding-contract.md`, `docs/technical-architecture.md`, `docs/milestone-implementation-plan.md`.
+
 ---
 
 ## Current readiness snapshot
