@@ -1486,6 +1486,7 @@ export interface PlayerProfileRecord {
   starter_tutorial_block_state: StarterTutorialBlockState;
   starter_tutorial_completed_stages_json: string; // JSON array of StarterTutorialCueStage values for show-once cues
   starter_tutorial_last_interrupted_stage: StarterTutorialCueStage;
+  last_victory_at_utc: string | null;
   cosmetic_currency_balance: number;
   cosmetic_unlock_records_json: string; // JSON array of CosmeticUnlockRecord values
   created_at_utc: string;
@@ -1506,6 +1507,7 @@ Rules:
 - `starter_tutorial_completed_stages_json` stores show-once completion markers (`cue_01_trace_word`, `cue_02_release_to_cast`, `cue_03_read_countdown`) and must not include event/result-bound cues.
 - `starter_tutorial_block_state` stores whether interruption recovery must reopen a blocking cue before normal interaction.
 - `starter_tutorial_last_interrupted_stage` stores interruption checkpointing for background/kill/resume recovery and should be `'none'` when no cue was active at interruption time.
+- `last_victory_at_utc` stores the latest committed encounter win timestamp across all encounters and is the canonical cross-encounter reset input for repeated-loss fail-soft logic.
 - `cosmetic_currency_balance` is the canonical spendable cosmetic soft-currency balance and must be a non-negative integer.
 - `cosmetic_unlock_records_json` stores owned cosmetic unlocks as canonical `CosmeticUnlockRecord[]` and is the profile-side source of truth for cosmetic ownership.
 - cosmetic spend deduction and append of a new owned unlock record must commit in one SQLite transaction (see `docs/technical-architecture.md` section 14 "Persistence Architecture" for trust-critical local persistence behavior).
@@ -1544,6 +1546,8 @@ export interface EncounterProgressRecord {
   last_completed_at_utc: string | null;
   win_count: number;
   loss_count: number;
+  assist_consecutive_loss_count: number;
+  assist_last_failed_attempt_ended_at_utc: string | null;
   updated_at_utc: string;
 }
 ```
@@ -1555,6 +1559,8 @@ Rules:
 - `best_star_rating = 0` means the encounter has never been won
 - `win_count = 0` and `loss_count > 0` means unlocked-and-attempted but not yet cleared
 - `first_unlocked_at_utc` records the first time the encounter became unlocked and does not change on replay
+- `assist_consecutive_loss_count` is the durable same-encounter fail-soft streak counter used for loss-#2 / loss-#3 / loss-#4 eligibility; it must be exact, not inferred from lifetime `loss_count`
+- `assist_last_failed_attempt_ended_at_utc` stores the terminal commit timestamp of the most recent failed attempt on that encounter and is the canonical rolling-24h reset anchor for fail-soft streak evaluation
 - this contract is intentionally lightweight enough to support list/path progression without overcommitting to a specific map structure
 - additive progression fields are allowed later, but this table should remain a stable per-encounter record
 
@@ -1992,6 +1998,8 @@ Rules:
 - `boss` and `event` encounters must explicitly author `starPolicyVersion` (no implied inheritance from standard defaults)
 - omission of `starPolicyVersion` for `boss`/`event` content is an authoring/validation failure and runtime must not silently fall back
 - `starPolicyVersion` routing and defaults must align with `docs/game-rules.md` section 13 ("Current star-rating direction" and "Boss/event star-policy routing rule")
+- `rewardDefinition` and `hiddenBonusWordPolicy` are future-capable authoring fields, not automatic feature-activation signals
+- if the active milestone scope, content lock, or first-shippable-pack doc says these systems are inactive, shipped encounter content must author them as `null` and runtime must not expose related UI, reward hooks, or analytics behavior
 - `hiddenBonusWordPolicy` is optional and encounter-bound; when present it must select from a themed lexicon subset using deterministic seeded selection for that encounter only
 - `hiddenBonusWordPolicy.maxClaimsPerEncounter` is locked to `1`; runtime must guard against multiple claims in the same encounter session
 - hidden bonus discovery is reward-side flavor only and must not alter damage, move consumption, creature countdown behavior, or board mutation/collapse/refill semantics
@@ -2332,6 +2340,7 @@ export interface CosmeticUnlockRecord {
 Rules:
 
 - reward writes and reward UI text must use the locked constants in `docs/milestone-locked-constants.md` section 3.3 (no duplicated ad hoc numeric literals).
+- structural support for rewards does not, by itself, activate player-facing reward layers; if the active authored slice requires rewards dormant, shipped encounters must keep `rewardDefinition = null` and reward UI must stay hidden
 - encounter first-clear currency and journal increments must follow section 3.3.a.
 - star-improvement currency grants and per-encounter cap behavior must follow section 3.3.b.
 - `grantsJournalProgress = 1` means apply the canonical journal increment from section 3.3.d (not an encounter-specific increment amount).
@@ -2486,12 +2495,15 @@ When the starter encounter resolves:
 - on win:
   - set `player_profile_records.has_completed_starter_encounter = 1`
   - set `player_profile_records.starter_result_outcome = 'won'`
+  - set `player_profile_records.last_victory_at_utc = concluded_at_utc`
+  - reset the starter encounter row `assist_consecutive_loss_count = 0`
+  - set the starter encounter row `assist_last_failed_attempt_ended_at_utc = null`
   - update the starter encounter progress/result records normally
   - unlock the first mainline encounter if it is locked
 - on loss:
   - set `player_profile_records.starter_result_outcome = 'lost'`
   - keep `player_profile_records.has_completed_starter_encounter = 0`
-  - update the starter encounter progress/result records normally
+  - update the starter encounter progress/result records using the encounter-loss fail-soft streak rules in section 9.3
   - unlock nothing
 
 
@@ -2607,17 +2619,27 @@ When a mainline encounter resolves with outcome `won`:
 - set `first_completed_at_utc` if this is the first win
 - set `last_completed_at_utc`
 - increment `win_count`
+- reset `assist_consecutive_loss_count = 0`
+- set `assist_last_failed_attempt_ended_at_utc = null`
+- set `player_profile_records.last_victory_at_utc = concluded_at_utc`
 - find the canonical next mainline encounter from `RuntimeProgressionDefinition`
 - if a next mainline encounter exists and is locked:
   - set `is_unlocked = 1`
   - set `first_unlocked_at_utc` if null
 - unlock at most one next mainline encounter from a single win
 
-### 9.3 Mainline loss transition rules
+### 9.3 Encounter loss transition rules
 
-When a mainline encounter resolves with outcome `lost`:
+When an encounter resolves with outcome `lost`:
 
 - increment `loss_count`
+- update fail-soft streak fields on the same `encounter_progress_records` row using this exact order:
+  - if `assist_last_failed_attempt_ended_at_utc = null`, start from base streak `0`
+  - else if `player_profile_records.last_victory_at_utc` is non-null and later than `assist_last_failed_attempt_ended_at_utc`, reset base streak to `0`
+  - else if `concluded_at_utc` is at least 24 rolling hours later than `assist_last_failed_attempt_ended_at_utc` (UTC-to-UTC instant comparison), reset base streak to `0`
+  - else preserve the existing base streak
+  - persist `assist_consecutive_loss_count = base_streak + 1`
+  - persist `assist_last_failed_attempt_ended_at_utc = concluded_at_utc`
 - do not change `best_star_rating`
 - do not change unlock state for any encounter
 
@@ -2958,7 +2980,7 @@ export interface SessionSliceState {
   active_result_record_id: string | null;
   starter_tutorial_cue_stage: StarterTutorialCueStage;
   starter_tutorial_block_state: StarterTutorialBlockState;
-  has_completed_starter_flow: 0 | 1;
+  has_completed_starter_encounter: 0 | 1;
   last_route_change_at_utc: string;
 }
 ```
@@ -2968,6 +2990,10 @@ Allowed write sources:
 - persistence restore (`EncounterRestoreTarget`, starter-flow/profile flags)
 - engine result mapping (`active_*` references after encounter creation or terminalization)
 - UI-only interaction (`app_primary_surface` route acknowledgment)
+
+Required mirror rule:
+
+- `has_completed_starter_encounter` must mirror `player_profile_records.has_completed_starter_encounter` exactly; it is onboarding gate truth, not a result-acknowledgement flag, so it may already be `1` while the starter win result surface is still visible.
 
 Forbidden fields (must stay in encounter runtime/persistence contracts):
 
@@ -3079,7 +3105,7 @@ Forbidden fields:
 
 - canonical encounter terminal outcome or persistence identifiers
 - board truth, creature truth, or deterministic RNG progression
-- duplicated starter-flow progression flags (`has_completed_starter_flow`, `starter_tutorial_cue_stage`)
+- duplicated starter-flow progression flags (`has_completed_starter_encounter`, `starter_tutorial_cue_stage`)
 - queue orchestration ownership fields (`execution_mode`, channel gating policies, completion-token bookkeeping, overlap limits)
 
 Required actions and idempotency:

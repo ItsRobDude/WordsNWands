@@ -409,8 +409,12 @@ UI tone and messaging requirements:
 
 Reset rules:
 
-- same-encounter consecutive-loss counter resets on a win
-- counter resets after a win on another encounter, or 24 hours without attempting this encounter
+- same-encounter consecutive-loss state must be persisted through the durable encounter/profile contract fields in `docs/implementation-contracts.md`; it must not be guessed from aggregate lifetime `loss_count` alone
+- on a loss, persist the encounter-local assist streak using the terminal commit timestamp for that failed attempt
+- before creating the next attempt for that same uncleared encounter, reset the streak to `0` if either:
+  - `player_profile_records.last_victory_at_utc` is later than that encounter's `assist_last_failed_attempt_ended_at_utc`, or
+  - at least 24 rolling hours have elapsed since `assist_last_failed_attempt_ended_at_utc`
+- a win on the same encounter or another encounter therefore clears stale loss pressure before the next retry is offered
 - mechanical assists expire after one assisted attempt and require meeting threshold again
 
 ---
