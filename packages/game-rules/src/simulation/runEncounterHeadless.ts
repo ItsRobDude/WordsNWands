@@ -42,6 +42,7 @@ export interface HeadlessEncounterDefinition {
     validation_lookup: ValidationSnapshotLookup;
     minimum_word_length?: number;
   };
+  creature_spell_primitives?: readonly CreatureSpellPrimitive[] | null;
   creature_spell_primitive?: CreatureSpellPrimitive | null;
 }
 
@@ -213,8 +214,13 @@ export const runEncounterHeadless = ({
           creature,
           rng_stream_states,
         }) => {
-          const primitive = encounter.creature_spell_primitive;
-          if (!primitive) {
+          const primitives =
+            encounter.creature_spell_primitives ??
+            (encounter.creature_spell_primitive
+              ? [encounter.creature_spell_primitive]
+              : []);
+
+          if (primitives.length === 0) {
             return {
               board,
               creature,
@@ -222,17 +228,21 @@ export const runEncounterHeadless = ({
             };
           }
 
-          const spell_state = applyCreatureSpell({
-            encounter_state: {
-              ...before_state,
-              board: {
-                ...board,
-                rng_stream_states,
-              },
-              creature,
+          let spell_state: EncounterRuntimeState = {
+            ...before_state,
+            board: {
+              ...board,
+              rng_stream_states,
             },
-            primitive,
-          });
+            creature,
+          };
+
+          for (const primitive of primitives) {
+            spell_state = applyCreatureSpell({
+              encounter_state: spell_state,
+              primitive,
+            });
+          }
 
           return {
             board: spell_state.board,
