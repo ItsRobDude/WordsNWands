@@ -104,10 +104,14 @@ test("authored runtime snapshot loads through provider lookup path without adapt
   const lookup = provider.get(authoredSnapshot.metadata.snapshot_version);
 
   assert.equal(lookup.hasWord("burn"), true);
+  assert.equal(lookup.hasPrefix("bur"), true);
   assert.equal(lookup.getEntry("burn")?.element, "flame");
+  assert.equal(lookup.getMaxWordLength() >= 4, true);
 
   assert.equal(lookup.hasWord("calm"), true);
+  assert.equal(lookup.hasPrefix("cal"), true);
   assert.equal(lookup.getEntry("calm")?.element, "arcane");
 
   assert.equal(lookup.getEntry("definitelynotaword"), null);
+  assert.equal(lookup.hasPrefix("definitelynotaword"), false);
 });

@@ -11,7 +11,9 @@ const BASE_STATE_TURNS: Record<TileStateKind, number> = {
 export const getBaseStateTurns = (state: TileStateKind): number =>
   BASE_STATE_TURNS[state];
 
-export const getStateTurnsRemaining = (tile: Pick<BoardTile, "state" | "state_turns_remaining">): number | null => {
+export const getStateTurnsRemaining = (
+  tile: Pick<BoardTile, "state" | "state_turns_remaining">,
+): number | null => {
   if (tile.state === null) {
     return null;
   }

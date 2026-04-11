@@ -83,12 +83,20 @@ const createLookup = (): ValidationSnapshotLookup => ({
   },
   hasWord: (normalizedWord) =>
     normalizedWord === "cab" || normalizedWord === "abc",
+  hasPrefix: (normalizedWord) =>
+    normalizedWord === "a" ||
+    normalizedWord === "ab" ||
+    normalizedWord === "abc" ||
+    normalizedWord === "c" ||
+    normalizedWord === "ca" ||
+    normalizedWord === "cab",
   getEntry: (normalizedWord) =>
     normalizedWord === "abc"
       ? { normalized_word: "abc", element: "flame" }
       : normalizedWord === "cab"
         ? { normalized_word: "cab", element: "flame" }
         : null,
+  getMaxWordLength: () => 3,
 });
 
 test("validateCastSubmission returns repeated for repeated words", () => {

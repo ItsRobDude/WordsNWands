@@ -25,7 +25,7 @@ export interface ValidateCastSubmissionInput {
     matchup_result: MatchupResult;
     cast_element: ElementType;
     used_wand_tile: boolean;
-    selected_tile_states: readonly (BoardTile["state"])[];
+    selected_tile_states: readonly BoardTile["state"][];
   }) => number;
   minimum_word_length?: number;
 }
@@ -44,7 +44,9 @@ export const validateCastSubmission = ({
   compute_damage,
   minimum_word_length = DEFAULT_MINIMUM_WORD_LENGTH,
 }: ValidateCastSubmissionInput): ValidateCastSubmissionResult => {
-  const caller_normalized_word = submission.traced_word_display.trim().toLowerCase();
+  const caller_normalized_word = submission.traced_word_display
+    .trim()
+    .toLowerCase();
 
   const illegal_path_reason = validatePath(submission.selected_positions);
   if (illegal_path_reason) {

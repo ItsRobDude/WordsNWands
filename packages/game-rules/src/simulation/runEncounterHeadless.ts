@@ -4,6 +4,7 @@ import {
 } from "../../../validation/src/index.ts";
 
 import type { EncounterRuntimeState } from "../contracts/board.ts";
+import type { EncounterRngStreamStates } from "../contracts/board.ts";
 import type { EncounterVersionPins } from "../contracts/board.ts";
 import type {
   CastResolution,
@@ -34,9 +35,17 @@ export interface HeadlessEncounterDefinition {
   encounter_id: string;
   encounter_seed: string;
   board: Parameters<typeof createEncounterRuntimeState>[0]["board"];
+  rng_stream_states?: Partial<EncounterRngStreamStates>;
   creature: Parameters<typeof createEncounterRuntimeState>[0]["creature"];
   move_budget_total: number;
   version_pins?: Partial<EncounterVersionPins>;
+  moves_remaining?: number;
+  repeated_words?: readonly string[];
+  casts_resolved_count?: number;
+  spark_shuffle_retry_cap?: number;
+  spark_shuffle_retries_attempted?: number;
+  spark_shuffle_fallback_outcome?: EncounterRuntimeState["spark_shuffle_fallback_outcome"];
+  updated_at_utc?: string;
   session_state?: Extract<
     EncounterSessionState,
     "unopened" | "intro_presented" | "in_progress"
@@ -112,13 +121,24 @@ export const runEncounterHeadless = ({
     creature: encounter.creature,
     move_budget_total: encounter.move_budget_total,
     version_pins: encounter.version_pins,
+    moves_remaining: encounter.moves_remaining,
+    repeated_words: encounter.repeated_words,
+    casts_resolved_count: encounter.casts_resolved_count,
+    spark_shuffle_retry_cap: encounter.spark_shuffle_retry_cap,
+    spark_shuffle_retries_attempted: encounter.spark_shuffle_retries_attempted,
+    spark_shuffle_fallback_outcome: encounter.spark_shuffle_fallback_outcome,
+    rng_stream_states: encounter.rng_stream_states,
     session_state: encounter.session_state ?? "in_progress",
-    updated_at_utc: "2026-01-01T00:00:00.000Z",
+    updated_at_utc: encounter.updated_at_utc ?? "2026-01-01T00:00:00.000Z",
   });
 
   const transcript: HeadlessTranscriptEntry[] = [];
 
-  for (const [cast_index, submission] of cast_submissions.entries()) {
+  const starting_cast_index = encounter_state.casts_resolved_count;
+
+  for (const [cast_offset, submission] of cast_submissions.entries()) {
+    const cast_index = starting_cast_index + cast_offset;
+
     if (isTerminal(encounter_state.session_state)) {
       break;
     }
@@ -183,10 +203,7 @@ export const runEncounterHeadless = ({
           applyBubbleRise({
             board,
           }),
-        compute_damage: ({
-          cast_resolution,
-          encounter_state,
-        }) => ({
+        compute_damage: ({ cast_resolution, encounter_state }) => ({
           cast_resolution,
           creature: {
             ...encounter_state.creature,
@@ -227,11 +244,7 @@ export const runEncounterHeadless = ({
             did_trigger_creature_spell: countdown.did_trigger_creature_spell,
           };
         },
-        apply_creature_spell: ({
-          board,
-          creature,
-          rng_stream_states,
-        }) => {
+        apply_creature_spell: ({ board, creature, rng_stream_states }) => {
           const primitives =
             encounter.creature_spell_primitives ??
             (encounter.creature_spell_primitive
@@ -304,7 +317,9 @@ export const runEncounterHeadless = ({
                 validation_lookup: encounter.validation.validation_lookup,
               }),
             next_random_index: (max_exclusive) => {
-              const draw = drawUint32FromStreamState(spark_shuffle_stream_state);
+              const draw = drawUint32FromStreamState(
+                spark_shuffle_stream_state,
+              );
               spark_shuffle_stream_state = draw.next_stream_state;
               return Math.floor(
                 (draw.value / 0x1_0000_0000) * Math.max(1, max_exclusive),

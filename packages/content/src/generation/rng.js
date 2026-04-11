@@ -11,7 +11,9 @@ function hashStringToUint32(value) {
 
 export function createDeterministicRng(seed) {
   if (!/^[0-9a-f]{32}$/.test(seed)) {
-    throw new Error(`Invalid generation_seed. Expected 32 lowercase hex chars, got: ${seed}`);
+    throw new Error(
+      `Invalid generation_seed. Expected 32 lowercase hex chars, got: ${seed}`,
+    );
   }
 
   let state = hashStringToUint32(seed);
@@ -32,17 +34,19 @@ export function createDeterministicRng(seed) {
     },
     pickOne(values) {
       if (!Array.isArray(values) || values.length === 0) {
-        throw new Error('Cannot pick from an empty collection.');
+        throw new Error("Cannot pick from an empty collection.");
       }
       const index = Math.floor(this.nextFloat() * values.length);
       return values[index];
     },
     pickIntInclusive(min, max) {
       if (!Number.isInteger(min) || !Number.isInteger(max) || max < min) {
-        throw new Error(`Invalid pickIntInclusive bounds: min=${min}, max=${max}`);
+        throw new Error(
+          `Invalid pickIntInclusive bounds: min=${min}, max=${max}`,
+        );
       }
       const span = max - min + 1;
       return min + (this.nextUint32() % span);
-    }
+    },
   };
 }

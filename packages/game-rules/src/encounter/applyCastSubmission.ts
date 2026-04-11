@@ -61,9 +61,7 @@ export interface ApplyCastSubmissionDependencies {
     board: BoardSnapshot;
     rng_stream_states: EncounterRngStreamStates;
   };
-  apply_bubble_rise: (input: {
-    board: BoardSnapshot;
-  }) => BoardSnapshot;
+  apply_bubble_rise: (input: { board: BoardSnapshot }) => BoardSnapshot;
   compute_damage: (input: {
     encounter_state: EncounterRuntimeState;
     cast_resolution: Extract<CastResolution, { submission_kind: "valid" }>;
@@ -231,15 +229,14 @@ export const applyCastSubmission = ({
     : null;
 
   return {
-    encounter_state:
-      recovered?.encounter_state ?? {
-        ...encounter_state,
-        board: {
-          ...ticked_board,
-          rng_stream_states: spell_result.rng_stream_states,
-        },
-        creature: spell_result.creature,
+    encounter_state: recovered?.encounter_state ?? {
+      ...encounter_state,
+      board: {
+        ...ticked_board,
+        rng_stream_states: spell_result.rng_stream_states,
       },
+      creature: spell_result.creature,
+    },
     cast_resolution: hp_result.cast_resolution,
   };
 };

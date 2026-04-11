@@ -18,7 +18,6 @@ pnpm test
 pnpm build
 pnpm check
 ```
-Shared TypeScript package tests run through `tsx`; if `pnpm test` fails before loading tests, confirm `pnpm exec tsx --version` first.
 
 If scripts are not scaffolded yet, follow `docs/engineering-standards.md` section 5.1 and validate docs consistency manually.
 

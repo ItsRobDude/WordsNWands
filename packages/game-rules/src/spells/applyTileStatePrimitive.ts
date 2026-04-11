@@ -84,7 +84,10 @@ const selectTargetIds = (input: {
       input.eligible_tiles
         .slice()
         .sort((left, right) => compareStableTileOrder(left, right))
-        .slice(0, Math.min(input.primitive.target_count, input.eligible_tiles.length))
+        .slice(
+          0,
+          Math.min(input.primitive.target_count, input.eligible_tiles.length),
+        )
         .map((tile) => tile.id),
     ),
     creature_spell_stream_state: input.context.creature_spell_stream_state,

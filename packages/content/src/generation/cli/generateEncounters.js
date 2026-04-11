@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import { generateFromRequestFile } from '../generateEncounters.js';
+import { generateFromRequestFile } from "../generateEncounters.js";
 
 function parseRequestArg(argv) {
-  const index = argv.indexOf('--request');
+  const index = argv.indexOf("--request");
   if (index === -1 || !argv[index + 1]) {
-    throw new Error('Missing required --request <file> argument.');
+    throw new Error("Missing required --request <file> argument.");
   }
   return argv[index + 1];
 }

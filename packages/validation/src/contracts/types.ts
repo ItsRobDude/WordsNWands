@@ -24,7 +24,9 @@ export interface ValidationSnapshotLookup {
   snapshot_version: string;
   metadata: ValidationSnapshotMetadata;
   hasWord(normalizedWord: string): boolean;
+  hasPrefix(normalizedPrefix: string): boolean;
   getEntry(normalizedWord: string): RuntimeValidationWord | null;
+  getMaxWordLength(): number;
 }
 
 export interface ValidationSnapshotLookupProvider {

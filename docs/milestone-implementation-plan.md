@@ -263,7 +263,7 @@ Prepare the repo and app foundation so future work stays clean, boring, and main
 - `pnpm-workspace.yaml` **must exist** at repo root. It must exist in M0 so workspace boundaries are explicit and reproducible in every install; deferred: adding future workspaces not needed for M0–M1 delivery.
 - base TypeScript config file(s) shared by all workspaces **must exist** at repo root (for example `tsconfig.base.json` and root wiring config files). They must exist in M0 so type behavior is consistent from day one; deferred: stricter compiler policies and specialized per-package overrides.
 - Expo app config under `apps/mobile` **must be locked to `app.config.ts`** as the single source of truth (no parallel `app.json`). It must exist in M0 so runtime/build metadata stays deterministic; deferred: multi-environment config overlays beyond immediate milestone needs.
-- root test config location/naming **must be `./vitest.config.ts`** for repository-wide defaults. It must exist in M0 so test execution/discovery remains predictable across contributors and CI; deferred: multi-project config splitting unless scale requires it.
+- root test command ownership **must live in root `package.json` scripts**, and the current implemented shared-package path may use per-package `node:test` commands instead of a mandatory root `vitest.config.ts`. The command contract must remain predictable across contributors and CI; deferred: consolidating onto a root test config only if the repo actually adopts one.
 - root lint/format/typecheck command ownership **must live in root `package.json` scripts** and delegate to workspace tasks as needed. It must exist in M0 so contributor validation has one stable entrypoint; deferred: advanced task orchestration tooling and CI-specific wrappers.
 
 Minimum required first-pass file/folder tree for Milestone 0:
@@ -280,7 +280,6 @@ packages/
 package.json
 pnpm-workspace.yaml
 tsconfig.base.json
-vitest.config.ts
 ```
 
 ### Definition of done

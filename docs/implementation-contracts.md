@@ -2676,7 +2676,9 @@ export interface ValidationSnapshotLookup {
   snapshot_version: string;
   metadata: ValidationSnapshotMetadata;
   hasWord(normalizedWord: string): boolean;
+  hasPrefix(normalizedPrefix: string): boolean;
   getEntry(normalizedWord: string): RuntimeValidationWord | null;
+  getMaxWordLength(): number;
 }
 ```
 
@@ -2693,6 +2695,7 @@ Required runtime behavior:
 - player cast validation must resolve against a pre-hydrated in-memory lookup for the active pinned snapshot
 - dead-board detection must use the same lookup truth
 - board generation/refill safety checks must use the same lookup truth
+- hydrated lookup structures must expose correctness-preserving pruning metadata for dead-board detection (`hasPrefix`, `getMaxWordLength`) so the board search can stop exploring impossible branches without changing acceptance semantics
 - do not parse validation snapshot files per cast
 - do not query SQLite per cast for ordinary lookup paths
 

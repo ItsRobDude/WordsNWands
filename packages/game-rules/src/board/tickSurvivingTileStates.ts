@@ -1,5 +1,8 @@
 import type { BoardSnapshot } from "../contracts/board.js";
-import { clearTileState, getStateTurnsRemaining } from "./tileStateLifecycle.ts";
+import {
+  clearTileState,
+  getStateTurnsRemaining,
+} from "./tileStateLifecycle.ts";
 
 export interface TickSurvivingTileStatesInput {
   board: BoardSnapshot;

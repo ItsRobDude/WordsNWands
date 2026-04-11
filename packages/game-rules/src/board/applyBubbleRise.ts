@@ -1,5 +1,8 @@
 import type { BoardSnapshot, BoardTile } from "../contracts/board.js";
-import { clearTileState, getStateTurnsRemaining } from "./tileStateLifecycle.ts";
+import {
+  clearTileState,
+  getStateTurnsRemaining,
+} from "./tileStateLifecycle.ts";
 
 export interface ApplyBubbleRiseInput {
   board: BoardSnapshot;

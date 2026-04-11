@@ -113,7 +113,7 @@ Code that passes visually but fails type safety is not done.
 
 ### Testing
 Mandatory test tools:
-- **Vitest** for shared logic and unit tests
+- **Node's built-in test runner** for the current shared-package/unit-test path (`node --test` with the repo's TypeScript runner flags/hooks)
 - **React Native Testing Library** for app/component behavior where needed
 - **Jest with `jest-expo`** for Expo/React Native test environment support where needed
 
@@ -136,7 +136,7 @@ The project must maintain a reliable way to validate that the mobile app still b
 - `prettier`
 - `eslint`
 - `typescript`
-- `vitest`
+- `node --test`
 - `@testing-library/react-native`
 - `jest-expo`
 - `expo` CLI
@@ -908,7 +908,7 @@ Words 'n Wands! engineering should follow this practical standard:
 - Expo-friendly and Android-realistic
 - pnpm only
 - Prettier + ESLint + TypeScript + tests are mandatory
-- Vitest for shared logic
+- Node's built-in test runner for the current shared-package path
 - React Native Testing Library + jest-expo where app behavior needs testing
 - SQLite for important local truth
 - shared packages own battle truth and validation truth

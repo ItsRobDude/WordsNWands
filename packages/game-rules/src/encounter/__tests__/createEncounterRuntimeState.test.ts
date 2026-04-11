@@ -58,10 +58,7 @@ test("createEncounterRuntimeState seeds deterministic stream states and defaults
     "validation_snapshot_unpinned",
   );
   assert.equal(result.battle_rules_version_pin, "battle_rules_unpinned");
-  assert.equal(
-    result.board_generator_version_pin,
-    "board_generator_unpinned",
-  );
+  assert.equal(result.board_generator_version_pin, "board_generator_unpinned");
   assert.equal(
     result.reward_constants_version_pin,
     "reward_constants_unpinned",

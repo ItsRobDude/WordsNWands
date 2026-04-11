@@ -19,6 +19,14 @@ const createValidationLookup = (
       { normalized_word: word, element: "flame" as const },
     ]),
   );
+  const prefixes = new Set<string>();
+  let maxWordLength = 0;
+  for (const word of words) {
+    maxWordLength = Math.max(maxWordLength, word.length);
+    for (let index = 1; index <= word.length; index += 1) {
+      prefixes.add(word.slice(0, index));
+    }
+  }
 
   return {
     snapshot_version: "headless_fixture_snapshot",
@@ -30,7 +38,9 @@ const createValidationLookup = (
       generated_at_utc: "2026-04-11T00:00:00.000Z",
     },
     hasWord: (normalizedWord) => entries.has(normalizedWord),
+    hasPrefix: (normalizedPrefix) => prefixes.has(normalizedPrefix),
     getEntry: (normalizedWord) => entries.get(normalizedWord) ?? null,
+    getMaxWordLength: () => maxWordLength,
   };
 };
 

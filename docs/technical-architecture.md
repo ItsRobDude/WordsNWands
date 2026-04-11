@@ -285,7 +285,7 @@ The smallest practical early shape is likely:
 - `pnpm-workspace.yaml` **must exist** at repo root. It must exist in M0 so workspace membership is explicit and deterministic for installs and task execution; deferred: broader workspace expansion beyond M0-required packages.
 - base TypeScript config file(s) **must exist** at repo root and be shared by all workspaces (for example `tsconfig.base.json` plus any root-level `tsconfig.json` wiring). They must exist in M0 so type boundaries and compiler defaults stay consistent; deferred: strictness ramp-ups and per-package advanced compiler overrides.
 - Expo app config in `apps/mobile` **must be locked to `app.config.ts`** (do not dual-track with `app.json`). It must exist in M0 so mobile runtime/build metadata has one authoritative location; deferred: environment-specific config branching beyond immediate local development needs.
-- root test config location and naming **must be explicit and stable** as `./vitest.config.ts` at repo root for repository-wide defaults. It must exist in M0 so test discovery and contributor commands stay predictable; deferred: extra project-specific split configs unless scale demands them.
+- root test command ownership **must be explicit and stable** in root `package.json` scripts, and the current implemented shared-package path may use per-package `node:test` commands rather than a mandatory root `vitest.config.ts`. Test discovery and contributor commands must still stay predictable; deferred: adding a consolidated root test config only if the repo actually adopts one.
 - root command ownership for lint/format/typecheck **must remain at repo root scripts** (implemented in root `package.json`, delegating into workspaces as needed). It must exist in M0 so engineering validation has one entrypoint; deferred: task-runner orchestration upgrades or CI-only command wrappers.
 
 Minimum required first-pass file/folder tree (M0) must include:
@@ -302,7 +302,6 @@ packages/
 package.json
 pnpm-workspace.yaml
 tsconfig.base.json
-vitest.config.ts
 ```
 
 ### 7.4 Deferred folders rule

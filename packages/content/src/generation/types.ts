@@ -1,19 +1,19 @@
 export type EncounterGenerationMode =
-  | 'draft_generate_freeze_v1'
-  | 'runtime_seeded_trial_v1';
+  | "draft_generate_freeze_v1"
+  | "runtime_seeded_trial_v1";
 
 export type GeneratorTargetTier =
-  | 'gentle'
-  | 'standard'
-  | 'challenging'
-  | 'boss'
-  | 'event';
+  | "gentle"
+  | "standard"
+  | "challenging"
+  | "boss"
+  | "event";
 
-export type GeneratorTargetFailRateBand = 'low' | 'medium' | 'high';
+export type GeneratorTargetFailRateBand = "low" | "medium" | "high";
 
 export interface EncounterGenerationRequest {
   request_id: string;
-  generator_version: 'structured_generation_v1';
+  generator_version: "structured_generation_v1";
   generator_mode: EncounterGenerationMode;
   generation_seed: string;
   content_version_target: string;
@@ -28,20 +28,20 @@ export interface EncounterGenerationRequest {
   board_profile_ids: string[];
   allow_name_generation_from_bank: boolean;
   allow_flavor_generation_from_bank: boolean;
-  output_scope: 'draft_only' | 'draft_and_freeze_candidate';
+  output_scope: "draft_only" | "draft_and_freeze_candidate";
 }
 
 export interface EncounterArchetypeBlueprint {
   blueprint_id: string;
   display_label: string;
   allowed_tiers: GeneratorTargetTier[];
-  encounter_type: 'standard' | 'boss' | 'event';
+  encounter_type: "standard" | "boss" | "event";
   pressure_style:
-    | 'soft_nuisance'
-    | 'board_reorder'
-    | 'temporary_blockage'
-    | 'element_disruption'
-    | 'boss_escalation';
+    | "soft_nuisance"
+    | "board_reorder"
+    | "temporary_blockage"
+    | "element_disruption"
+    | "boss_escalation";
   spell_identity: string;
   allowed_spell_payloads: SpellPayloadTemplateRef[];
   allowed_matchup_pair_pool_ids: string[];
@@ -52,7 +52,7 @@ export interface EncounterArchetypeBlueprint {
 
 export interface SpellPayloadTemplateRef {
   template_id: string;
-  primitive_kind: 'apply_tile_state' | 'shift_row' | 'shift_column' | 'chained';
+  primitive_kind: "apply_tile_state" | "shift_row" | "shift_column" | "chained";
 }
 
 export interface BlueprintBalanceProfileOverride {
@@ -67,7 +67,7 @@ export interface RuntimeValidationFinding {
   pass_id?: string;
   code: string;
   message: string;
-  severity: 'info' | 'warn' | 'error';
+  severity: "info" | "warn" | "error";
   json_path?: string;
 }
 
@@ -78,7 +78,7 @@ export type RuntimeCreatureDefinition = Record<string, unknown>;
 export interface GeneratedEncounterDraftArtifact {
   draft_id: string;
   request_id: string;
-  generator_version: 'structured_generation_v1';
+  generator_version: "structured_generation_v1";
   generator_mode: EncounterGenerationMode;
   generation_seed: string;
   blueprint_id: string;
@@ -123,5 +123,5 @@ export interface GeneratedEncounterBalanceReport {
     derived_base_countdown: number;
   };
   validator_findings: RuntimeValidationFinding[];
-  guardrail_status: 'pass' | 'warn' | 'error';
+  guardrail_status: "pass" | "warn" | "error";
 }

@@ -24,7 +24,6 @@ After install, verify the basic toolchain:
 ```bash
 pnpm exec prettier --version
 pnpm exec tsc -v
-pnpm exec tsx --version
 pnpm typecheck
 ```
 
@@ -54,7 +53,7 @@ The root workspace scripts intentionally execute workspaces with serial recursio
 Reason:
 
 - this repo uses the serial mode to avoid the Windows `spawn EPERM` failure seen with pnpm's default parallel recursive runner on some machines
-- shared TypeScript packages run `node:test` through `tsx` so package tests can execute `.ts` sources and `.js` import specifiers consistently during local validation
+- shared TypeScript packages run `node:test` with Node 24's built-in `--experimental-strip-types`, `--test-isolation=none`, and a small repo-local resolver hook so package tests can execute `.ts` sources and local `.js` import specifiers consistently during local validation
 
 Contributors should treat the root scripts as canonical and should not replace them with ad hoc parallel recursive commands in docs or automation without re-validating Windows behavior.
 
@@ -69,7 +68,6 @@ After a successful install, the repo should have:
 - package-local links such as `apps/mobile/node_modules/expo`
 
 If `pnpm exec prettier --version` or `pnpm exec tsc -v` fails, assume the install is incomplete or corrupted even if `pnpm-lock.yaml` is present.
-If `pnpm exec tsx --version` fails, assume shared-package tests will not run reliably yet.
 
 ---
 
@@ -85,7 +83,6 @@ Typical symptoms:
 
 - `pnpm exec prettier --version` fails
 - `pnpm exec tsc -v` fails
-- `pnpm test` fails before loading shared package tests because `tsx` is missing
 - root `node_modules` has `.pnpm` content but is missing `.bin` or package links
 
 Recovery:
@@ -208,9 +205,8 @@ Check in this order:
 2. shell env overrides for offline/proxy behavior
 3. `pnpm exec prettier --version`
 4. `pnpm exec tsc -v`
-5. `pnpm exec tsx --version`
-6. `pnpm install --frozen-lockfile`
-7. `pnpm typecheck`
+5. `pnpm install --frozen-lockfile`
+6. `pnpm typecheck`
 
 Practical rule:
 

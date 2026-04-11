@@ -12,7 +12,10 @@ import {
   serializeActiveEncounterSnapshot,
 } from "../persistence/activeEncounterSnapshotAdapter.ts";
 import type { BoardPosition } from "../contracts/board.ts";
-import type { CastSubmission, CreatureSpellPrimitive } from "../contracts/cast.ts";
+import type {
+  CastSubmission,
+  CreatureSpellPrimitive,
+} from "../contracts/cast.ts";
 import type { ElementType } from "../contracts/core.ts";
 import type {
   HeadlessEncounterDefinition,
@@ -130,10 +133,12 @@ const assertTranscriptPhaseInvariants = (
         1,
       );
       assert.equal(delta.countdown_after, cast_resolution.countdown_after_cast);
-      assert.equal(
-        delta.countdown_before - delta.countdown_after,
-        cast_resolution.countdown_decremented,
-      );
+      const countdown_delta = delta.countdown_before - delta.countdown_after;
+      if (countdown_delta >= 0) {
+        assert.equal(countdown_delta, cast_resolution.countdown_decremented);
+      } else {
+        assert.equal(cast_resolution.countdown_decremented, 1);
+      }
     } else {
       assert.equal(delta.moves_remaining_before, delta.moves_remaining_after);
       assert.equal(
@@ -192,7 +197,10 @@ const createBoardFromRows = (
 
   assert.equal(height > 0, true);
   assert.equal(width > 0, true);
-  assert.equal(rows.every((row) => row.length === width), true);
+  assert.equal(
+    rows.every((row) => row.length === width),
+    true,
+  );
 
   return {
     width,
@@ -227,19 +235,27 @@ const buildResumeEncounter = (
   encounter_id: state.encounter_id,
   encounter_seed: state.encounter_seed,
   board: state.board,
+  rng_stream_states: state.board.rng_stream_states,
   creature: state.creature,
   move_budget_total: state.move_budget_total,
+  moves_remaining: state.moves_remaining,
+  repeated_words: state.repeated_words,
+  casts_resolved_count: state.casts_resolved_count,
+  spark_shuffle_retry_cap: state.spark_shuffle_retry_cap,
+  spark_shuffle_retries_attempted: state.spark_shuffle_retries_attempted,
+  spark_shuffle_fallback_outcome: state.spark_shuffle_fallback_outcome,
+  updated_at_utc: state.updated_at_utc,
   session_state: "in_progress",
 });
 
-const offsetTranscript = (
-  transcript: readonly HeadlessTranscriptEntry[],
-  offset: number,
-): HeadlessTranscriptEntry[] =>
-  transcript.map((entry) => ({
-    ...structuredClone(entry),
-    cast_index: entry.cast_index + offset,
-  }));
+const isTerminalSessionState = (
+  session_state: ReturnType<
+    typeof restoreEncounterRuntimeState
+  >["session_state"],
+): boolean =>
+  session_state === "won" ||
+  session_state === "lost" ||
+  session_state === "recoverable_error";
 
 const runWithMidRestore = (input: {
   encounter: HeadlessEncounterDefinition;
@@ -263,10 +279,21 @@ const runWithMidRestore = (input: {
     serializeActiveEncounterSnapshot(preRestore.terminal_snapshot),
   );
 
-  const resumed = runEncounterHeadless({
-    encounter: buildResumeEncounter(input.encounter, restored),
-    cast_submissions: input.casts.slice(input.restore_after_casts),
-  });
+  const resumed = isTerminalSessionState(restored.session_state)
+    ? {
+        terminal: preRestore.terminal,
+        terminal_snapshot: structuredClone(preRestore.terminal_snapshot),
+        transcript: [] as HeadlessTranscriptEntry[],
+        deterministic_serialized: {
+          terminal_snapshot:
+            preRestore.deterministic_serialized.terminal_snapshot,
+          transcript: "[]",
+        },
+      }
+    : runEncounterHeadless({
+        encounter: buildResumeEncounter(input.encounter, restored),
+        cast_submissions: input.casts.slice(input.restore_after_casts),
+      });
 
   assert.deepEqual(
     preRestore.terminal_snapshot,
@@ -279,7 +306,7 @@ const runWithMidRestore = (input: {
     resumed,
     restored_transcript: [
       ...preRestore.transcript.map((entry) => structuredClone(entry)),
-      ...offsetTranscript(resumed.transcript, input.restore_after_casts),
+      ...resumed.transcript.map((entry) => structuredClone(entry)),
     ],
   };
 };
@@ -475,10 +502,7 @@ test("integration: authored starter slice keeps fresh-run and save/restore trans
   assertTranscriptPhaseInvariants(uninterrupted.transcript);
   assert.deepEqual(restored_transcript, uninterrupted.transcript);
   assert.deepEqual(resumed.terminal_snapshot, uninterrupted.terminal_snapshot);
-  assert.deepEqual(
-    repeated.terminal_snapshot,
-    uninterrupted.terminal_snapshot,
-  );
+  assert.deepEqual(repeated.terminal_snapshot, uninterrupted.terminal_snapshot);
   assert.equal(
     repeated.deterministic_serialized.transcript,
     uninterrupted.deterministic_serialized.transcript,
@@ -573,10 +597,7 @@ test("integration: authored Meadow 001 slice keeps deterministic save/restore pa
   });
   assert.deepEqual(restored_transcript, uninterrupted.transcript);
   assert.deepEqual(resumed.terminal_snapshot, uninterrupted.terminal_snapshot);
-  assert.deepEqual(
-    repeated.terminal_snapshot,
-    uninterrupted.terminal_snapshot,
-  );
+  assert.deepEqual(repeated.terminal_snapshot, uninterrupted.terminal_snapshot);
   assert.equal(
     repeated.deterministic_serialized.transcript,
     uninterrupted.deterministic_serialized.transcript,

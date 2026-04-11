@@ -96,7 +96,11 @@ test("runSparkShuffle recovers a playable board while preserving tile identity a
   assert.equal(result.encounter_state.spark_shuffle_retries_attempted, 1);
   assert.equal(result.encounter_state.spark_shuffle_fallback_outcome, "none");
   assert.deepEqual(
-    ordered.map((tile) => ({ id: tile.id, letter: tile.letter, state: tile.state })),
+    ordered.map((tile) => ({
+      id: tile.id,
+      letter: tile.letter,
+      state: tile.state,
+    })),
     [
       { id: "c", letter: "C", state: null },
       { id: "a", letter: "A", state: null },

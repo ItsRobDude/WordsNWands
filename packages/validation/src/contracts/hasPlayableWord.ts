@@ -34,6 +34,11 @@ export function hasPlayableWord(input: HasPlayableWordInput): boolean {
   const colCount = input.board[0]?.length ?? 0;
   if (colCount === 0) return false;
 
+  const maxWordLength = input.validation_lookup.getMaxWordLength();
+  if (maxWordLength < minLength) {
+    return false;
+  }
+
   const visited: boolean[][] = Array.from({ length: rowCount }, () =>
     Array(colCount).fill(false),
   );
@@ -64,15 +69,27 @@ function dfs(
 
   visited[row][col] = true;
   pathLetters.push(tile.letter);
+  const normalizedWord = normalizeTracedBoardLetters(pathLetters);
+
+  if (!input.validation_lookup.hasPrefix(normalizedWord)) {
+    visited[row][col] = false;
+    pathLetters.pop();
+    return false;
+  }
 
   if (pathLetters.length >= minimumLength) {
-    const normalizedWord = normalizeTracedBoardLetters(pathLetters);
     const isRepeated = input.repeated_words.has(normalizedWord);
     if (!isRepeated && input.validation_lookup.hasWord(normalizedWord)) {
       visited[row][col] = false;
       pathLetters.pop();
       return true;
     }
+  }
+
+  if (pathLetters.length >= input.validation_lookup.getMaxWordLength()) {
+    visited[row][col] = false;
+    pathLetters.pop();
+    return false;
   }
 
   for (const [rowOffset, colOffset] of ADJACENCY_DIRECTIONS) {
