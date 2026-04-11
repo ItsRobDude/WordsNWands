@@ -497,7 +497,7 @@ The resolution pipeline below is mandatory for every **validated cast** (`submis
 2. Mark selected tiles as consumed for this cast; consumed tiles are removed from active board occupancy.
 3. Collapse affected columns downward.
 4. Refill empty spaces from the top.
-5. Apply Bubble post-refill motion for **surviving** Bubble tiles (rise to column top, shift others downward), then clear Bubble from those tiles.
+5. Apply Bubble post-refill motion for **surviving** Bubble tiles (rise to column top, shift others downward), then clear Bubble from those tiles. For multiple surviving Bubble tiles in one column, preserve original relative vertical order among surviving Bubble tiles: the Bubble tile with the smallest pre-rise row index becomes the highest Bubble after rise.
 6. Resolve matchup candidate from cast element versus creature weakness/resistance.
 7. Apply Dull override: if one or more selected tiles were Dull and cast element is non-Arcane, force matchup to Arcane/neutral (`matchup_result = 'neutral'`, `matchupMultiplier = 1.0`).
 8. Resolve wand multiplier (`1.25` if any selected Wand tile, else `1.0`).
@@ -538,6 +538,12 @@ Resolution:
 3. Damage math: `round(14 * 1.0 * 1.0 * 0.75) = round(10.5) = 11`; minimum clamp not needed.
 4. Creature survives, so weakness stall check uses post-Dull matchup (`neutral`), meaning **no stall**; countdown decrements from `2` to `1`.
 5. Surviving Frozen/Sooted/Dull durations decrement once now; consumed state tiles were already cleared when selected.
+
+Worked example (Bubble stable ordering in one column):
+
+- Pre-rise single column (row `0` = top): row `0` = `H` (normal), row `1` = `B1` (Bubble), row `2` = `M` (normal), row `3` = `B2` (Bubble), row `4` = `Q` (normal), row `5` = `R` (normal)
+- Post-rise + clear Bubble in same column: row `0` = `B1`, row `1` = `B2`, row `2` = `H`, row `3` = `M`, row `4` = `Q`, row `5` = `R`
+- Ordering rule illustrated: `B1` started above `B2` pre-rise, so `B1` remains above `B2` after rise.
 
 Worked example (cast cycle that triggers Spark Shuffle):
 

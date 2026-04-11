@@ -589,9 +589,16 @@ The current design direction supports negative board effects such as:
 #### Bubble
 - the tile is still usable
 - after the next successful cast refill step, each surviving Bubble tile rises to the top of its column
+- for multiple surviving Bubble tiles in one column, preserve original relative vertical order among surviving Bubble tiles
+- the Bubble tile with the smallest pre-rise row index becomes the highest Bubble after rise
 - other tiles in that column shift downward
 - Bubble then clears
 - duration: 1 successful player turn
+
+Worked example (single column, row `0` = top):
+
+- before rise: row `0` = `H`, row `1` = `B1` (Bubble), row `2` = `M`, row `3` = `B2` (Bubble), row `4` = `Q`, row `5` = `R`
+- after rise + Bubble clear: row `0` = `B1`, row `1` = `B2`, row `2` = `H`, row `3` = `M`, row `4` = `Q`, row `5` = `R`
 
 ### Row/column movement effects
 Creatures may also use effects like:
