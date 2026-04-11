@@ -285,6 +285,15 @@ It must not quietly overwrite the expectations of ordinary mainline play.
 ### Event rule-banner requirement
 If an event encounter uses challenge-style modifiers or unusually framed pressure, that should be stated clearly in encounter intro or challenge-card copy.
 
+### Boss/event star-policy declaration requirement
+Authored boss and event content must declare `star_policy_version` explicitly.
+
+Rules:
+
+- boss/event content is invalid if `star_policy_version` is missing
+- allowed values are the versioned policies defined in `docs/implementation-contracts.md`
+- runtime must use authored `star_policy_version` directly rather than assuming standard absolute thresholds
+
 ---
 
 ## 10. Packaging and Fallback Rules
