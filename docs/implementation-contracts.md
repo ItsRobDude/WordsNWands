@@ -1664,7 +1664,7 @@ These interfaces define the stable runtime shapes for bundled encounter content.
 
 ### 8.0 Content package manifest load contract (required fields) *(Active in M1)*
 
-Runtime content loaders must require and validate these manifest fields before any creature/encounter/validation payload is activated:
+Runtime content loaders must require and validate these manifest fields before any creature/encounter/progression/validation payload is activated:
 
 ```ts
 export interface RuntimeContentPackageManifest {
@@ -1673,11 +1673,13 @@ export interface RuntimeContentPackageManifest {
   validation_snapshot_version: string;
   battle_rules_version: string;
   board_generator_version: string;
+  progression_version: string;
   min_supported_app_version: string;
   schema_versions: {
     manifest_schema: string;
     creature_schema: string;
     encounter_schema: string;
+    progression_schema: string;
     validation_snapshot_schema: string;
   };
   asset_pack_version: string | null;
@@ -1692,16 +1694,22 @@ export interface RuntimeContentPackageManifest {
     | 'published'
     | 'archived'
     | 'corrected_exception';
+  payload_files: {
+    encounters: Record<string, string>;
+    progression: Record<string, string>;
+    validation: Record<string, string>;
+  };
 }
 ```
 
 Load-time requirements:
 
 - missing any required field above is a hard load failure (`schema_invalid`)
-- `content_version`, `validation_snapshot_version`, `battle_rules_version`, and `board_generator_version` must match active runtime pins before activation (`version_pin_mismatch` on failure)
+- `content_version`, `validation_snapshot_version`, `battle_rules_version`, `board_generator_version`, and `progression_version` must match active runtime pins before activation (`version_pin_mismatch` on failure)
 - For active M1-M2 content, runtime pins must match docs/early-content-lock.md section 1 canonical versions exactly.
 - `schema_versions.*` identifiers must match known runtime-supported schema IDs (`schema_invalid` on failure)
-- loaders must validate manifest first, then creature/encounter/snapshot payloads; do not partially activate package content on manifest failure
+- `payload_files` registry keys must match the authored version pins in the same manifest for `progression` and `validation`.
+- loaders must validate manifest first, then creature/encounter/progression/snapshot payloads; do not partially activate package content on manifest failure
 
 ### 8.0.a AssetManifest contract (required for bundled runtime assets) *(Active in M1)*
 
