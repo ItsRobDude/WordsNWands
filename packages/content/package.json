@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "lint": "node -e \"console.log('content lint placeholder')\"",
-    "typecheck": "node -e \"console.log('content typecheck placeholder')\"",
-    "test": "node -e \"console.log('content test placeholder')\"",
-    "build": "node -e \"console.log('content build placeholder')\"",
-    "format": "node -e \"console.log('content format placeholder')\""
+    "format": "prettier --write \"src/**/*.{ts,js,mjs,json,md}\"",
+    "lint": "prettier --check \"src/**/*.{ts,js,mjs,json,md}\" && tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "cd ../.. && node --test packages/content/src/**/*.test.js",
+    "build": "tsc -p tsconfig.json --noEmit"
   }
 }
