@@ -292,6 +292,13 @@ Milestone 1 is a **single-device, local-first, content-bundled vertical slice** 
 - the app can save and restore an in-progress encounter
 - the result flow feels satisfying
 
+### Assist policy lock (M1)
+Milestone 1 ships with **tip-only fail-soft** for repeated losses on the same encounter:
+
+- enabled: optional encouragement + one-time strategy tip (non-mechanical)
+- disabled: gentle board bias
+- disabled: easier variant
+
 ### Docs required before Milestone 1 begins
 - all Milestone 0 docs
 - `docs/implementation-contracts.md`
@@ -376,6 +383,13 @@ Milestone 2 may use:
 
 Milestone 2 should not spend major effort on a decorative world map unless it clearly improves play.
 
+### Assist policy lock (M2)
+Milestone 2 enables the middle assist tier but keeps strongest assists off:
+
+- enabled: optional encouragement + one-time strategy tip (non-mechanical)
+- enabled: optional gentle board bias (next attempt only)
+- disabled: easier variant
+
 ### Docs required before Milestone 2 begins
 - all Milestone 1 docs
 - `docs/technical-architecture.md` finalized enough for shared package boundaries
@@ -428,6 +442,13 @@ Add optional side flavor and more standout content without redefining the core g
 Daily/weekly content must remain **side flavor**, not mandatory identity.
 
 The player should still be able to treat the main encounter progression as the center of the game.
+
+### Assist policy lock (M3+)
+Milestone 3 and later use the full fail-soft contract:
+
+- enabled: optional encouragement + one-time strategy tip (non-mechanical)
+- enabled: optional gentle board bias (next attempt only)
+- enabled: optional easier variant (next attempt only)
 
 ### What Milestone 3 should not include
 - live-service complexity that requires a backend before it is justified
