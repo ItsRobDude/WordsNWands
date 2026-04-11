@@ -4,10 +4,10 @@
   "type": "module",
   "scripts": {
     "content:generate:encounters": "node packages/content/src/generation/cli/generateEncounters.js",
-    "lint": "bash -lc \"node --check $(find packages/content/src/generation -name '*.js' -type f | tr '\n' ' ')\"",
-    "test": "node --test packages/content/src/generation/generateEncounters.test.js",
-    "typecheck": "bash -lc \"node --check $(find packages/content/src/generation -name '*.js' -type f | tr '\n' ' ')\"",
-    "build": "bash -lc \"node --check $(find packages/content/src/generation -name '*.js' -type f | tr '\n' ' ')\"",
+    "lint": "node scripts/check-syntax-from-tsconfig.mjs",
+    "test": "node scripts/run-tests-from-vitest-config.mjs",
+    "typecheck": "node scripts/check-syntax-from-tsconfig.mjs",
+    "build": "node scripts/check-syntax-from-tsconfig.mjs",
     "format": "echo 'No formatter configured yet'",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   }
