@@ -1167,6 +1167,46 @@ Rules:
 
 These interfaces define the stable runtime shapes for bundled encounter content.
 
+### 8.0 Content package manifest load contract (required fields)
+
+Runtime content loaders must require and validate these manifest fields before any creature/encounter/validation payload is activated:
+
+```ts
+export interface RuntimeContentPackageManifest {
+  package_id: string;
+  content_version: string;
+  validation_snapshot_version: string;
+  battle_rules_version: string;
+  board_generator_version: string;
+  min_supported_app_version: string;
+  schema_versions: {
+    manifest_schema: string;
+    creature_schema: string;
+    encounter_schema: string;
+    validation_snapshot_schema: string;
+  };
+  asset_pack_version: string | null;
+  created_at_utc: string; // ISO-8601 UTC
+  created_by: string;
+  status:
+    | 'draft'
+    | 'review_ready'
+    | 'fairness_reviewed'
+    | 'approved'
+    | 'bundled'
+    | 'published'
+    | 'archived'
+    | 'corrected_exception';
+}
+```
+
+Load-time requirements:
+
+- missing any required field above is a hard load failure (`schema_invalid`)
+- `content_version`, `validation_snapshot_version`, `battle_rules_version`, and `board_generator_version` must match active runtime pins before activation (`version_pin_mismatch` on failure)
+- `schema_versions.*` identifiers must match known runtime-supported schema IDs (`schema_invalid` on failure)
+- loaders must validate manifest first, then creature/encounter/snapshot payloads; do not partially activate package content on manifest failure
+
 ### 8.1 Creature definition contract
 
 ```ts
