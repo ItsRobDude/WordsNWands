@@ -74,6 +74,7 @@ Baseline for all code tasks:
 | RNG, board generation, refill logic, or Spark Shuffle determinism | `docs/randomness-and-seeding-contract.md`, `docs/implementation-contracts.md` |
 | numeric tuning, HP/move derivation, fail-rate targeting, or content shippability gates | `docs/encounter-balance-framework.md` |
 | M1-M2 version pins, authorized content bundles, or deterministic fixtures | `docs/early-content-lock.md`, `docs/milestone-locked-constants.md` |
+| validation snapshot/bootstrap setup or fixture refresh workflows (not gameplay-rule or balance changes) | `docs/validation-snapshot-bootstrap-playbook.md`, `docs/engineering-standards.md` (for command/contract alignment) |
 | product identity, tone boundaries, design pillars, or vision-level decision framing | `docs/project-identity.md` |
 | player-facing semantic text, exact UI copy, names, labels, tone rules | `docs/copy-locks-and-voice-guide.md` if it exists; otherwise use `README.md` and conservative tone assumptions |
 | challenge schedules, daily/weekly structure, content release flow, encounter curation | `docs/content-pipeline-and-liveops.md`, `docs/milestone-implementation-plan.md`, `docs/challenge-and-boss-layer.md`; add `docs/encounter-generator-implementation.md` when building or modifying encounter-generation tooling (policy remains in `docs/structured-encounter-generation.md`) |
