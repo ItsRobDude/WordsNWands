@@ -191,7 +191,10 @@ unless and until the product truly needs them.
 
 Words 'n Wands! should stay aligned with a conservative TypeScript-first mobile stack.
 
-### Current working stack direction
+### Current intended stack direction
+
+This section defines the canonical stack target for the architecture.
+It should not be read as a claim that every app-layer piece listed below is already fully implemented in the current mobile slice.
 
 - **Language:** TypeScript
 - **Mobile app:** React Native with Expo

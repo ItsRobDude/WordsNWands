@@ -71,7 +71,10 @@ Important rules:
 
 Words 'n Wands! should stay aligned with the current intended stack direction.
 
-### Current working stack
+### Current intended stack direction
+
+This section defines the canonical stack target for contributors.
+It should not be read as a claim that every app-layer piece listed below is already fully implemented in the current mobile slice.
 
 - mobile app: React Native with Expo
 - language: TypeScript
