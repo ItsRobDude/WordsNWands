@@ -461,6 +461,32 @@ Particles may be used for casts, hits, or magical accents, but they should remai
 
 The board must still be readable during and after the effect.
 
+### 11.7 Spark Shuffle feedback timing (dead-board recovery)
+Spark Shuffle feedback should read as a short system-assist sequence that restores playability without feeling like a penalty phase.
+
+Canonical total runtime target (normal conditions):
+
+- **420–700ms total**, with a normal-runtime hard cap of **700ms** from recovery cue start to restored board input readiness.
+
+Recommended phase breakdown:
+
+1. **Cue-in (80–140ms):** brief assist cue/message indicating no playable moves were found.
+2. **Board transition (220–420ms):** discard/reshuffle visual transition to refreshed board state.
+3. **Settle/readability beat (100–140ms):** short clarity hold so players can re-orient before interaction resumes.
+
+Lock/input behavior for this sequence is inherited from existing contracts and must not be redefined here:
+
+- `docs/implementation-contracts.md` section **5.1.1** (lock-window gesture ignore/discard behavior)
+- `docs/implementation-contracts.md` section **5.7** (Spark Shuffle as recovery, explicit no hidden penalties)
+- `docs/screens-and-session-flow.md` sections **12–14** (valid-cast/creature-spell lock windows and dead-board recovery flow)
+
+Tone guardrails (normative):
+
+- Present Spark Shuffle as **system assist, not punishment**.
+- Messaging must frame recovery as board help after a no-moves state, not player error.
+- Avoid punitive language, failure stingers, or “you caused this” framing.
+- Keep audiovisual intensity supportive and brief so the player can quickly resume solving with confidence.
+
 ---
 
 ## 12. Resolution Order Visualization
