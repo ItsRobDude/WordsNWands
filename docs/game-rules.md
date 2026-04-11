@@ -781,6 +781,7 @@ The result screen should clearly communicate:
 - remaining moves, if relevant
 - star rating, if relevant
 - any notable reward or progress gained
+- hidden bonus discovery feedback, when applicable
 
 The player should not be confused about how the battle ended.
 
@@ -803,6 +804,21 @@ Failure should feel like:
 - not "the game just punished me"
 
 The tone of result handling matters.
+
+### Hidden bonus discovery result rule
+Some encounters may include one hidden bonus word as optional flavor discovery.
+
+When discovered, the player should receive:
+
+- subtle celebratory feedback (short visual/audio ‘juice’ that does not interrupt play)
+- a small meta reward (for example `+1` cosmetic currency or journal progress)
+
+Discovery behavior constraints:
+
+- no effect on win/loss determination
+- no effect on damage math
+- no effect on move consumption
+- no effect on creature countdown behavior
 
 ---
 
@@ -874,6 +890,7 @@ Progression should give the player reasons to continue, such as:
 - star goals
 - codex/journal unlocks
 - small cosmetic or collection rewards
+- optional hidden bonus-word discoveries that grant tiny meta progress only
 
 The board battle remains the core value.
 

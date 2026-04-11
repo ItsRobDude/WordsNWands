@@ -90,6 +90,7 @@ Substream labels:
 - `board_refill`
 - `spell_targeting`
 - `spark_shuffle`
+- `hidden_bonus_word_selection`
 
 Rules:
 
@@ -150,7 +151,16 @@ Rules:
 - Eligibility filtering order must be deterministic before random index selection.
 - Each random pick consumes exactly one `nextUint32()` draw unless documented otherwise in spell-specific contracts.
 
-### 5.4 Spark Shuffle
+### 5.4 Hidden bonus word selection
+
+- RNG stream: `hidden_bonus_word_selection`
+- Seed label: `hidden_bonus_word_selection`
+- Selection source: authored themed lexicon subset pinned by active content/validation versions.
+- Consumption rule: exactly one deterministic selection draw per encounter run when `hiddenBonusWordPolicy` is present; no draws from this stream when policy is absent.
+- Selection must be encounter-bound and replay-stable: same encounter seed + same content/version pins must resolve to the same hidden bonus target word.
+- This stream must remain isolated from damage/countdown/board streams; adding or removing hidden bonus selection logic must not perturb `board_init`, `board_refill`, `spell_targeting`, or `spark_shuffle` outputs.
+
+### 5.5 Spark Shuffle
 
 - RNG stream: `spark_shuffle`
 - Seed label: `spark_shuffle`
@@ -199,6 +209,7 @@ Active encounter snapshots must persist:
   - `board_refill`
   - `spell_targeting`
   - `spark_shuffle`
+- `hidden_bonus_word_selection`
 
 ### 6.2 Resume behavior
 

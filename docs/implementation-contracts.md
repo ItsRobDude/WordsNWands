@@ -259,6 +259,7 @@ export interface EncounterRngStreamStates {
   board_refill: string;
   spell_targeting: string;
   spark_shuffle: string;
+  hidden_bonus_word_selection: string;
 }
 ```
 
@@ -267,6 +268,7 @@ Rules:
 - each stream state is a deterministic serialized RNG internal state blob
 - restore must continue from these stored stream states (never regenerate from seed when snapshot state exists)
 - stream labels and behavior must match `docs/randomness-and-seeding-contract.md`
+- `hidden_bonus_word_selection` is optional to consume in encounters that do not author `hiddenBonusWordPolicy`, but its stored state is still required for deterministic replay parity
 
 ### 4.3 Creature runtime state contract
 
@@ -1245,6 +1247,13 @@ export interface RuntimeStarterTutorialScript {
   mustShowCreatureSpellBeforeWin: boolean;
 }
 
+export interface HiddenBonusWordPolicy {
+  selectionSource: 'themed_lexicon_subset';
+  deterministicSelection: 'encounter_seed_bound';
+  maxClaimsPerEncounter: 1;
+  grantsMetaRewardOnly: 1;
+}
+
 export interface RuntimeEncounterDefinition {
   id: string;
   creatureId: string;
@@ -1254,6 +1263,7 @@ export interface RuntimeEncounterDefinition {
   introFlavorText: string | null;
   damageModelVersion: 'damage_model_v1';
   rewardDefinition: RuntimeRewardDefinition | null;
+  hiddenBonusWordPolicy: HiddenBonusWordPolicy | null;
   boardConfig: RuntimeBoardConfig;
   balanceMetadata: RuntimeEncounterBalanceMetadata;
   contentVersion: string;
@@ -1269,6 +1279,9 @@ Rules:
 - this strict first-cast element rule preserves deterministic onboarding intent: first guided success should immediately reinforce that element choice changes battle outcomes
 - this contract is onboarding truth and does not define player-invoked hint/clue behavior (M1-M2 ship with no player-invoked hint/clue runtime contract)
 - `damageModelVersion` is required encounter authoring metadata for every balance-derived encounter and must currently be `'damage_model_v1'`
+- `hiddenBonusWordPolicy` is optional and encounter-bound; when present it must select from a themed lexicon subset using deterministic seeded selection for that encounter only
+- `hiddenBonusWordPolicy.maxClaimsPerEncounter` is locked to `1`; runtime must guard against multiple claims in the same encounter session
+- hidden bonus discovery is reward-side flavor only and must not alter damage, move consumption, creature countdown behavior, or board mutation/collapse/refill semantics
 - `RuntimeEncounterDefinition` intentionally has no Spark Shuffle countdown/move override field in v1; runtime must apply the global Spark Shuffle pressure rule from section 5.6 without per-encounter guessing
 - `balanceMetadata.waivers` is required and must be present even when empty (`[]`)
 - any authored out-of-band balance value with `warn` severity requires an active waiver entry
@@ -1943,6 +1956,7 @@ export type CanonicalAnalyticsEventName =
   | 'encounter.spark_shuffle_retry_cap_hit'
   | 'encounter.clue_used'
   | 'encounter.clue_denied'
+  | 'encounter.hidden_bonus_word_discovered'
   | 'encounter.won'
   | 'encounter.lost'
   | 'encounter.result_viewed'
@@ -1991,6 +2005,7 @@ export interface CanonicalGameplayAnalyticsFields {
   battle_rules_version_pin: string | null;
   board_generator_version_pin: string | null;
   reward_constants_version_pin: string | null;
+  hidden_bonus_reward_granted: 0 | 1 | null;
   competition_shared_seed: string | null;
   word_length: number | null;
   element: ElementType | null;
@@ -2032,6 +2047,7 @@ Required behavior:
 - `encounter.spark_shuffle_retry_cap_hit` is required whenever Spark Shuffle reaches retry cap (even if deterministic emergency regeneration succeeds)
 - `encounter.clue_used` is required for every successful clue action commit and must include `clue_action_type`, `clue_charges_available`, and `clue_uses_total`.
 - `encounter.clue_denied` is required for clue-use attempts rejected by gating, cooldown, or budget constraints and must include `clue_use_deny_reason`.
+- `encounter.hidden_bonus_word_discovered` is required when an encounter-hidden bonus word is first discovered and must include `encounter_id`, `encounter_session_id`, `validation_snapshot_version_pin`, `reward_constants_version_pin`, and `hidden_bonus_reward_granted`.
 - `encounter_terminal_reason_code = 'spark_shuffle_retry_cap_unrecoverable'` is required on terminal analytics events emitted from a `recoverable_error` encounter end
 - all `challenge.*` events must include `challenge_id`; if emitted from a bundle context they must also include `challenge_bundle_id`
 - all `competition.*` events must include `competition_id`, ranking dimensions (`ranking_dimension_primary`, `ranking_dimension_secondary`), and final rank/tie fields when available
