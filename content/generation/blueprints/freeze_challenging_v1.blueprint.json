@@ -1,0 +1,34 @@
+{
+  "blueprint_id": "freeze_challenging_v1",
+  "display_label": "Freeze Challenging Blockage",
+  "allowed_tiers": ["challenging"],
+  "encounter_type": "standard",
+  "pressure_style": "temporary_blockage",
+  "spell_identity": "freeze",
+  "allowed_spell_payloads": [
+    {
+      "template_id": "freeze_three_tile_challenging_v1",
+      "primitive_kind": "apply_tile_state"
+    },
+    {
+      "template_id": "freeze_four_tile_challenging_v1",
+      "primitive_kind": "apply_tile_state"
+    }
+  ],
+  "allowed_matchup_pair_pool_ids": ["pair_pool_freeze_challenging_v1"],
+  "allowed_habitat_tags": ["hedgerow", "bramble", "grove", "meadow", "fern"],
+  "profile_overrides": {
+    "weakness_hit_rate_delta": -0.03,
+    "wand_incidence_delta": 0,
+    "soot_exposure_delta": -0.1,
+    "target_casts_to_defeat_delta": 0.5,
+    "target_spell_count_on_win_delta": 0.25
+  },
+  "prohibited_combination_flags": [
+    "no_chained_spell_templates",
+    "no_countdown_below_4",
+    "no_move_budget_below_9",
+    "no_multi_state_payloads",
+    "no_matchup_shifting"
+  ]
+}
