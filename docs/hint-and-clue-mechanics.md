@@ -64,22 +64,22 @@ All clue actions share these global constraints:
 - clue use must be explicit player intent (no auto-fire)
 
 ### 3.1 `reveal_starter_letter`
-- **Max uses per encounter:** `2`
-- **Cooldown:** `2` successful casts before next use
+- **Max uses per encounter:** locked in `docs/milestone-locked-constants.md` section 3.3.e
+- **Cooldown:** locked in `docs/milestone-locked-constants.md` section 3.3.e (successful-cast units)
 - **Move/countdown interaction:** consumes **no move**; immediately decrements creature countdown by `1` (minimum `0`)
-- **Star interaction:** if used at least once in a run, cap result to `max 2 stars`
+- **Star interaction:** if used at least once in a run, cap result per `docs/milestone-locked-constants.md` section 3.3.e
 
 ### 3.2 `highlight_legal_path`
-- **Max uses per encounter:** `1`
-- **Cooldown:** none (single-use by encounter cap)
+- **Max uses per encounter:** locked in `docs/milestone-locked-constants.md` section 3.3.e
+- **Cooldown:** locked in `docs/milestone-locked-constants.md` section 3.3.e (single-use by encounter cap)
 - **Move/countdown interaction:** consumes **no move**; immediately decrements creature countdown by `1` (minimum `0`)
-- **Star interaction:** if used, cap result to `max 2 stars`
+- **Star interaction:** if used, cap result per `docs/milestone-locked-constants.md` section 3.3.e
 
 ### 3.3 `reroll_local_tiles`
-- **Max uses per encounter:** `1`
-- **Cooldown:** none (single-use by encounter cap)
+- **Max uses per encounter:** locked in `docs/milestone-locked-constants.md` section 3.3.e
+- **Cooldown:** locked in `docs/milestone-locked-constants.md` section 3.3.e (single-use by encounter cap)
 - **Move/countdown interaction:** consumes **1 move** and decrements creature countdown by `1`; if this reaches `0`, normal creature spell trigger rules still apply
-- **Star interaction:** if used, cap result to `max 1 star`
+- **Star interaction:** if used, cap result per `docs/milestone-locked-constants.md` section 3.3.e
 
 ### 3.4 Anti-abuse constraints
 - Cannot chain two clue uses back-to-back without at least one valid cast in between.
@@ -193,10 +193,11 @@ Not allowed:
 - in-encounter emergency direct-buy prompts
 
 ### 4.3 Daily cap rules
-- **Global earn cap:** max `3` earned clue charges per UTC day.
-- **Global purchase cap:** max `3` purchased clue charges per UTC day.
-- **Inventory carry cap:** max stored clue charges `9`.
+- **Global earn cap:** locked in `docs/milestone-locked-constants.md` section 3.3.e.
+- **Global purchase cap:** locked in `docs/milestone-locked-constants.md` section 3.3.e.
+- **Inventory carry cap:** locked in `docs/milestone-locked-constants.md` section 3.3.e.
 - Overflow above cap is discarded; it must not convert into power currency.
+- If clue-economy values ever change, update `docs/milestone-locked-constants.md` section 3.3.e first, then update mirrored references.
 
 ### 4.4 Strict anti-pay-to-win parity constraints
 - Paying players must remain bound by the exact same per-encounter clue action caps and cooldowns as non-paying players.

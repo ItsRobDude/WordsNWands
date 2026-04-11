@@ -98,6 +98,18 @@ Use these values as the only canonical reward constants for authored content, ru
 - journal progress points required per creature entry unlock: `3`
 - max journal progress points granted per creature from encounter rewards: `3`
 
+#### 3.3.e Clue economy lock values (M3+)
+
+- daily earned clue charge cap (UTC day): `3`
+- daily purchased clue charge cap (UTC day): `3`
+- max stored clue inventory: `9`
+- per-encounter clue action usage/cooldown/star-cap lock references:
+  - `reveal_starter_letter`: max uses `2`, cooldown `2` successful casts, star cap `2`
+  - `highlight_legal_path`: max uses `1`, cooldown `0` (single-use), star cap `2`
+  - `reroll_local_tiles`: max uses `1`, cooldown `0` (single-use), star cap `1`
+
+If any clue-economy numbers change, update this section first, then update every mirrored reference in other docs/contracts in the same change.
+
 ---
 
 ## 4. Explicit not-in-milestone lists

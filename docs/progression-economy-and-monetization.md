@@ -345,12 +345,13 @@ If clues are enabled in Milestone 3 or later, use `docs/hint-and-clue-mechanics.
 Required guardrails:
 
 - Only canonical clue actions are allowed: `reveal_starter_letter`, `highlight_legal_path`, `reroll_local_tiles`.
-- Earned clue charges are capped at `3` per UTC day.
-- Purchased clue charges are capped at `3` per UTC day.
-- Total stored clue inventory is capped at `9`.
-- Per-encounter usage caps and star-impact penalties apply equally to earned and purchased clue charges.
+- Earned clue charges are capped by the locked value in `docs/milestone-locked-constants.md` section 3.3.e.
+- Purchased clue charges are capped by the locked value in `docs/milestone-locked-constants.md` section 3.3.e.
+- Total stored clue inventory is capped by the locked value in `docs/milestone-locked-constants.md` section 3.3.e.
+- Per-encounter usage caps, cooldowns, and star-impact penalties apply equally to earned and purchased clue charges and are locked in `docs/milestone-locked-constants.md` section 3.3.e.
 - Purchase paths must not remove countdown penalties, move costs, cooldowns, or per-encounter clue limits.
 - Starter flow remains clue-hidden unless explicitly unlocked by later milestone docs.
+- If clue-economy numbers change, update `docs/milestone-locked-constants.md` section 3.3.e first, then update mirrored references.
 
 ---
 
