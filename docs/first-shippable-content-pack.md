@@ -586,30 +586,8 @@ Editorial label note: this label is for human review only and has no runtime loa
 }
 ```
 
-Starter scripted opening behavior (required explicit representation):
+Starter opening behavior is authored through `starterTutorialScript.starterBoardOpening` in the encounter definition, while `boardConfig` remains only the canonical `RuntimeBoardConfig`.
 
-```json
-{
-  "starterScriptedOpening": {
-    "mode": "fixed_seed_opening_then_generated",
-    "openingBoardContract": {
-      "mustContainGuidedWord": "LEAF",
-      "guidedWordPath": [
-        { "row": 0, "col": 0 },
-        { "row": 0, "col": 1 },
-        { "row": 0, "col": 2 },
-        { "row": 0, "col": 3 }
-      ],
-      "mustEnableWeaknessTeachingWordAfterFirstCreatureSpell": "SUN"
-    },
-    "postOpeningTransition": {
-      "seedMode": "generated",
-      "fixedSeed": null,
-      "inheritsRemainingBoardConfig": true
-    }
-  }
-}
-```
 
 The starter board exists to teach confidence, not to test systemic variety.
 
