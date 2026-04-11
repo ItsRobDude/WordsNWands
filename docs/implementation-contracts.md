@@ -730,6 +730,206 @@ Examples:
 - **Dead due to repeat + blocked constraints:** board contains only one dictionary-valid adjacency path, `GLOW`, but `G` is Frozen and `"glow"` already exists in `repeated_words`; all remaining adjacency paths are either too short or not in lexicon. `hasPlayableWord(...)` returns `false`, so Spark Shuffle recovery is required.
 - **Playable board:** board contains legal path `S-T-O-N-E` with no tile reuse, no blocked tiles, length `5`, `"stone"` in active validation snapshot, and `"stone"` absent from `repeated_words`; `hasPlayableWord(...)` returns `true`, so no dead-board recovery triggers.
 
+### 5.9 Engine event stream and UI action queue contract
+
+The gameplay engine must emit a deterministic, append-only battle event stream.  
+UI, audio, haptics, animation, and analytics consume this stream but do not redefine gameplay outcomes.
+
+#### 5.9.1 Base event envelope + idempotency keys
+
+```ts
+export type EngineEventType =
+  | 'cast_submitted'
+  | 'cast_resolved'
+  | 'damage_applied'
+  | 'countdown_ticked'
+  | 'spell_started'
+  | 'spell_resolved'
+  | 'encounter_ended';
+
+export type EngineFramePhase =
+  | 'input_acceptance'
+  | 'board_resolution'
+  | 'damage_commit'
+  | 'countdown_commit'
+  | 'spell_resolution'
+  | 'terminal_commit';
+
+export interface EngineEventEnvelope {
+  event_id: string; // UUID/ULID; globally unique within the session
+  sequence: number; // strict monotonic per encounter session; starts at 1
+  event_type: EngineEventType; // discriminant
+  session_id: string;
+  encounter_id: string;
+  turn_index: number; // 0-based valid-cast turn index; stable for all events from that cast cycle
+  cast_index: number; // 0-based submission index; increments for valid + rejected submissions
+  occurred_at_utc: string; // ISO 8601 UTC timestamp from engine clock
+  frame_phase: EngineFramePhase;
+}
+```
+
+Deduplication/idempotency rule:
+
+- consumers must dedupe on `(session_id, event_id)` first
+- if `event_id` is unknown but `sequence` is already consumed, treat as duplicate and do not replay side effects
+- a consumer checkpoint should persist `last_consumed_sequence` per `session_id`
+
+#### 5.9.2 Discriminated union payloads
+
+```ts
+export interface CastSubmittedEvent extends EngineEventEnvelope {
+  event_type: 'cast_submitted';
+  frame_phase: 'input_acceptance';
+  submission_kind: CastSubmissionKind;
+  normalized_word: string;
+  selected_positions_count: number;
+}
+
+export interface CastResolvedEvent extends EngineEventEnvelope {
+  event_type: 'cast_resolved';
+  frame_phase: 'board_resolution';
+  submission_kind: CastSubmissionKind;
+  moves_consumed: 0 | 1;
+  did_trigger_creature_spell: boolean;
+  did_trigger_spark_shuffle: boolean;
+}
+
+export interface DamageAppliedEvent extends EngineEventEnvelope {
+  event_type: 'damage_applied';
+  frame_phase: 'damage_commit';
+  hp_before: number;
+  hp_after: number;
+  base_damage: number;
+  final_damage: number;
+  matchup_result: MatchupResult;
+}
+
+export interface CountdownTickedEvent extends EngineEventEnvelope {
+  event_type: 'countdown_ticked';
+  frame_phase: 'countdown_commit';
+  countdown_before: number;
+  countdown_after: number;
+  tick_reason: 'post_cast_non_weakness' | 'spell_reset';
+}
+
+export interface SpellStartedEvent extends EngineEventEnvelope {
+  event_type: 'spell_started';
+  frame_phase: 'spell_resolution';
+  spell_id: string;
+  countdown_before_reset: number;
+}
+
+export interface SpellResolvedEvent extends EngineEventEnvelope {
+  event_type: 'spell_resolved';
+  frame_phase: 'spell_resolution';
+  spell_id: string;
+  applied_primitives_count: number;
+  countdown_reset_to: number;
+}
+
+export interface EncounterEndedEvent extends EngineEventEnvelope {
+  event_type: 'encounter_ended';
+  frame_phase: 'terminal_commit';
+  outcome: EncounterOutcome;
+  terminal_reason_code: EncounterTerminalReasonCode;
+}
+
+export type EngineEvent =
+  | CastSubmittedEvent
+  | CastResolvedEvent
+  | DamageAppliedEvent
+  | CountdownTickedEvent
+  | SpellStartedEvent
+  | SpellResolvedEvent
+  | EncounterEndedEvent;
+```
+
+#### 5.9.3 Ordering guarantees
+
+- `sequence` defines canonical order; transport order is irrelevant if consumers re-sort by `sequence`.
+- Required causal order for a cast cycle:
+  1. `cast_submitted`
+  2. `cast_resolved`
+  3. optional `damage_applied` (valid casts only)
+  4. optional `countdown_ticked` (only when creature survives)
+  5. optional `spell_started`
+  6. optional `spell_resolved`
+  7. optional `encounter_ended` (terminal outcome)
+- `spell_started` and `spell_resolved` must share the same `turn_index`/`cast_index` as the triggering cast.
+- `encounter_ended` must be the final emitted event for the session (`sequence = last_consumed_sequence` at terminal commit).
+
+#### 5.9.4 Restore/replay emission rules
+
+- restore must reload canonical gameplay state from snapshot tables (section 7.5), not from re-running UI animation logic.
+- already-committed historical events with `sequence <= restored_last_sequence` must not be re-emitted.
+- after restore, only not-yet-emitted future events may be emitted with continuing monotonic `sequence`.
+- recoverable re-notification is allowed only through explicit UI-local restore actions (see `ActionQueueItem` below), not through duplicated `EngineEvent` emission.
+- analytics adapters must treat replayed UI-local restore actions as non-analytics unless explicitly mapped as restore telemetry.
+
+#### 5.9.5 Side-effect eligibility: presentation vs analytics-only
+
+- may trigger audio/haptics/animation:
+  - `cast_submitted`
+  - `cast_resolved`
+  - `damage_applied`
+  - `countdown_ticked`
+  - `spell_started`
+  - `spell_resolved`
+  - `encounter_ended`
+- analytics-only events are emitted by analytics adapters (section 12), not by this battle-engine union.
+- rule: presentation side effects are optional consumers of `EngineEvent`; skipping an effect must not change canonical battle state.
+
+#### 5.9.6 UI-side `ActionQueueItem` contract (engine-decoupled, React-decoupled)
+
+```ts
+export type UIActionType =
+  | 'show_cast_trace_feedback'
+  | 'show_cast_resolution_banner'
+  | 'animate_damage_number'
+  | 'animate_hp_bar'
+  | 'animate_countdown_tick'
+  | 'play_spell_windup'
+  | 'play_spell_resolution'
+  | 'show_encounter_result'
+  | 'persist_event_checkpoint';
+
+export interface ActionQueueItem {
+  action_id: string; // unique queue item id
+  session_id: string;
+  source_event_id: string;
+  source_sequence: number;
+  action_type: UIActionType;
+  enqueue_ts_utc: string;
+  not_before_phase: EngineFramePhase;
+  payload: Record<string, unknown>;
+  effect_channel: 'visual' | 'audio' | 'haptic' | 'system';
+  dedupe_key: string; // recommended: `${session_id}:${source_event_id}:${action_type}`
+}
+```
+
+Rules:
+
+- `ActionQueueItem` is a platform/application contract, not a React component prop.
+- queue consumption order is stable by (`source_sequence`, insertion order).
+- dedupe must be enforced on `dedupe_key` to prevent repeated haptic/audio firings during warm restore.
+- `persist_event_checkpoint` must run after each consumed engine event to update `last_consumed_sequence`.
+
+Engine events -> required baseline UI action mapping:
+
+| Engine event | Required `ActionQueueItem` entries |
+| --- | --- |
+| `cast_submitted` | `show_cast_trace_feedback`, `persist_event_checkpoint` |
+| `cast_resolved` | `show_cast_resolution_banner`, `persist_event_checkpoint` |
+| `damage_applied` | `animate_damage_number`, `animate_hp_bar`, `persist_event_checkpoint` |
+| `countdown_ticked` | `animate_countdown_tick`, `persist_event_checkpoint` |
+| `spell_started` | `play_spell_windup`, `persist_event_checkpoint` |
+| `spell_resolved` | `play_spell_resolution`, `persist_event_checkpoint` |
+| `encounter_ended` | `show_encounter_result`, `persist_event_checkpoint` |
+
+Mapping-extension rule:
+
+- teams may add extra platform-specific actions (for example richer animation variants), but additive actions must still trace back to one `source_event_id` and must preserve baseline dedupe/order semantics above.
+
 ---
 
 ## 6. Spell Primitive Contracts
