@@ -1412,6 +1412,76 @@ Rules:
 - the current product direction expects very little or no use of matchup shifts in v1 ordinary content
 - `changesWeaknessTo` and `changesResistanceTo` must not be random
 
+### 8.7 Post-M2 challenge and competition runtime contracts
+
+```ts
+export interface RuntimeChallengeDefinition {
+  challengeId: string;
+  challengeType: 'daily' | 'weekly' | 'event' | 'limited_time';
+  sourceEncounterId: string;
+  modifierList: string[];
+  rewardDefinition: RuntimeRewardDefinition | null;
+  contentVersionPin: string;
+  validationSnapshotVersionPin: string;
+  battleRulesVersionPin: string;
+  boardGeneratorVersionPin: string;
+  availabilityWindow: {
+    startsAtUtc: string;
+    endsAtUtc: string;
+    timezoneMode: 'utc';
+    windowLabel: string | null;
+  };
+}
+
+export interface RuntimeChallengeBundleManifest {
+  bundleId: string;
+  bundleType: 'daily_rotation' | 'weekly_rotation' | 'event_bundle';
+  activeWindow: {
+    startsAtUtc: string;
+    endsAtUtc: string;
+    timezoneMode: 'utc';
+  };
+  includedChallengeIds: string[];
+  spotlightMapping: Record<string, string | null>;
+  contentVersionPin: string;
+  validationSnapshotVersionPin: string;
+  battleRulesVersionPin: string;
+}
+
+export interface RuntimeMirrorCompetitionDefinition {
+  competitionId: string;
+  format: 'mirror_competition_v1';
+  encounterId: string;
+  sharedSeed: string;
+  contentVersionPin: string;
+  validationSnapshotVersionPin: string;
+  battleRulesVersionPin: string;
+  boardGeneratorVersionPin: string;
+  cluePolicy: 'disabled' | 'shared_budget' | 'own_budget';
+  rankingRulesRef: string;
+}
+
+export interface CompetitionResultSummary {
+  outcome: EncounterOutcome;
+  stars: 0 | 1 | 2 | 3;
+  movesRemaining: number;
+  successfulCastsUsed: number;
+  tieState: 'none' | 'exact_tie' | 'shared_rank';
+  rankDisplay: {
+    rankLabel: string;
+    rankOrdinal: number | null;
+    percentileBand: string | null;
+  };
+}
+```
+
+Rules:
+
+- post-M2 challenge and competition contracts are additive and must not redefine M1-M2 encounter runtime semantics
+- `sourceEncounterId` and `encounterId` must resolve to a valid `RuntimeEncounterDefinition.id`
+- `sharedSeed` is fairness-critical and must be immutable once a competition becomes active
+- all post-M2 challenge and competition payloads must preserve explicit version pins to support replayability, auditability, and deterministic dispute review
+
 ---
 
 ## 9. Canonical progression transition rules
@@ -1690,6 +1760,14 @@ export type CanonicalAnalyticsEventName =
   | 'encounter.won'
   | 'encounter.lost'
   | 'encounter.result_viewed'
+  | 'challenge.viewed'
+  | 'challenge.started'
+  | 'challenge.completed'
+  | 'challenge.expired'
+  | 'competition.joined'
+  | 'competition.seed_locked'
+  | 'competition.result_submitted'
+  | 'competition.rank_viewed'
   | 'progression.encounter_unlocked'
   | 'settings.updated';
 ```
@@ -1714,6 +1792,9 @@ export interface AnalyticsEventBase {
 ```ts
 export interface CanonicalGameplayAnalyticsFields {
   encounter_id: string | null;
+  challenge_id: string | null;
+  challenge_bundle_id: string | null;
+  competition_id: string | null;
   encounter_session_id: string | null;
   encounter_type: EncounterType | null;
   difficulty_tier: DifficultyTier | null;
@@ -1722,6 +1803,8 @@ export interface CanonicalGameplayAnalyticsFields {
   content_version_pin: string | null;
   validation_snapshot_version_pin: string | null;
   battle_rules_version_pin: string | null;
+  board_generator_version_pin: string | null;
+  competition_shared_seed: string | null;
   word_length: number | null;
   element: ElementType | null;
   matchup_result: MatchupResult | null;
@@ -1735,6 +1818,10 @@ export interface CanonicalGameplayAnalyticsFields {
   clue_charges_available: number | null;
   clue_uses_total: number | null;
   clue_star_cap_from_usage: 0 | 1 | 2 | 3 | null;
+  ranking_dimension_primary: 'stars' | 'moves_remaining' | 'successful_casts_used' | 'completion_time_ms' | null;
+  ranking_dimension_secondary: 'moves_remaining' | 'successful_casts_used' | 'completion_time_ms' | 'none' | null;
+  rank_ordinal: number | null;
+  tie_state: 'none' | 'exact_tie' | 'shared_rank' | null;
 }
 ```
 
@@ -1759,6 +1846,9 @@ Required behavior:
 - `encounter.clue_used` is required for every successful clue action commit and must include `clue_action_type`, `clue_charges_available`, and `clue_uses_total`.
 - `encounter.clue_denied` is required for clue-use attempts rejected by gating, cooldown, or budget constraints and must include `clue_use_deny_reason`.
 - `encounter_terminal_reason_code = 'spark_shuffle_retry_cap_unrecoverable'` is required on terminal analytics events emitted from a `recoverable_error` encounter end
+- all `challenge.*` events must include `challenge_id`; if emitted from a bundle context they must also include `challenge_bundle_id`
+- all `competition.*` events must include `competition_id`, ranking dimensions (`ranking_dimension_primary`, `ranking_dimension_secondary`), and final rank/tie fields when available
+- competition analytics payloads must always preserve `content_version_pin`, `validation_snapshot_version_pin`, `battle_rules_version_pin`, `board_generator_version_pin`, and `competition_shared_seed` for fairness audits
 
 ---
 
