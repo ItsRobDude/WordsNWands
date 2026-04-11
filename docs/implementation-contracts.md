@@ -998,6 +998,10 @@ export type EngineEvent =
 - after restore, only not-yet-emitted future events may be emitted with continuing monotonic `sequence`.
 - recoverable re-notification is allowed only through explicit UI-local restore actions (see `ActionQueueItem` below), not through duplicated `EngineEvent` emission.
 - analytics adapters must treat replayed UI-local restore actions as non-analytics unless explicitly mapped as restore telemetry.
+- restore-only UI recap actions (for example `show_restore_recap_banner`) are permitted only during launch/warm-resume restoration when snapshot truth indicates interruption happened after a spell/collapse-visible mutation checkpoint was already committed (for example `last_consumed_sequence` is at/after the completed mutation event boundary).
+- restore-only UI recap actions must be derived from persisted snapshot truth (`last_consumed_sequence`, session/snapshot payload fields), never from re-emitting or synthesizing historical `EngineEvent` payloads.
+- restore-only UI recap actions are presentation-only: they must not mutate gameplay state, advance RNG streams, consume moves, modify countdown/HP/board values, or write duplicate analytics records.
+- restore-only recap actions must preserve deterministic restore state and existing queue dedupe semantics; repeated launch/resume attempts for the same persisted checkpoint must collapse to one deduped recap action per `dedupe_key`.
 
 #### 5.9.5 Side-effect eligibility: presentation vs analytics-only
 
@@ -1018,6 +1022,7 @@ export type EngineEvent =
 export type UIActionType =
   | 'show_cast_trace_feedback'
   | 'show_cast_resolution_banner'
+  | 'show_restore_recap_banner'
   | 'animate_damage_number'
   | 'animate_hp_bar'
   | 'animate_countdown_tick'
@@ -1046,6 +1051,8 @@ Rules:
 - queue consumption order is stable by (`source_sequence`, insertion order).
 - dedupe must be enforced on `dedupe_key` to prevent repeated haptic/audio firings during warm restore.
 - `persist_event_checkpoint` must run after each consumed engine event to update `last_consumed_sequence`.
+- `show_restore_recap_banner` is restore-only and must be enqueued only from snapshot-derived launch/resume logic (never from live engine frame execution).
+- `show_restore_recap_banner` must be short-lived and non-blocking, and must not enqueue `persist_event_checkpoint` on its own.
 
 Engine events -> required baseline UI action mapping:
 

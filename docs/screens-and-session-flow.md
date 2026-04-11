@@ -728,6 +728,15 @@ Resume behavior must not:
 - double-apply creature damage
 - restore to an older board by accident
 
+### Resume recap readability rule
+When interruption likely skipped player-visible mutation context (for example a spell/collapse sequence completed before interruption and restore lands after that commit), resume should show a short non-blocking recap cue.
+
+Requirements:
+- recap cue is restore-only (launch/warm resume), not part of normal uninterrupted turn flow
+- recap cue is derived from persisted restore truth (`last_consumed_sequence` + snapshot state), not from replaying historical engine events
+- recap cue must not block input, mutate gameplay state, or duplicate analytics event emission
+- recap cue should auto-dismiss quickly and only reappear if a later interruption crosses a new committed mutation checkpoint
+
 ---
 
 ## 17. Retry and Restart Rules
@@ -944,6 +953,9 @@ Board interaction targets should feel comfortable on a typical phone.
 Battle animations should support understanding, not compete with it.
 
 If the player cannot track what changed, the motion is too much.
+
+### Resume readability cue rule
+If restore returns the player to a post-mutation state where likely-causal visuals were missed during interruption, the UI should provide a brief non-blocking recap cue so state changes remain understandable without replaying simulation events.
 
 ---
 
