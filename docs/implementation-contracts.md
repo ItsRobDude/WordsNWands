@@ -1921,6 +1921,23 @@ export interface RuntimeStarterTutorialScript {
     selectedPositions: BoardPosition[];
     expectedElement: NonNeutralElementType;
   };
+  starterBoardOpening: {
+    openingBoardSource: {
+      mode: 'authored_board' | 'authored_seed';
+      authoredBoard?: string[][];
+      authoredSeed?: string;
+    };
+    guaranteedGuidedFirstCastPath: BoardPosition[];
+    postFirstSpellWeaknessTeachingTarget: {
+      normalizedWord: string;
+      expectedElement: NonNeutralElementType;
+      availabilityRule: 'required_immediately_after_first_creature_spell';
+    };
+    transitionToOrdinaryFlow: {
+      trigger: 'after_guided_first_cast_and_first_creature_spell';
+      continueWithStandardEncounterRules: true;
+    };
+  };
   weaknessTeachingWord: string;
   mustShowCreatureSpellBeforeWin: boolean;
 }
@@ -1956,6 +1973,10 @@ Rules:
 - `guidedFirstCast.selectedPositions` must map to canonical `cue_01_trace_word` behavior in starter cue flow
 - `guidedFirstCast.expectedElement` is intentionally restricted to `NonNeutralElementType`; the first guided cast must teach a concrete weakness/resistance-facing element, not Arcane fallback
 - this strict first-cast element rule preserves deterministic onboarding intent: first guided success should immediately reinforce that element choice changes battle outcomes
+- `starterBoardOpening.openingBoardSource.mode` must be authored (`'authored_board'` or `'authored_seed'`); starter onboarding must not rely on unbounded/generated-only opening randomness
+- `starterBoardOpening.guaranteedGuidedFirstCastPath` must contain the same ordered path as `guidedFirstCast.selectedPositions`
+- `starterBoardOpening.postFirstSpellWeaknessTeachingTarget` defines the required post-first-spell teaching opportunity and must align with `weaknessTeachingWord`
+- `starterBoardOpening.transitionToOrdinaryFlow` is the explicit handoff contract from authored onboarding choreography back into ordinary encounter resolution
 - this contract is onboarding truth and does not define player-invoked hint/clue behavior (M1-M2 ship with no player-invoked hint/clue runtime contract)
 - `damageModelVersion` is required encounter authoring metadata for every balance-derived encounter and must currently be `'damage_model_v1'`
 - `starPolicyVersion` is the canonical star-rating policy input for encounter results and must be passed to section 9.1.b `deriveStarRating(...)` as `star_policy_version`
