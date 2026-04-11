@@ -676,6 +676,9 @@ The resolution pipeline below is mandatory for every **validated cast** (`submis
     - detection is required at step 17 for every non-terminal valid cast cycle
     - additional dead-board checks are allowed during internal spell primitive execution, but do not replace step 17
     - Spark Shuffle may chain/retry in the same cast cycle if the first shuffle output is still dead, up to `max_shuffle_retries_per_recovery_cycle = 3`
+    - during Spark Shuffle retries, do not run gravity/collapse, refill, or Bubble-rise logic
+    - Spark Shuffle retries are position permutation only; tile states (including Bubble) persist on moved tiles
+    - Bubble rise is evaluated only at the normal post-refill Bubble step of a later successful cast cycle
     - each retry must preserve `moves_remaining` and `current_countdown` (zero move change, zero countdown change)
     - on retry-cap hit, run fallback sequence: deterministic emergency board regeneration branch, then recoverable-error encounter end + retry CTA if still dead
 19. Finalize post-resolution state (`moves_remaining`, `repeated_words`, board snapshot, countdown_after, did_win/did_lose flags).
@@ -715,6 +718,13 @@ Resolution:
 2. First shuffle result is still dead, so Spark Shuffle retries once in the same cast cycle.
 3. Second shuffle produces a playable board, ending recovery.
 4. Final state remains `moves_remaining = 9`, `countdown_after = 1` (no Spark Shuffle pressure side-effects across either trigger).
+
+Worked example (Bubble moved by Spark Shuffle, no immediate rise):
+
+- Dead-board detection triggers Spark Shuffle while a surviving Bubble tile `B` is currently at row `0`, column `2`
+- Retry permutation moves `B` to row `3`, column `5`; `B` remains Bubble-marked in that new slot
+- Recovery ends on a playable retry output; no gravity/refill/Bubble-rise pass runs inside the retry loop
+- `B` stays at row `3` until a later successful cast reaches step 5, where normal post-refill Bubble rise is evaluated
 
 ### 5.4 Rejected cast resolution contract
 

@@ -730,8 +730,18 @@ The default recovery action is a **Spark Shuffle**:
 - the game clearly communicates that the board was refreshed
 - the recovery should feel like assistance, not punishment
 - every retry in the same recovery cycle is permutation-only over surviving tiles (tile identity and tile state continuity are preserved; only positions change)
+- during Spark Shuffle retries, do not run gravity/collapse, refill, or Bubble-rise logic
+- Spark Shuffle is position permutation only; tile states (including Bubble) persist on moved tiles
+- Bubble rise is evaluated only at the normal post-refill Bubble step of a later successful cast cycle
 - Spark Shuffle retries do not consume `board_init`/`board_refill` draws and do not create new tile letters
 - emergency regeneration is the first fallback branch allowed to construct fresh letters, and it must follow deterministic branch lineage from the retry-cap Spark Shuffle state
+
+Tiny worked example (Bubble across Spark Shuffle retries):
+
+- pre-retry board has a Bubble tile `B` at row `0`, column `2`
+- Spark Shuffle retry permutes positions only and moves `B` to row `3`, column `5`
+- retry output is playable, so recovery ends immediately with `B` still at row `3` and still Bubble-marked
+- `B` does **not** rise during this retry cycle; it rises only later when a subsequent successful cast reaches the normal post-refill Bubble step
 
 ### Spark Shuffle pressure rule (v1 global standard)
 For **v1**, Spark Shuffle pressure behavior is a **global rule**, not configurable per encounter type:
