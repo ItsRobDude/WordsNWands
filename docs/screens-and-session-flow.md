@@ -550,6 +550,10 @@ When the player casts a valid word, the resolution should happen in a stable, re
 9. if countdown expires, creature spell resolves
 10. player regains control
 
+AV timing/stacking contract:
+
+- The valid-cast flow must apply the cast-window overlap/serialization rules in `docs/audio-visual-style-guide.md` section **12.3** (including single authoritative cast audio, 220ms micro-feedback overlap cap, serialized HP/countdown/banner commits, and phase-change interrupt/merge behavior).
+
 Sequencing clarification (loss edge case):
 
 - If a valid cast leaves the creature alive, drops countdown to `0`, and also spends the final remaining move, the creature spell in step 9 still resolves first; only after that resolution is complete should the encounter finalize to loss/result.
