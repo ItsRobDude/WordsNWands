@@ -11,6 +11,18 @@ If the contracts are vague, the code will drift.
 
 ---
 
+## Status Note
+
+This file contains both active shared-package contracts and future fuller app/runtime targets.
+
+Rules for keeping it trustworthy:
+
+- when a section defines a currently exported type from `packages/game-rules` or `packages/validation`, that section must match the shipped code exactly
+- future richer shapes are allowed only when they are explicitly called out as target-state rather than written as already-live runtime truth
+- `apps/mobile` is still pre-vertical-slice, so app-store and SQLite sections must not imply more implementation coverage than the repo actually has today
+
+---
+
 ## 1. Contract Stability Rules *(Active in M1)*
 
 - Contract names and field names in this file are **stable** once used in production code.
@@ -335,21 +347,22 @@ export interface BoardPosition {
 }
 
 export interface BoardTile {
-  tile_id: string;
+  id: string;
   letter: string; // normalized uppercase A-Z for runtime board storage
-  row: number;
-  col: number;
-  tile_state: TileStateKind | null;
+  position: BoardPosition;
+  state: TileStateKind | null;
+  state_turns_remaining: number | null;
   special_marker: TileSpecialMarkerKind | null;
 }
 ```
 
 Rules:
 
-- `row` and `col` are 0-based indexes
+- `position.row` and `position.col` are 0-based indexes
 - each tile occupies exactly one board position
-- a tile may have at most one negative `tile_state`
+- a tile may have at most one negative `state`
 - a tile may have at most one `special_marker`
+- `state_turns_remaining` stores remaining successful-cast lifetime for the active negative state and should be `null` when `state = null`
 - runtime board storage should use normalized uppercase letters for stability and cheap comparisons
 
 Tile-state runtime behavior locks:
@@ -365,34 +378,28 @@ Tile-state runtime behavior locks:
 
 ```ts
 export interface BoardSnapshot {
-  rows: 6;
-  cols: 6;
+  width: number;
+  height: number;
   tiles: BoardTile[];
-  encounter_seed: string;
-  rng_algorithm_id: 'pcg32_xsh_rr_64_32' | 'xoroshiro128ss';
   rng_stream_states: EncounterRngStreamStates;
 }
 ```
 
 Rules:
 
-- `tiles.length` must always equal `rows * cols` for a valid active board
-- every `row` and `col` pair must be unique
-- `encounter_seed` is required and must be immutable for the encounter session
-- `encounter_seed` format is 32 lowercase hex chars (128-bit)
-- `rng_algorithm_id` must match the active RNG contract implementation
-- `rng_stream_states` must include deterministic serialized state for every required encounter substream
+- `tiles.length` must always equal `width * height` for a valid active board
+- every `position.row` and `position.col` pair must be unique
+- v1 authored encounters should currently use a `6 x 6` board even though the shared engine contract keeps `width` and `height` numeric for headless fixtures and tests
+- `rng_stream_states` must match the active shared-engine RNG implementation for the current milestone slice
 - the board snapshot is canonical gameplay truth, not derived presentation state
 
 `EncounterRngStreamStates` contract:
 
 ```ts
 export interface EncounterRngStreamStates {
-  board_init: string;
-  board_refill: string;
-  spell_targeting: string;
-  spark_shuffle: string;
-  hidden_bonus_word_selection: string;
+  board_fill_stream_state: string;
+  creature_spell_stream_state: string;
+  spark_shuffle_stream_state: string;
 }
 ```
 
@@ -400,8 +407,8 @@ Rules:
 
 - each stream state is a deterministic serialized RNG internal state blob
 - restore must continue from these stored stream states (never regenerate from seed when snapshot state exists)
-- stream labels and behavior must match `docs/randomness-and-seeding-contract.md`
-- `hidden_bonus_word_selection` is optional to consume in encounters that do not author `hiddenBonusWordPolicy`, but its stored state is still required for deterministic replay parity
+- current shared-engine stream labels are intentionally smaller than the future target topology in `docs/randomness-and-seeding-contract.md`
+- splitting `board_fill_stream_state` into separate `board_init` and `board_refill` streams, or adding `hidden_bonus_word_selection`, is a future migration and must land as one deliberate contract/code/fixture change
 
 ### 4.3 Creature runtime state contract
 
@@ -411,25 +418,21 @@ export interface CreatureRuntimeState {
   display_name: string;
   encounter_type: EncounterType;
   difficulty_tier: DifficultyTier;
-  max_hp: number;
-  current_hp: number;
-  weakness: NonNeutralElementType;
-  resistance: NonNeutralElementType;
-  base_countdown: number;
-  current_countdown: number;
-  spell_identity: string;
-  phase_state: 'default' | 'phase_two' | 'special';
-  has_matchup_shifted: 0 | 1;
+  weakness_element: ElementType;
+  resistance_element: ElementType;
+  hp_current: number;
+  hp_max: number;
+  spell_countdown_current: number;
+  spell_countdown_reset: number;
 }
 ```
 
 Rules:
 
-- ordinary creatures must keep `phase_state = 'default'`
-- `has_matchup_shifted` should remain `0` for standard encounters
-- `weakness` and `resistance` must never be equal
-- bosses/events may use phase changes only if separately documented and clearly telegraphed
-- HP must be represented as both `current_hp` and `max_hp` so UI and persistence do not infer missing values
+- `weakness_element` and `resistance_element` must never be equal
+- HP must be represented as both `hp_current` and `hp_max` so UI and persistence do not infer missing values
+- countdown must be represented as both `spell_countdown_current` and `spell_countdown_reset` so restore/debug paths do not infer hidden reset values
+- richer creature phase/state fields remain future scope until boss/event contracts actually require them in code
 
 ### 4.4 Encounter runtime state contract
 
@@ -437,13 +440,15 @@ Rules:
 export interface EncounterRuntimeState {
   encounter_session_id: string;
   encounter_id: string;
-  creature_state: CreatureRuntimeState;
+  encounter_seed: string;
   board: BoardSnapshot;
+  creature: CreatureRuntimeState;
   session_state: EncounterSessionState;
   terminal_reason_code: EncounterTerminalReasonCode | null;
   move_budget_total: number;
   moves_remaining: number;
   repeated_words: string[]; // normalized lowercase words
+  casts_resolved_count: number;
   spark_shuffle_retry_cap: number;
   spark_shuffle_retries_attempted: number;
   spark_shuffle_fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end';
@@ -453,19 +458,24 @@ export interface EncounterRuntimeState {
   board_generator_version_pin: string;
   reward_constants_version_pin: string;
   damage_model_version: 'damage_model_v1';
+  updated_at_utc: string;
 }
 ```
 
 Rules:
 
+- `encounter_seed` is required and must be immutable for the encounter session
+- `encounter_seed` format is 32 lowercase hex chars (128-bit)
 - `repeated_words` stores normalized cast history for repeat rejection
 - `moves_remaining` must never exceed `move_budget_total`
+- `casts_resolved_count` increments only after a successful valid cast resolves
 - `terminal_reason_code` is required whenever `session_state` is terminal, and must be `spark_shuffle_retry_cap_unrecoverable` when `session_state = 'recoverable_error'`
 - `spark_shuffle_retry_cap` must mirror the canonical v1 value (`3`) so restore/debug payloads do not infer hidden constants
 - `spark_shuffle_retries_attempted` and `spark_shuffle_fallback_outcome` must persist the last Spark Shuffle recovery cycle outcome even when encounter terminates
 - the five version pins above are required for restore/debug trust
 - any change to locked milestone constants in `docs/milestone-locked-constants.md` requires corresponding version-pin updates in this contract file within the same change
 - `damage_model_version` is required for deterministic restore/debug replay and must match the active canonical damage model contract version
+- `updated_at_utc` tracks the canonical last-mutated timestamp for snapshot persistence and restore bookkeeping
 - runtime state should be complete enough that battle resolution does not depend on hidden UI state
 
 ---
@@ -1614,51 +1624,21 @@ export interface ActiveEncounterSnapshotRecord {
   encounter_session_id: string;
   encounter_id: string;
   encounter_type: EncounterType;
-  difficulty_tier: DifficultyTier;
   session_state: EncounterSessionState;
   terminal_reason_code: EncounterTerminalReasonCode | null;
-  content_version_pin: string;
-  validation_snapshot_version_pin: string;
-  battle_rules_version_pin: string;
-  board_generator_version_pin: string;
-  reward_constants_version_pin: string;
-  encounter_seed: string;
-  rng_algorithm_id: 'pcg32_xsh_rr_64_32' | 'xoroshiro128ss';
-  rng_stream_states_json: string;
-  move_budget_total: number;
-  moves_remaining: number;
-  board_json: string;
-  creature_state_json: string;
-  repeated_words_json: string;
-  spark_shuffle_retry_cap: number;
-  spark_shuffle_retries_attempted: number;
-  spark_shuffle_fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end';
-  assist_policy_version: 'assist_policy_v1' | null;
-  active_assist_state_json: string | null; // serialized ActiveEncounterAssistState for current attempt
-  cosmetic_currency_balance_snapshot: number;
-  cosmetic_unlock_records_json_snapshot: string; // JSON array of CosmeticUnlockRecord values mirrored from PlayerProfileRecord
-  starter_tutorial_current_stage: StarterTutorialCueStage;
-  starter_tutorial_block_state: StarterTutorialBlockState;
-  starter_tutorial_completed_stages_json: string; // JSON array of StarterTutorialCueStage values mirrored from PlayerProfileRecord
-  starter_tutorial_last_interrupted_stage: StarterTutorialCueStage;
-  last_surface: AppPrimarySurface;
-  created_at_utc: string;
-  updated_at_utc: string;
-  last_interaction_at_utc: string;
+  runtime_state_json: string;
+  active_assist_state_json: string | null;
+  last_persisted_at_utc: string;
 }
 ```
 
 Rules:
 
-- `board_json`, `creature_state_json`, and `repeated_words_json` are canonical serialized restore payloads for early milestones
-- `encounter_seed`, `rng_algorithm_id`, and `rng_stream_states_json` are required restore-critical randomness fields
-- `rng_stream_states_json` must serialize all required substreams (`board_init`, `board_refill`, `spell_targeting`, `spark_shuffle`)
+- `runtime_state_json` is the canonical serialized `EncounterRuntimeState` payload for the current shared-package persistence contract
+- restore adapters may carry `rng_stream_states` alongside the record when they need to preserve exact snapshot fidelity across write/read boundaries
 - `terminal_reason_code` is required whenever `session_state` is terminal and must preserve recoverable-error reason across warm/cold resume
-- `spark_shuffle_retry_cap`, `spark_shuffle_retries_attempted`, and `spark_shuffle_fallback_outcome` are required restore/debug fields for Spark Shuffle retry-cap traces
-- `assist_policy_version` and `active_assist_state_json` are required once repeated-loss assist state exists for an attempt and must preserve one-attempt assist behavior across warm/cold restore.
-- `cosmetic_currency_balance_snapshot` and `cosmetic_unlock_records_json_snapshot` must mirror the latest persisted profile cosmetic state at snapshot write time.
-- `starter_tutorial_current_stage`, `starter_tutorial_block_state`, `starter_tutorial_completed_stages_json`, and `starter_tutorial_last_interrupted_stage` must mirror `player_profile_records` at snapshot write time so hard-resume can restore the exact cue/blocking state from a single deterministic restore payload.
-- this table stores exact restore truth, not a lossy summary
+- `active_assist_state_json` is reserved for per-attempt assist state when that feature becomes active
+- this compact record shape is the current M0/M1 shared-package contract; a future normalized SQLite shape is allowed only when the record contract, adapters, and restore tests are updated together
 - a terminal `session_state` may still remain here briefly until the result screen is acknowledged and cleanup rules run
 - restore must prefer this snapshot over guessed screen history
 

@@ -23,7 +23,7 @@ export interface SessionSliceState {
   active_result_record_id: string | null;
   starter_tutorial_cue_stage: StarterTutorialCueStage;
   starter_tutorial_block_state: StarterTutorialBlockState;
-  has_completed_starter_flow: 0 | 1;
+  has_completed_starter_encounter: 0 | 1;
   last_route_change_at_utc: string;
 }
 

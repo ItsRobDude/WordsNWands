@@ -2,7 +2,7 @@
 
 ## What this is
 Words 'n Wands! is an Android-first, portrait-first magical word battle game where players swipe valid words to cast spells.
-This repository is currently in a docs-first, pre-vertical-slice planning phase.
+This repository is still docs-first, but it is no longer docs-only: shared packages contain partial headless battle, validation, and content-loading implementations while `apps/mobile` remains pre-vertical-slice.
 The main goal right now is to keep gameplay rules, UX flow, and implementation contracts aligned.
 Treat focused docs in `docs/` as product truth; this file is a fast entry point.
 For contributor execution rules and scope discipline, read `AGENTS.md`.

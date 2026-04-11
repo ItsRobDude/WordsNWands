@@ -6,6 +6,21 @@ It exists to prevent fairness drift, replay mismatches, and restore inconsistenc
 
 ---
 
+## Status Note
+
+This document currently describes the intended full RNG architecture, not the exact behavior of the smaller shared-engine prototype already in `packages/game-rules`.
+
+Current shared-engine implementation status as of 2026-04-11:
+
+- active serialized stream labels are `board_fill_stream_state`, `creature_spell_stream_state`, and `spark_shuffle_stream_state`
+- the current helper uses deterministic counter-based string hashing rather than the approved PCG32/xoroshiro migration target described below
+- the current engine does not yet split `board_init` from `board_refill`
+- the current engine does not yet persist or consume `hidden_bonus_word_selection`
+
+Until the RNG migration lands in code and fixtures, contributors touching the current engine must keep `packages/game-rules/src/contracts/board.ts`, `packages/game-rules/src/encounter/createEncounterRuntimeState.ts`, and related tests aligned with the implemented three-stream contract. When the richer RNG contract below becomes active, the code, fixtures, and this document must be updated in the same change.
+
+---
+
 ## 1. Scope and goals
 
 This contract covers:
