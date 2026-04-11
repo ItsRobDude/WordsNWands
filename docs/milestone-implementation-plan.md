@@ -544,7 +544,8 @@ Async competition must not redefine the solo battle loop or make solo play feel 
 
 ### Docs required before Milestone 5 begins
 - all Milestone 4 docs
-- `docs/async-competition-rules.md` required before implementation begins for async competition policy and fairness constraints
+- `docs/async-competition-rules.md` is required
+- implementation details must remain consistent with `docs/implementation-contracts.md` section 8.7 post-M2 challenge/competition runtime contracts
 - `docs/technical-architecture.md` updated for any online/service additions
 
 ### Definition of done
