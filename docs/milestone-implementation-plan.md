@@ -241,6 +241,33 @@ Prepare the repo and app foundation so future work stays clean, boring, and main
 - `docs/technical-architecture.md`
 - `docs/engineering-standards.md`
 
+### M0 bootstrap contract (required artifacts)
+> **Normative (M0 required):** Milestone 0 is not complete unless these bootstrap artifacts exist and are the enforced defaults for all contributors.
+
+- `package.json` at repo root **must exist** and own the root scripts contract (`format`, `lint`, `typecheck`, `test`, `build`, and `check` when present). It must exist in M0 so all contributors execute one canonical validation surface; deferred: deeper package-specific script fan-out where not yet needed.
+- `pnpm-workspace.yaml` **must exist** at repo root. It must exist in M0 so workspace boundaries are explicit and reproducible in every install; deferred: adding future workspaces not needed for M0–M1 delivery.
+- base TypeScript config file(s) shared by all workspaces **must exist** at repo root (for example `tsconfig.base.json` and root wiring config files). They must exist in M0 so type behavior is consistent from day one; deferred: stricter compiler policies and specialized per-package overrides.
+- Expo app config under `apps/mobile` **must be locked to `app.config.ts`** as the single source of truth (no parallel `app.json`). It must exist in M0 so runtime/build metadata stays deterministic; deferred: multi-environment config overlays beyond immediate milestone needs.
+- root test config location/naming **must be `./vitest.config.ts`** for repository-wide defaults. It must exist in M0 so test execution/discovery remains predictable across contributors and CI; deferred: multi-project config splitting unless scale requires it.
+- root lint/format/typecheck command ownership **must live in root `package.json` scripts** and delegate to workspace tasks as needed. It must exist in M0 so contributor validation has one stable entrypoint; deferred: advanced task orchestration tooling and CI-specific wrappers.
+
+Minimum required first-pass file/folder tree for Milestone 0:
+
+```text
+apps/
+  mobile/
+    app.config.ts
+packages/
+  game-rules/
+  validation/
+  content/
+  utils/
+package.json
+pnpm-workspace.yaml
+tsconfig.base.json
+vitest.config.ts
+```
+
 ### Definition of done
 Milestone 0 is done when:
 
