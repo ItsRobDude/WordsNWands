@@ -332,6 +332,10 @@ AI must not be the final authority for:
 - live challenge approval
 - validation snapshot approval
 
+For validation snapshot workflows, optional AI-prefilled draft fields are allowed only under the human-verification and provenance requirements in:
+
+- `docs/validation-snapshot-bootstrap-playbook.md` (`Optional AI prefill mode`)
+
 ### 7.4 Validation snapshot curation protocol linkage
 Validation snapshot approvals must follow the operational curation protocol defined in:
 

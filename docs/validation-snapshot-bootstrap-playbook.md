@@ -147,6 +147,23 @@ Dispute handling (Section 18.3):
 Completion rule:
 - a row is review-complete only when all Section 18.1 required fields are non-empty and `final_decision` is set
 
+### Optional AI prefill mode
+
+AI assistance is optional and may only prefill draft values for:
+
+- `tone_classification`
+- `tier`
+- `proposed_decision`
+- `proposed_element`
+- `element_rationale`
+- `confidence_score`
+
+Human-review requirements:
+
+- reviewer must verify and edit, as needed, every required Section 18.1 field before approval
+- `final_decision`, any override fields, and `content_owner_signoff` remain human-only actions
+- every AI-prefilled row must include provenance metadata, recorded either in the CSV row itself or in a linked sidecar log
+
 ---
 
 ## 4. Batch QA gate checklist (Section 18.4) with explicit pass/fail criteria

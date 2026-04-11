@@ -815,6 +815,7 @@ This section defines the required review protocol for candidate-word decisions b
 Execution playbook for the M2 launch snapshot is defined in:
 
 - `docs/validation-snapshot-bootstrap-playbook.md`
+- optional AI prefill policy: `docs/validation-snapshot-bootstrap-playbook.md` (`Optional AI prefill mode`)
 
 ### 18.1 Mandatory review fields per candidate word
 Each candidate word record must include all of the following fields before approval:
