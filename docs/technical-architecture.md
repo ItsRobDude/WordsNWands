@@ -31,7 +31,7 @@ Current repo status as of 2026-04-11:
 
 - `packages/game-rules`, `packages/validation`, and `packages/content` contain the main implemented shared logic
 - `apps/mobile` now contains a first playable local encounter slice covering starter flow, active encounter, result routing, and a minimal Home continuation surface using the shared gameplay and validation packages
-- the current mobile slice still relies on tap-chained board input rather than the canonical final swipe gesture, and bundled content is loaded through an app-local adapter because the existing shared file-system loader is Node-only
+- the current mobile slice currently ships tap-chained board input only; the intended product input model is to support both continuous trace/swipe input and tap-selected path building, and bundled content is loaded through an app-local adapter because the existing shared file-system loader is Node-only
 - the current mobile slice does not yet realize the full Expo Router, Zustand, SQLite-backed restore, or broader persistence architecture described later in this document
 - when current code and target architecture differ, contributors must either align the code or mark the target-only architecture explicitly instead of treating future structure as already shipped
 
@@ -578,7 +578,7 @@ The canonical battle updates should still come from shared gameplay-truth functi
 
 Purely transient UI state may live in components or view-level state, such as:
 
-- active swipe preview
+- active board-selection preview
 - temporary highlight animation flags
 - ephemeral feedback visibility
 

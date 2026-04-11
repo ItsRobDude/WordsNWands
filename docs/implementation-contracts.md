@@ -19,7 +19,7 @@ Rules for keeping it trustworthy:
 
 - when a section defines a currently exported type from `packages/game-rules` or `packages/validation`, that section must match the shipped code exactly
 - future richer shapes are allowed only when they are explicitly called out as target-state rather than written as already-live runtime truth
-- `apps/mobile` now has a first playable local encounter slice, but app-store, restore, and SQLite sections must still distinguish active contracts from fuller target-state architecture that is not yet fully implemented
+- `apps/mobile` now has a first playable local encounter slice, but app-store, restore, and SQLite sections must still distinguish active contracts from fuller target-state architecture that is not yet fully implemented, and board-input contracts must preserve the intended dual-input product direction (continuous trace/swipe plus tap-selected path building)
 
 ---
 
@@ -50,7 +50,7 @@ then it belongs in a stable contract here rather than being redefined ad hoc in 
 
 ### Scope badge legend
 
-- **Active in M1**: normative and in current implementation scope for Milestone 1.
+- **Active in M1**: normative for Milestone 1 scope; shared-package sections in this file are expected to match current code, while some app-layer sections may still be partially implemented until the mobile slice finishes that wiring.
 - **Active in M2**: normative and in current implementation scope for Milestone 2.
 - **Reserved for M3+**: normative reference only unless explicitly activated by `docs/milestone-implementation-plan.md`.
 - **Reserved post-M2**: normative reference only unless explicitly activated by `docs/milestone-implementation-plan.md`.
@@ -501,16 +501,17 @@ Rules:
 - the gameplay engine should not trust `traced_word_display` over `normalized_word`
 - the board-path validator should confirm that the selected positions are legal for the current board
 
-### 5.1.1 Companion input-binding contract (gesture trace -> `selected_positions`)
+### 5.1.1 Companion input-binding contract (board input -> `selected_positions`)
 
-This companion contract defines the deterministic mapping from pointer gesture traces to `CastSubmission.selected_positions` so input UX and gameplay validation remain aligned.
+This companion contract defines the deterministic mapping from board-input path building to `CastSubmission.selected_positions` so input UX and gameplay validation remain aligned.
+Continuous pointer traces and tap-selected path building must converge on the same downstream selection, validation, and resolution semantics.
 
 Cross-document alignment requirements:
 
 - cast feedback/lifecycle behavior must align with `docs/screens-and-session-flow.md` section 11 (**Core Battle Interaction Flow**, including Rejected Cast Feedback ordering)
 - normalization behavior must align with `docs/word-validation-and-element-rules.md` section 5 (**Word Normalization Rules**)
 
-Trace payload contract:
+Continuous-trace payload contract:
 
 ```ts
 export interface TracePointerSample {
@@ -532,6 +533,12 @@ Output contract:
 ```ts
 export type BoundSelectedPositions = BoardPosition[];
 ```
+
+Tap-selection companion rule:
+
+- tap-selected input may build the same `BoundSelectedPositions` candidate without emitting `TracePointerSample` payloads
+- tap-selected input must still obey the same adjacency, no-reuse, backtrack/no-op, lock-window discard, normalization, and submission invariants defined in this section
+- if a tap-selected flow uses an explicit confirm/submit action, that action is the lifecycle-equivalent of trace `phase = 'end'`
 
 Binding rules:
 
@@ -582,17 +589,17 @@ Submission/cancel lifecycle:
   - lock-window traces must not create or mutate a candidate path, must not emit `CastSubmission`, and must not be buffered for later replay
   - when control returns after lock completion, input handling resumes from a clean idle state; no deferred auto-submit from previously discarded lock-window gestures is allowed
 
-Deterministic contract example (lock-window gesture discard):
+Deterministic contract example (lock-window input discard):
 
-- scenario: board is mid-resolution after a valid cast (collapse/refill active), player begins a swipe gesture and releases before control returns
+- scenario: board is mid-resolution after a valid cast (collapse/refill active), player begins a swipe gesture or starts tap-selecting before control returns
 - expected binding/result:
   - no candidate path is retained after lock window
-  - no `CastSubmission` is emitted for that swipe
+  - no `CastSubmission` is emitted from that blocked input attempt
   - no queued/deferred submission fires when board returns to `battle_input_ready`
 
 Normalization coupling rules:
 
-- `traced_word_display` must be derived from selected tiles in candidate order by concatenating tile letters exactly as displayed to the player during trace feedback
+- `traced_word_display` must be derived from selected tiles in candidate order by concatenating tile letters exactly as displayed to the player during input feedback
 - committed `traced_word_display` for `CastSubmission` must be recomputed from committed `selected_positions` (never copied from stale UI text buffers)
 - `normalized_word` must be derived from committed `traced_word_display` using canonical normalization policy in `docs/word-validation-and-element-rules.md` section 5 before lexicon lookup
 - lexicon lookup and repeat-word checks must key on `normalized_word`, not on display-form text
@@ -1479,7 +1486,8 @@ Event encounter spell (curated unusual mix, still schema-valid):
 
 ## 7. Persisted SQLite Entity Contracts *(Active in M1)*
 
-These are canonical entity names and required fields for local persistence.
+These are the canonical entity names and required fields for local persistence once the app-layer SQLite implementation is wired in.
+Current repo note: shared packages already define and test the record shapes and restore semantics that depend on these contracts, but the mobile slice does not yet ship the full SQLite adapter/repository layer described here.
 
 Column naming uses `snake_case` to keep SQL schemas boring and explicit.
 
@@ -2926,13 +2934,14 @@ Required behavior:
 ## 13. App Store State Orchestration Contracts *(Active in M1)*
 
 This section defines the canonical Zustand-facing app orchestration state described in `docs/technical-architecture.md` section 13.1–13.4.
+Current repo note: the shared `AppStoreState` contract exists, but the current mobile slice still uses narrower local wiring and does not yet ship the fuller Zustand store module layout described below.
 It intentionally separates:
 
 - engine-owned battle truth
 - persistence restore truth
 - UI-only transient orchestration state
 
-`AppStoreState` and slice contracts below are normative for `apps/mobile` store modules.
+`AppStoreState` and slice contracts below are normative for `apps/mobile` store modules once that architecture is fully wired in, and they should remain the shape that current narrower app wiring grows toward rather than diverging from.
 
 ### 13.1 Root `AppStoreState` composition
 
@@ -3079,6 +3088,10 @@ export interface UiSliceState {
 }
 ```
 
+Stable-name note:
+
+- `swipe_preview_path` and `uiSlice.setSwipePreview(...)` are stable contract names for the transient board-selection preview and must cover both continuous trace/swipe input and tap-selected path building unless intentionally versioned later
+
 Allowed write sources:
 
 - UI-only interaction and view lifecycle state
@@ -3093,7 +3106,7 @@ Forbidden fields:
 
 Required actions and idempotency:
 
-- `uiSlice.setSwipePreview(path, word)` must accept empty-path resets and be idempotent for same preview payload
+- `uiSlice.setSwipePreview(path, word)` must accept empty-path resets and be idempotent for same preview payload, regardless of whether the preview came from swipe-trace or tap-selection input
 - `uiSlice.showTransientBanner(kind)` must allow safe repeated calls without queue duplication side effects
 - `uiSlice.acknowledgeResultView()` must only clear UI acknowledgment flags and must not mutate encounter outcome truth
 - any queue-completion acknowledgment surfaced through `uiSlice` must remain minimal UI intent signaling and must not take over queue scheduling or channel gating decisions from the queue-runner/service layer
@@ -3101,7 +3114,7 @@ Required actions and idempotency:
 Selector stability rules:
 
 - transient selectors must return stable primitives or stable array references unless payload changed
-- interaction-heavy selectors (swipe preview) should avoid derived allocations in render path
+- interaction-heavy selectors (board-selection preview) should avoid derived allocations in render path
 - UI-only selectors must never derive or infer gameplay legality; legality comes from engine output
 
 ### 13.6 Field mapping to existing contracts
@@ -3124,7 +3137,7 @@ These contracts operationalize `docs/technical-architecture.md` section 13.1–1
 ## 14. Contract Usage Guidance *(Active in M1)*
 
 - `packages/game-rules` and `packages/validation` should own these exported contracts where practical
-- `apps/mobile` should consume contracts and avoid redefining parallel shape types
+- `apps/mobile` should consume contracts and avoid redefining parallel shape types, even when the current slice only wires a subset of the fuller app-store/persistence architecture
 - tests for transition legality, persistence serialization, analytics payload safety, and runtime content validation should assert against this contract file
 - determinism tests must include:
   - same `encounter_seed` + same valid-cast sequence => identical board/countdown/outcome

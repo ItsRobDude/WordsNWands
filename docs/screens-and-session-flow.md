@@ -204,8 +204,8 @@ Its first guided cast should teach a non-neutral element outcome (not Arcane fal
 
 | Cue stage | Trigger condition | Dismissal behavior | Gameplay state |
 | --- | --- | --- | --- |
-| `cue_01_trace_word` | First starter run enters `in_progress` with no successful cast yet. | Auto-dismiss immediately after first **valid** swipe submission is accepted, or manually dismiss via `Got it` while keeping cue eligible to re-open on next submit attempt. | **Blocked** (board input locked except tutorial CTA). |
-| `cue_02_release_to_cast` | Player has traced at least one legal path while `cue_01_trace_word` is complete and no valid cast has resolved yet. | Auto-dismiss when the player releases a legal path and cast submission resolves (valid or rejected). | **Non-blocking** (board remains interactive). |
+| `cue_01_trace_word` | First starter run enters `in_progress` with no successful cast yet. | Auto-dismiss immediately after first **valid** cast submission is accepted, or manually dismiss via `Got it` while keeping cue eligible to re-open on next submit attempt. | **Blocked** (board input locked except tutorial CTA). |
+| `cue_02_release_to_cast` | Player has built at least one legal path while `cue_01_trace_word` is complete and no valid cast has resolved yet. | Auto-dismiss when the player submits a legal path and cast submission resolves (valid or rejected). | **Non-blocking** (board remains interactive). |
 | `cue_03_read_countdown` | First valid cast from starter run finishes resolution and creature survives. | Tap-to-dismiss or auto-dismiss after `2.0s`, whichever comes first. | **Non-blocking**. |
 | `cue_04_watch_creature_spell` | Countdown reaches `0` in starter run and creature spell banner starts. | Auto-dismiss after the spell resolution completes. | **Blocked** only during normal creature-spell lock window (no extra tutorial lock). |
 | `cue_05_loss_retry_prompt` | Starter encounter ends in `lost`. | Dismiss by pressing primary CTA `Retry Starter`; no close/X bypass. | **Blocked** until player selects retry or leaves via secondary `Return to Title` when available. |
@@ -417,7 +417,7 @@ The bottom area should contain:
 
 - the 6x6 board
 - clear tile markers and tile states
-- current swipe trace
+- current path-selection preview
 - any active Wand tile indicator
 - a minimal battle utility row if needed, such as pause/settings
 
@@ -461,16 +461,16 @@ Use:
 - stable placement
 
 ### Current word feedback
-While tracing a word, the player should be able to see:
+While building a word by tracing or tap selection, the player should be able to see:
 
-- the currently traced letters
+- the currently selected letters
 - whether the path is visually valid
 - the order of selection
-- once traced candidate length is `>= 3` and validation marks the current candidate as a valid castable word, the trace word chip must show the currently recognized element using icon/color/state-token treatment
-- during active trace, exact damage numbers and multiplier values must not be shown
-- if a selected tile state forces neutral resolution (for example, `dull`), the trace word chip must immediately revert to neutral/Arcane preview state
+- once the current candidate length is `>= 3` and validation marks it as a valid castable word, the word-preview chip must show the currently recognized element using icon/color/state-token treatment
+- during active word building, exact damage numbers and multiplier values must not be shown
+- if a selected tile state forces neutral resolution (for example, `dull`), the word-preview chip must immediately revert to neutral/Arcane preview state
 
-The game should not require the player to guess whether the swipe path was read correctly.
+The game should not require the player to guess whether the selected path was read correctly.
 
 ---
 
@@ -480,16 +480,16 @@ The game should not require the player to guess whether the swipe path was read 
 The main interaction loop is:
 
 1. player studies the board
-2. player swipes a path
-3. game previews the traced word
-4. player completes the swipe
+2. player traces a path or tap-selects adjacent tiles
+3. game previews the current word
+4. player ends the trace or confirms the tap-built selection
 5. game validates or rejects the word
 6. valid cast resolves with board and damage updates
 7. player regains control
 
-### Live tracing rule
-As the player traces letters, the game should show the growing word clearly.
-Preview feedback during active trace is read-only and must not alter deterministic cast math order; keep UI semantics aligned with `docs/implementation-contracts.md` section 5.1 (cast submission contract) and section 5.3 (modifier evaluation order contract).
+### Live selection rule
+As the player builds a word, the game should show the growing word clearly.
+Preview feedback during active word building is read-only and must not alter deterministic cast math order; keep UI semantics aligned with `docs/implementation-contracts.md` section 5.1 (cast submission contract) and section 5.3 (modifier evaluation order contract).
 
 ### Path feedback rule
 The player should receive immediate visual feedback showing:
@@ -499,7 +499,7 @@ The player should receive immediate visual feedback showing:
 - path continuity
 
 ### Submission clarity rule
-A completed swipe should feel deliberate and satisfying.
+A completed cast input should feel deliberate and satisfying.
 
 The player should know when the game has accepted the cast attempt.
 Canonical damage and multiplier reveal timing remains in section 12 successful cast resolution flow; pre-release preview must not bypass that tension window.
@@ -512,13 +512,14 @@ Shared terminology contract (cross-doc):
 
 Interaction sequence after submit (required order):
 
-1. **Submit transition:** player ends swipe; UI enters transient `cast_submit_pending` for feedback lock (input disabled for this micro-beat only).
+1. **Submit transition:** player completes the active input method; UI enters transient `cast_submit_pending` for feedback lock (input disabled for this micro-beat only).
+   Trace input ends on release; tap-selected input ends on explicit submit/confirm.
 2. **Resolution transition:** gameplay resolves to `RejectedCastResolution`; encounter remains canonical `in_progress` and UI enters `rejected_cast_feedback_active`.
 3. **Invariant lock:** during `rejected_cast_feedback_active`, gameplay truth must match contract invariants:
    - no board mutation
    - no countdown mutation
    - no move-budget mutation
-4. **Visual treatment:** show a gentle rejection treatment on traced tiles/word chip only (not full-board punishment), then dissolve back to neutral board presentation.
+4. **Visual treatment:** show a gentle rejection treatment on selected tiles/word-preview chip only (not full-board punishment), then dissolve back to neutral board presentation.
 5. **Timeout window:** rejection treatment should complete within a short readable feedback window (`220–420ms` total).
 6. **Return-to-idle transition:** after timeout completion, clear transient styling and return to normal playable idle (`battle_input_ready`) with full control restored.
 

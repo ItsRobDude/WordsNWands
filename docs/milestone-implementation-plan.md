@@ -38,7 +38,7 @@ Current repo status as of 2026-04-11:
 - root workspace/setup tooling is in the Milestone 0 foundation shape
 - shared packages (`packages/game-rules`, `packages/validation`, `packages/content`) contain the main implemented Milestone 1 gameplay, validation, and content-loading logic
 - `apps/mobile` now contains a first playable local encounter slice wired into those shared packages
-- the current mobile slice still does not satisfy the full Milestone 1 app/runtime definition of done because canonical swipe input, SQLite-backed save/restore, and the fuller mobile app architecture are still in progress
+- the current mobile slice still does not satisfy the full Milestone 1 app/runtime definition of done because final player-facing support for both trace/swipe input and tap-selected casting, SQLite-backed save/restore, and the fuller mobile app architecture are still in progress
 
 When contributors compare code to this plan, they should treat missing app-layer work as not-yet-built milestone scope unless code or docs explicitly claim the feature is already shipped.
 

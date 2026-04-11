@@ -232,7 +232,7 @@ Each tile on the board contains:
 - zero or one negative tile state
 
 ### Adjacency rules
-A valid word path is formed by swiping through adjacent letters.
+A valid word path is formed by selecting adjacent letters, either by tracing across the board or by tap-selecting tiles in order.
 
 Adjacency includes:
 
@@ -247,7 +247,9 @@ A tile may not be used more than once in the same word.
 A valid cast must contain at least **3 letters**.
 
 ### Submission rule
-A word is cast only when the player completes the swipe and the game validates the word.
+A word is cast only when the player completes the active input flow and the game validates the word.
+For trace/swipe input, this means ending the trace.
+For tap-selected input, this means confirming the built selection through the app's submission affordance.
 
 ### Board resolution rule
 When a word is successfully cast:

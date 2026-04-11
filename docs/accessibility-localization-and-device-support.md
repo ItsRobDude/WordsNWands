@@ -233,9 +233,10 @@ Touch targets should be generous.
 
 For Words 'n Wands!, early product targets should generally aim for roughly **48dp-equivalent** minimum touch areas wherever practical for buttons and other tap controls.
 
-The board itself is a swipe surface, not a grid of tiny independent tap-only buttons.
+The board itself is a word-building surface, not a grid of tiny independent tap-only buttons.
+It must support readable continuous tracing and precise tap-selection without forcing one input style on every player.
 
-### 6.3 Swipe-path clarity rule
+### 6.3 Path-selection clarity rule
 The player should be able to tell:
 
 - which tile the trace started on
@@ -370,7 +371,7 @@ The player should not have to hunt for it.
 Damage numbers and multiplier feedback should be readable, brief, and not visually overwhelming.
 
 ### 9.4 Current-trace readability
-The currently traced word should remain legible while swiping.
+The currently built word should remain legible while tracing or tap-selecting.
 
 ### 9.5 Board-state readability
 After each cast or creature spell, the player should be able to understand the new board state quickly.
@@ -509,7 +510,7 @@ If a device struggles, the game should degrade:
 before degrading core gameplay readability.
 
 ### 14.3 Input-responsiveness rule
-Swipe interaction must remain responsive on ordinary Android hardware.
+Word-building input must remain responsive on ordinary Android hardware for both tracing and tap selection.
 
 If fancy effects make input feel laggy, the effects are wrong.
 
