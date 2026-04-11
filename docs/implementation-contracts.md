@@ -1051,6 +1051,8 @@ export interface PlayerProfileRecord {
   starter_tutorial_block_state: StarterTutorialBlockState;
   starter_tutorial_completed_stages_json: string; // JSON array of StarterTutorialCueStage values for show-once cues
   starter_tutorial_last_interrupted_stage: StarterTutorialCueStage;
+  cosmetic_currency_balance: number;
+  cosmetic_unlock_records_json: string; // JSON array of CosmeticUnlockRecord values
   created_at_utc: string;
   updated_at_utc: string;
 }
@@ -1069,6 +1071,8 @@ Rules:
 - `starter_tutorial_completed_stages_json` stores show-once completion markers (`cue_01_trace_word`, `cue_02_release_to_cast`, `cue_03_read_countdown`) and must not include event/result-bound cues.
 - `starter_tutorial_block_state` stores whether interruption recovery must reopen a blocking cue before normal interaction.
 - `starter_tutorial_last_interrupted_stage` stores interruption checkpointing for background/kill/resume recovery and should be `'none'` when no cue was active at interruption time.
+- `cosmetic_currency_balance` is the canonical spendable cosmetic soft-currency balance and must be a non-negative integer.
+- `cosmetic_unlock_records_json` stores owned cosmetic unlocks as canonical `CosmeticUnlockRecord[]` and is the profile-side source of truth for cosmetic ownership.
 
 ### 7.2 `player_settings_records`
 
@@ -1186,6 +1190,8 @@ export interface ActiveEncounterSnapshotRecord {
   spark_shuffle_retry_cap: number;
   spark_shuffle_retries_attempted: number;
   spark_shuffle_fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end';
+  cosmetic_currency_balance_snapshot: number;
+  cosmetic_unlock_records_json_snapshot: string; // JSON array of CosmeticUnlockRecord values mirrored from PlayerProfileRecord
   last_surface: AppPrimarySurface;
   created_at_utc: string;
   updated_at_utc: string;
@@ -1200,6 +1206,7 @@ Rules:
 - `rng_stream_states_json` must serialize all required substreams (`board_init`, `board_refill`, `spell_targeting`, `spark_shuffle`)
 - `terminal_reason_code` is required whenever `session_state` is terminal and must preserve recoverable-error reason across warm/cold resume
 - `spark_shuffle_retry_cap`, `spark_shuffle_retries_attempted`, and `spark_shuffle_fallback_outcome` are required restore/debug fields for Spark Shuffle retry-cap traces
+- `cosmetic_currency_balance_snapshot` and `cosmetic_unlock_records_json_snapshot` must mirror the latest persisted profile cosmetic state at snapshot write time.
 - this table stores exact restore truth, not a lossy summary
 - a terminal `session_state` may still remain here briefly until the result screen is acknowledged and cleanup rules run
 - restore must prefer this snapshot over guessed screen history
@@ -1611,6 +1618,13 @@ export interface RuntimeRewardDefinition {
   grantsJournalProgress: 0 | 1;
   grantsCosmeticCurrency: number;
 }
+
+export interface CosmeticUnlockRecord {
+  unlock_id: string;
+  unlock_type: 'avatar_frame' | 'profile_badge' | 'board_vfx' | 'other_profile_cosmetic';
+  cost_currency: number;
+  unlocked_at_utc: string; // ISO-8601 UTC
+}
 ```
 
 Rules:
@@ -1622,6 +1636,10 @@ Rules:
 - challenge reward amounts and challenge cadence caps must follow section 3.3.c.
 - `grantsCosmeticCurrency` must be a non-negative integer and must not exceed the applicable locked reward cap for the claim type.
 - when no reward applies, `RuntimeRewardDefinition` should be `null` rather than using zeroed placeholder values.
+- source-of-truth linkage: the `grantsCosmeticCurrency` accrual field writes directly into `player_profile_records.cosmetic_currency_balance`; implementations must not create alternate spendable cosmetic balance field names for the same economy.
+- spend invariant: cosmetic purchases/unlocks must fail pre-commit if `player_profile_records.cosmetic_currency_balance - cost_currency < 0`.
+- spend invariant: unlock handling must be idempotent by `unlock_id`; retrying an already-owned unlock must not decrement currency again.
+- spend invariant: profile ownership must not contain duplicate `unlock_id` records inside `cosmetic_unlock_records_json`.
 
 ### 8.5 Progression definition contract
 

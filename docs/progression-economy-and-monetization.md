@@ -294,6 +294,16 @@ If monetization is added later, direct purchases are usually safer and clearer t
 ### 7.5 No power currency rule
 The game should not create a currency whose main job is buying wins, extra moves, or overpowering the core campaign.
 
+### 7.6 Cosmetic surface scope (profile-side, optional)
+Cosmetic unlock usage should stay on Profile-side surfaces and remain secondary to battle and mainline progression.
+
+Required scope:
+
+- cosmetic selection and ownership views should live in profile-adjacent UI, not inside active encounter flow
+- cosmetics must not interrupt an active battle with spend prompts, unlock popups, or conversion pressure
+- Home should stay low-clutter; do not add dense cosmetic shop chrome that competes with play-next actions
+- cosmetic systems are optional side engagement and must not become required for ordinary progression clarity
+
 ---
 
 ## 8. Core Economy Boundaries
