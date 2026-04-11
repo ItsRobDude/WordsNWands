@@ -1,0 +1,306 @@
+{
+  "schema_version": "generation_seed_data_v1",
+  "habitat_pools": [
+    {
+      "habitat_pool_id": "habitat_pool_early_access_gentle_v1",
+      "habitats": [
+        {
+          "habitat_theme_id": "habitat_sunspell_meadow_v1",
+          "display_name": "Sunspell Meadow",
+          "tags": ["meadow", "sunlit", "starter_friendly", "soft_nature"],
+          "allowed_board_profile_ids": ["board_profile_starter_onboarding_v1", "board_profile_core_mainline_v1"]
+        },
+        {
+          "habitat_theme_id": "habitat_dewdrop_brook_v1",
+          "display_name": "Dewdrop Brook",
+          "tags": ["brook", "sunlit", "playful", "waterway"],
+          "allowed_board_profile_ids": ["board_profile_core_mainline_v1"]
+        }
+      ]
+    },
+    {
+      "habitat_pool_id": "habitat_pool_meadow_and_brook_v1",
+      "habitats": [
+        {
+          "habitat_theme_id": "habitat_sunspell_meadow_v1",
+          "display_name": "Sunspell Meadow",
+          "tags": ["meadow", "sunlit", "soft_nature"],
+          "allowed_board_profile_ids": ["board_profile_core_mainline_v1"]
+        },
+        {
+          "habitat_theme_id": "habitat_dewdrop_brook_v1",
+          "display_name": "Dewdrop Brook",
+          "tags": ["brook", "playful", "waterway"],
+          "allowed_board_profile_ids": ["board_profile_core_mainline_v1"]
+        },
+        {
+          "habitat_theme_id": "habitat_ripple_reedway_v1",
+          "display_name": "Ripple Reedway",
+          "tags": ["meadow", "brook", "reed", "sunlit"],
+          "allowed_board_profile_ids": ["board_profile_core_mainline_v1"]
+        }
+      ]
+    },
+    {
+      "habitat_pool_id": "habitat_pool_hedgerow_and_grove_v1",
+      "habitats": [
+        {
+          "habitat_theme_id": "habitat_briarblink_hedge_v1",
+          "display_name": "Briarblink Hedge",
+          "tags": ["hedgerow", "bramble", "meadow", "grove"],
+          "allowed_board_profile_ids": ["board_profile_core_mainline_v1"]
+        },
+        {
+          "habitat_theme_id": "habitat_glowfern_grove_v1",
+          "display_name": "Glowfern Grove",
+          "tags": ["grove", "fern", "sunlit", "soft_nature"],
+          "allowed_board_profile_ids": ["board_profile_core_mainline_v1"]
+        }
+      ]
+    }
+  ],
+  "matchup_pair_pools": [
+    {
+      "pair_pool_id": "pair_pool_bubble_gentle_v1",
+      "pairs": [
+        { "weakness": "light", "resistance": "tide" },
+        { "weakness": "storm", "resistance": "tide" }
+      ]
+    },
+    {
+      "pair_pool_id": "pair_pool_soot_standard_v1",
+      "pairs": [
+        { "weakness": "tide", "resistance": "flame" },
+        { "weakness": "storm", "resistance": "flame" }
+      ]
+    },
+    {
+      "pair_pool_id": "pair_pool_freeze_challenging_v1",
+      "pairs": [
+        { "weakness": "flame", "resistance": "bloom" },
+        { "weakness": "light", "resistance": "bloom" }
+      ]
+    },
+    {
+      "pair_pool_id": "pair_pool_shift_row_standard_v1",
+      "pairs": [
+        { "weakness": "storm", "resistance": "tide" },
+        { "weakness": "light", "resistance": "tide" }
+      ]
+    },
+    {
+      "pair_pool_id": "pair_pool_shift_column_standard_v1",
+      "pairs": [
+        { "weakness": "tide", "resistance": "stone" },
+        { "weakness": "bloom", "resistance": "stone" }
+      ]
+    },
+    {
+      "pair_pool_id": "pair_pool_dull_standard_v1",
+      "pairs": [
+        { "weakness": "stone", "resistance": "light" },
+        { "weakness": "bloom", "resistance": "light" }
+      ]
+    }
+  ],
+  "name_banks": [
+    {
+      "bank_id": "name_bank_bubble_gentle_v1",
+      "associated_blueprint_ids": ["bubble_gentle_v1"],
+      "names": ["Puddle Puff", "Bubble Sprite", "Drizzle Hopper", "Mallow Minnow"]
+    },
+    {
+      "bank_id": "name_bank_soot_standard_v1",
+      "associated_blueprint_ids": ["soot_standard_v1"],
+      "names": ["Cinder Cub", "Spark Snuffit", "Ashling Pup", "Ember Mew"]
+    },
+    {
+      "bank_id": "name_bank_freeze_challenging_v1",
+      "associated_blueprint_ids": ["freeze_challenging_v1"],
+      "names": ["Briar Bunny", "Thorn Tumbler", "Hedge Hopper", "Snarlvine Hare"]
+    },
+    {
+      "bank_id": "name_bank_shift_row_standard_v1",
+      "associated_blueprint_ids": ["shift_row_standard_v1"],
+      "names": ["Brookling Otter", "Rill Rascal", "Stream Skipper", "Pebble Paddler"]
+    },
+    {
+      "bank_id": "name_bank_shift_column_standard_v1",
+      "associated_blueprint_ids": ["shift_column_standard_v1"],
+      "names": ["Mossback Mole", "Pebble Pouncer", "Burrow Bobble", "Stonewhisker"]
+    },
+    {
+      "bank_id": "name_bank_dull_standard_v1",
+      "associated_blueprint_ids": ["dull_standard_v1"],
+      "names": ["Glintling", "Dawn Dabbler", "Mirror Moth", "Hushbeam Sprite"]
+    }
+  ],
+  "flavor_banks": [
+    {
+      "bank_id": "flavor_bank_bubble_gentle_v1",
+      "associated_blueprint_ids": ["bubble_gentle_v1"],
+      "lines": [
+        "A splashy little trickster is bobbing magic across the path.",
+        "Bubbles are drifting over the trail, but the mood stays playful.",
+        "A cheerful puddle-creature is sending letters gently afloat."
+      ]
+    },
+    {
+      "bank_id": "flavor_bank_soot_standard_v1",
+      "associated_blueprint_ids": ["soot_standard_v1"],
+      "lines": [
+        "Warm ash is puffing across the board; cool-headed words will help.",
+        "This ember-bright rascal leaves a dusty trail wherever it hops.",
+        "The creature is lively rather than cruel, but its ash still slows sloppy play."
+      ]
+    },
+    {
+      "bank_id": "flavor_bank_freeze_challenging_v1",
+      "associated_blueprint_ids": ["freeze_challenging_v1"],
+      "lines": [
+        "Snaring hedge-magic is tightening around a few letters at a time.",
+        "Bramble tricks are blocking easy paths, so plan your next cast early.",
+        "The creature tangles the board just enough to test careful play."
+      ]
+    },
+    {
+      "bank_id": "flavor_bank_shift_row_standard_v1",
+      "associated_blueprint_ids": ["shift_row_standard_v1"],
+      "lines": [
+        "A playful stream tug keeps nudging one row sideways.",
+        "This watery trickster likes to slide a lane just as you settle in.",
+        "The board stays readable, but the middle flow never quite sits still."
+      ]
+    },
+    {
+      "bank_id": "flavor_bank_shift_column_standard_v1",
+      "associated_blueprint_ids": ["shift_column_standard_v1"],
+      "lines": [
+        "A burrowing shuffle sends one column bobbing out of place.",
+        "This earthy creature jostles a lane upward and asks you to reread fast.",
+        "The board is still fair, but one column keeps hopping to a new rhythm."
+      ]
+    },
+    {
+      "bank_id": "flavor_bank_dull_standard_v1",
+      "associated_blueprint_ids": ["dull_standard_v1"],
+      "lines": [
+        "A haze of glimmer-magic makes bright element plans a little fuzzier.",
+        "This soft glare does not hurt you, but it can flatten an obvious elemental answer.",
+        "The creature blurs certainty just enough to reward flexible word choices."
+      ]
+    }
+  ],
+  "spell_payload_templates": [
+    {
+      "template_id": "bubble_single_tile_gentle_v1",
+      "primitive_kind": "apply_tile_state",
+      "encounter_type": "standard",
+      "parameter_policy": {
+        "tile_state": "bubble",
+        "target_count_min": 1,
+        "target_count_max": 1,
+        "targeting": "random_eligible"
+      }
+    },
+    {
+      "template_id": "bubble_two_tile_gentle_v1",
+      "primitive_kind": "apply_tile_state",
+      "encounter_type": "standard",
+      "parameter_policy": {
+        "tile_state": "bubble",
+        "target_count_min": 2,
+        "target_count_max": 2,
+        "targeting": "random_eligible"
+      }
+    },
+    {
+      "template_id": "soot_two_tile_standard_v1",
+      "primitive_kind": "apply_tile_state",
+      "encounter_type": "standard",
+      "parameter_policy": {
+        "tile_state": "sooted",
+        "target_count_min": 2,
+        "target_count_max": 2,
+        "targeting": "random_eligible"
+      }
+    },
+    {
+      "template_id": "soot_three_tile_standard_v1",
+      "primitive_kind": "apply_tile_state",
+      "encounter_type": "standard",
+      "parameter_policy": {
+        "tile_state": "sooted",
+        "target_count_min": 3,
+        "target_count_max": 3,
+        "targeting": "random_eligible"
+      }
+    },
+    {
+      "template_id": "freeze_three_tile_challenging_v1",
+      "primitive_kind": "apply_tile_state",
+      "encounter_type": "standard",
+      "parameter_policy": {
+        "tile_state": "frozen",
+        "target_count_min": 3,
+        "target_count_max": 3,
+        "targeting": "random_eligible"
+      }
+    },
+    {
+      "template_id": "freeze_four_tile_challenging_v1",
+      "primitive_kind": "apply_tile_state",
+      "encounter_type": "standard",
+      "parameter_policy": {
+        "tile_state": "frozen",
+        "target_count_min": 4,
+        "target_count_max": 4,
+        "targeting": "random_eligible"
+      }
+    },
+    {
+      "template_id": "shift_row_single_step_standard_v1",
+      "primitive_kind": "shift_row",
+      "encounter_type": "standard",
+      "parameter_policy": {
+        "mode": "rotate",
+        "distance": 1,
+        "row_index_strategy": "seeded_visible_rule",
+        "direction_options": [-1, 1]
+      }
+    },
+    {
+      "template_id": "shift_column_single_step_standard_v1",
+      "primitive_kind": "shift_column",
+      "encounter_type": "standard",
+      "parameter_policy": {
+        "mode": "rotate",
+        "distance": 1,
+        "col_index_strategy": "seeded_visible_rule",
+        "direction_options": [-1, 1]
+      }
+    },
+    {
+      "template_id": "dull_two_tile_standard_v1",
+      "primitive_kind": "apply_tile_state",
+      "encounter_type": "standard",
+      "parameter_policy": {
+        "tile_state": "dull",
+        "target_count_min": 2,
+        "target_count_max": 2,
+        "targeting": "random_eligible"
+      }
+    },
+    {
+      "template_id": "dull_three_tile_standard_v1",
+      "primitive_kind": "apply_tile_state",
+      "encounter_type": "standard",
+      "parameter_policy": {
+        "tile_state": "dull",
+        "target_count_min": 3,
+        "target_count_max": 3,
+        "targeting": "random_eligible"
+      }
+    }
+  ]
+}
