@@ -162,6 +162,15 @@ The player-facing flow should emphasize:
 
 Anything else should stay hidden unless it is truly functional and useful.
 
+### Scope lock — hidden bonus word discovery feature
+Hidden bonus word discovery (encounter-bound themed lexicon selection + tiny meta reward) must remain **inactive and hidden** until the milestone that explicitly adopts it in scope docs.
+
+Rules:
+
+- do not silently enable it mid-milestone
+- do not expose UI hints, reward hooks, or analytics events for it before milestone activation
+- activation must be called out in milestone scope + definition-of-done updates in the same change
+
 ---
 
 ## 5. What Should Not Be Built Early

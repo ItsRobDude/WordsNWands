@@ -195,6 +195,7 @@ Early milestones should focus on a compact set such as:
 - `encounter.won`
 - `encounter.lost`
 - `encounter.result_viewed`
+- `encounter.hidden_bonus_word_discovered`
 - `progression.encounter_unlocked`
 - `settings.updated`
 
@@ -243,11 +244,25 @@ Gameplay events should usually include relevant combinations of:
 - matchup result when relevant
 - moves remaining when relevant
 - rejection reason when relevant
+- reward-granted flag for hidden bonus discovery when relevant
 
 ### 7.3 Field-minimization rule
 Do not attach every possible field to every event.
 
 Only include what helps answer the question the event exists for.
+
+### 7.3.a Hidden bonus discovery event contract
+When hidden bonus word flavor is active, emit `encounter.hidden_bonus_word_discovered` only on first successful discovery per encounter session.
+
+Required fields for this event:
+
+- encounter ID
+- encounter session ID
+- encounter seed version lineage (`content_version_pin`, `validation_snapshot_version_pin`, `battle_rules_version_pin`, `board_generator_version_pin`, `reward_constants_version_pin`)
+- `reward_granted` (`0` or `1`)
+
+This event is discovery telemetry only and must not be used to redefine battle outcome semantics.
+
 
 ---
 
