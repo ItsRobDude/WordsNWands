@@ -22,6 +22,17 @@ Rules:
 - Do not advance any one pin without intentional lock update in this file.
 - Runtime records that carry content/version pins must match this lock exactly for M1–M2 content slices.
 
+Payload must look like this (manifest pin block example):
+
+```json
+{
+  "content_version": "content_m2_launch_v1",
+  "validation_snapshot_version": "val_snapshot_m2_launch_v1",
+  "battle_rules_version": "battle_rules_m2_launch_v1",
+  "board_generator_version": "board_generator_m2_launch_v1"
+}
+```
+
 Cross-reference anchors:
 
 - Content package/version discipline: `docs/content-pipeline-and-liveops.md` sections 5, 9, and 11.
@@ -49,6 +60,15 @@ The M1–M2 lock is valid only when the following authored artifacts exist and a
   - `enc_meadow_002`
   - `enc_meadow_003`
 
+Payload must look like this (encounter identity/version block example):
+
+```json
+{
+  "id": "enc_starter_001",
+  "contentVersion": "content_m2_launch_v1"
+}
+```
+
 ### 2.2 Progression artifacts
 
 - Required exact progression artifact filename:
@@ -65,6 +85,15 @@ The M1–M2 lock is valid only when the following authored artifacts exist and a
   3. `enc_meadow_003`
 - No additional mainline encounter IDs may appear before, between, or after this locked sequence in the M1-M2 package.
 
+Payload must look like this (progression file identity block example):
+
+```json
+{
+  "progression_version": "progression_m2_chapter_linear_v1",
+  "starter_encounter_id": "enc_starter_001"
+}
+```
+
 ### 2.3 Validation artifacts
 
 - Required exact validation artifact filename:
@@ -72,6 +101,14 @@ The M1–M2 lock is valid only when the following authored artifacts exist and a
 - Required exact validation snapshot ID/version in payload:
   - `validation_snapshot_version = val_snapshot_m2_launch_v1`
 - Snapshot coverage must include all expected tutorial and chapter-1 intended-valid vocabulary used by authored onboarding/progression fixtures.
+
+Payload must look like this (validation snapshot identity block example):
+
+```json
+{
+  "validation_snapshot_version": "val_snapshot_m2_launch_v1"
+}
+```
 
 ### 2.4 Deterministic fixture artifacts
 
