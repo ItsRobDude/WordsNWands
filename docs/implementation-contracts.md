@@ -810,6 +810,7 @@ Deterministic resolution requirements:
 ### 6.3 Chain interaction contract for eligibility-affecting primitives
 
 If one cast contains multiple primitives that affect eligibility (including `chained` with repeated `apply_tile_state` steps), evaluate in authored order and commit each step before computing the next step's eligible set.
+Within the same chain, once a tile becomes ineligible in an earlier step (same requested state already present or a different negative state already present), later `apply_tile_state` steps cannot select that tile again.
 
 Example:
 
@@ -817,6 +818,7 @@ Example:
 - step 2: `apply_tile_state(tile_state: 'frozen', target_count: 2)`
 
 Step 2 eligibility uses post-shift coordinates, not pre-shift coordinates.
+Post-shift retargeting uses updated coordinates but still enforces the section 6.2 eligibility matrix without bypass.
 
 ### 6.4 Authoring examples for `apply_tile_state` variants
 
