@@ -14,6 +14,7 @@ Current shared-engine implementation status as of 2026-04-11:
 
 - active serialized stream labels are `board_fill_stream_state`, `creature_spell_stream_state`, and `spark_shuffle_stream_state`
 - the current helper uses deterministic counter-based string hashing rather than the approved PCG32/xoroshiro migration target described below
+- the current engine does consume `creature_spell_stream_state` for `random_eligible` creature-spell targeting
 - the current engine does not yet split `board_init` from `board_refill`
 - the current engine does not yet persist or consume `hidden_bonus_word_selection`
 

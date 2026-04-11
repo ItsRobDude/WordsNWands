@@ -265,7 +265,7 @@ export const runEncounterHeadless = ({
           return {
             board: spell_state.board,
             creature,
-            rng_stream_states,
+            rng_stream_states: spell_state.board.rng_stream_states,
           };
         },
         tick_surviving_tile_states: ({ board }) =>

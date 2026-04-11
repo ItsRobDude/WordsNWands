@@ -118,4 +118,8 @@ test("applyCreatureSpell returns a new encounter object without mutating input",
   );
   assert.equal(frozen_tiles.length, 1);
   assert.equal(frozen_tiles[0]?.state_turns_remaining, 2);
+  assert.equal(
+    result.board.rng_stream_states.creature_spell_stream_state,
+    "cs::1",
+  );
 });

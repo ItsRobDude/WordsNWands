@@ -29,6 +29,20 @@ over flashy breadth, premature live-service complexity, or architecture cosplay.
 
 ---
 
+## Status Note
+
+These milestone definitions are target completion criteria, not a claim that the repo has already reached that milestone in every layer.
+
+Current repo status as of 2026-04-11:
+
+- root workspace/setup tooling is in the Milestone 0 foundation shape
+- shared packages (`packages/game-rules`, `packages/validation`, `packages/content`) contain partial Milestone 1-style implementation work
+- `apps/mobile` is still effectively pre-vertical-slice and does not yet satisfy the Milestone 1 app/runtime definition of done
+
+When contributors compare code to this plan, they should treat missing app-layer work as not-yet-built milestone scope unless code or docs explicitly claim the feature is already shipped.
+
+---
+
 ## 1. Core Build Philosophy
 
 Words 'n Wands! should be built in a controlled sequence.
