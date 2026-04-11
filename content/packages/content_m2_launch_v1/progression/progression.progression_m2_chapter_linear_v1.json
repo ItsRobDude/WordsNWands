@@ -1,0 +1,16 @@
+{
+  "progression_version": "progression_m2_chapter_linear_v1",
+  "topology": "chapter_linear_v1",
+  "starter_encounter_id": "enc_starter_001",
+  "chapters": [
+    {
+      "chapter_id": "chapter_1_meadow",
+      "display_name": "Sunspell Meadow",
+      "habitat_theme_id": "habitat_sunspell_meadow_v1",
+      "sort_index": 1,
+      "encounter_ids": [
+        "enc_meadow_001"
+      ]
+    }
+  ]
+}
