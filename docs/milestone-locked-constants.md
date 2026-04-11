@@ -66,6 +66,38 @@ These are default authored move budgets used for initial M2 progression content.
 
 `event` does not have a default M2 campaign move-budget band because event content is out of milestone scope.
 
+### 3.3 Reward and journal constants (locked)
+
+Use these values as the only canonical reward constants for authored content, runtime writes, and player-facing reward messaging.
+
+#### 3.3.a Encounter first-clear rewards
+
+- first-clear cosmetic currency grant: `20`
+- first-clear journal progress increment (if enabled by encounter reward definition): `+1`
+
+#### 3.3.b Star-improvement rewards
+
+- 1-star -> 2-star improvement cosmetic currency grant: `5`
+- 2-star -> 3-star improvement cosmetic currency grant: `10`
+- total lifetime star-improvement cosmetic currency cap per encounter: `15`
+- star-improvement journal progress increment: `0` (none)
+
+#### 3.3.c Challenge reward amounts and caps
+
+- daily challenge completion cosmetic currency grant: `12`
+- weekly challenge completion cosmetic currency grant: `40`
+- daily challenge cosmetic currency cap (UTC day): `24` (max 2 claimed daily challenge rewards)
+- weekly challenge cosmetic currency cap (UTC week): `80` (max 2 claimed weekly challenge rewards)
+- challenge journal progress increment per successful claim: `+1`
+- challenge journal progress cap (UTC week): `3`
+
+#### 3.3.d Journal progression constants
+
+- encounter first-clear journal increment: `+1`
+- challenge claim journal increment: `+1`
+- journal progress points required per creature entry unlock: `3`
+- max journal progress points granted per creature from encounter rewards: `3`
+
 ---
 
 ## 4. Explicit not-in-milestone lists

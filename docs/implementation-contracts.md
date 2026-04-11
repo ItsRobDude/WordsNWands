@@ -316,6 +316,7 @@ export interface EncounterRuntimeState {
   validation_snapshot_version_pin: string;
   battle_rules_version_pin: string;
   board_generator_version_pin: string;
+  reward_constants_version_pin: string;
   damage_model_version: 'damage_model_v1';
 }
 ```
@@ -327,7 +328,7 @@ Rules:
 - `terminal_reason_code` is required whenever `session_state` is terminal, and must be `spark_shuffle_retry_cap_unrecoverable` when `session_state = 'recoverable_error'`
 - `spark_shuffle_retry_cap` must mirror the canonical v1 value (`3`) so restore/debug payloads do not infer hidden constants
 - `spark_shuffle_retries_attempted` and `spark_shuffle_fallback_outcome` must persist the last Spark Shuffle recovery cycle outcome even when encounter terminates
-- the four version pins above are required for restore/debug trust
+- the five version pins above are required for restore/debug trust
 - any change to locked milestone constants in `docs/milestone-locked-constants.md` requires corresponding version-pin updates in this contract file within the same change
 - `damage_model_version` is required for deterministic restore/debug replay and must match the active canonical damage model contract version
 - runtime state should be complete enough that battle resolution does not depend on hidden UI state
@@ -1095,6 +1096,7 @@ export interface EncounterResultRecord {
   validation_snapshot_version_pin: string;
   battle_rules_version_pin: string;
   board_generator_version_pin: string;
+  reward_constants_version_pin: string;
   concluded_at_utc: string;
   acknowledged_locally: 0 | 1;
   created_at_utc: string;
@@ -1128,6 +1130,7 @@ export interface ActiveEncounterSnapshotRecord {
   validation_snapshot_version_pin: string;
   battle_rules_version_pin: string;
   board_generator_version_pin: string;
+  reward_constants_version_pin: string;
   encounter_seed: string;
   rng_algorithm_id: 'pcg32_xsh_rr_64_32' | 'xoroshiro128ss';
   rng_stream_states_json: string;
@@ -1363,6 +1366,16 @@ export interface RuntimeRewardDefinition {
 }
 ```
 
+Rules:
+
+- reward writes and reward UI text must use the locked constants in `docs/milestone-locked-constants.md` section 3.3 (no duplicated ad hoc numeric literals).
+- encounter first-clear currency and journal increments must follow section 3.3.a.
+- star-improvement currency grants and per-encounter cap behavior must follow section 3.3.b.
+- `grantsJournalProgress = 1` means apply the canonical journal increment from section 3.3.d (not an encounter-specific increment amount).
+- challenge reward amounts and challenge cadence caps must follow section 3.3.c.
+- `grantsCosmeticCurrency` must be a non-negative integer and must not exceed the applicable locked reward cap for the claim type.
+- when no reward applies, `RuntimeRewardDefinition` should be `null` rather than using zeroed placeholder values.
+
 ### 8.5 Progression definition contract
 
 ```ts
@@ -1427,6 +1440,7 @@ export interface RuntimeChallengeDefinition {
   validationSnapshotVersionPin: string;
   battleRulesVersionPin: string;
   boardGeneratorVersionPin: string;
+  rewardConstantsVersionPin: string;
   availabilityWindow: {
     startsAtUtc: string;
     endsAtUtc: string;
@@ -1448,6 +1462,7 @@ export interface RuntimeChallengeBundleManifest {
   contentVersionPin: string;
   validationSnapshotVersionPin: string;
   battleRulesVersionPin: string;
+  rewardConstantsVersionPin: string;
 }
 
 export interface RuntimeMirrorCompetitionDefinition {
@@ -1459,6 +1474,7 @@ export interface RuntimeMirrorCompetitionDefinition {
   validationSnapshotVersionPin: string;
   battleRulesVersionPin: string;
   boardGeneratorVersionPin: string;
+  rewardConstantsVersionPin: string;
   cluePolicy: 'disabled' | 'shared_budget' | 'own_budget';
   rankingRulesRef: string;
 }
@@ -1481,6 +1497,8 @@ Rules:
 
 - post-M2 challenge and competition contracts are additive and must not redefine M1-M2 encounter runtime semantics
 - `sourceEncounterId` and `encounterId` must resolve to a valid `RuntimeEncounterDefinition.id`
+- `rewardDefinition` amounts for `daily` and `weekly` challenges must use the exact locked values in `docs/milestone-locked-constants.md` section 3.3.c
+- runtime claim services must enforce the UTC daily/weekly reward caps from section 3.3.c before persisting currency or journal progress writes
 - `sharedSeed` is fairness-critical and must be immutable once a competition becomes active
 - all post-M2 challenge and competition payloads must preserve explicit version pins to support replayability, auditability, and deterministic dispute review
 
@@ -1806,6 +1824,7 @@ export interface CanonicalGameplayAnalyticsFields {
   validation_snapshot_version_pin: string | null;
   battle_rules_version_pin: string | null;
   board_generator_version_pin: string | null;
+  reward_constants_version_pin: string | null;
   competition_shared_seed: string | null;
   word_length: number | null;
   element: ElementType | null;
@@ -1850,7 +1869,7 @@ Required behavior:
 - `encounter_terminal_reason_code = 'spark_shuffle_retry_cap_unrecoverable'` is required on terminal analytics events emitted from a `recoverable_error` encounter end
 - all `challenge.*` events must include `challenge_id`; if emitted from a bundle context they must also include `challenge_bundle_id`
 - all `competition.*` events must include `competition_id`, ranking dimensions (`ranking_dimension_primary`, `ranking_dimension_secondary`), and final rank/tie fields when available
-- competition analytics payloads must always preserve `content_version_pin`, `validation_snapshot_version_pin`, `battle_rules_version_pin`, `board_generator_version_pin`, and `competition_shared_seed` for fairness audits
+- competition analytics payloads must always preserve `content_version_pin`, `validation_snapshot_version_pin`, `battle_rules_version_pin`, `board_generator_version_pin`, `reward_constants_version_pin`, and `competition_shared_seed` for fairness audits
 
 ---
 

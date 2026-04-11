@@ -202,10 +202,14 @@ First clear is an especially useful reward trigger.
 
 It should be recognized clearly because it gives the player a sense of forward movement.
 
+Concrete first-clear reward amounts are locked in `docs/milestone-locked-constants.md` section 3.3.a.
+
 ### 5.3 Star-improvement rewards
 Improving a previous result may also produce a small reward or recognition moment.
 
 This encourages replay without making replay feel mandatory.
+
+Concrete star-improvement reward amounts and per-encounter caps are locked in `docs/milestone-locked-constants.md` section 3.3.b.
 
 ### 5.4 Journal rewards
 Creature or collection progress should feel like a nice side payoff, not a second job.
@@ -542,6 +546,8 @@ Journal progress may later unlock:
 - habitat completion marks
 - profile customization items
 
+Journal increment sizes and unlock thresholds are locked in `docs/milestone-locked-constants.md` section 3.3.d.
+
 ### 10.3 Journal restraint rule
 The journal should not become a second giant game system with its own tangled economy.
 
@@ -561,6 +567,8 @@ Daily/weekly challenge rewards should be:
 - nice-to-have
 - side-grade in emotional value
 - not required for core power
+
+Concrete daily/weekly challenge reward amounts and cadence caps are locked in `docs/milestone-locked-constants.md` section 3.3.c.
 
 ### 11.3 Acceptable reward examples later
 - small cosmetic currency
