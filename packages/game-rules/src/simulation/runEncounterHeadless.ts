@@ -9,7 +9,10 @@ import type {
   EncounterSessionState,
   EncounterTerminalReasonCode,
 } from "../contracts/core.ts";
+import { collapseColumns } from "../board/collapseColumns.ts";
+import { consumeTiles } from "../board/consumeTiles.ts";
 import { hasPlayableWord } from "../board/hasPlayableWord.ts";
+import { refillBoard } from "../board/refillBoard.ts";
 import { applyCastSubmission } from "../encounter/applyCastSubmission.ts";
 import { applyCountdownStep } from "../encounter/applyCountdownStep.ts";
 import { createEncounterRuntimeState } from "../encounter/createEncounterRuntimeState.ts";
@@ -134,12 +137,20 @@ export const runEncounterHeadless = ({
             return tile?.special_marker === "wand";
           }),
         }),
-        consume_tiles: ({ board }) => board,
-        collapse_columns: ({ board }) => board,
-        refill_board: ({ board, rng_stream_states }) => ({
-          board,
-          rng_stream_states,
-        }),
+        consume_tiles: ({ board, submission }) =>
+          consumeTiles({
+            board,
+            submission,
+          }),
+        collapse_columns: ({ board }) =>
+          collapseColumns({
+            board,
+          }),
+        refill_board: ({ board, rng_stream_states }) =>
+          refillBoard({
+            board,
+            rng_stream_states,
+          }),
         compute_damage: ({ cast_resolution, encounter_state }) => ({
           cast_resolution,
           creature: {
@@ -259,14 +270,6 @@ const applyPostCastProgression = (input: {
     casts_resolved_count: input.previous.casts_resolved_count + 1,
   };
 
-  if (input.did_hit_unrecoverable_dead_board) {
-    return {
-      ...updated_after_valid,
-      session_state: "recoverable_error",
-      terminal_reason_code: "spark_shuffle_retry_cap_unrecoverable",
-    };
-  }
-
   if (updated_after_valid.creature.hp_current === 0) {
     return {
       ...updated_after_valid,
@@ -283,6 +286,14 @@ const applyPostCastProgression = (input: {
       ...updated_after_valid,
       session_state: "lost",
       terminal_reason_code: "moves_exhausted",
+    };
+  }
+
+  if (input.did_hit_unrecoverable_dead_board) {
+    return {
+      ...updated_after_valid,
+      session_state: "recoverable_error",
+      terminal_reason_code: "spark_shuffle_retry_cap_unrecoverable",
     };
   }
 

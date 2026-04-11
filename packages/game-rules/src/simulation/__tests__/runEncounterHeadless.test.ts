@@ -94,6 +94,7 @@ test("runEncounterHeadless terminal reason semantics parity for won, lost, and r
   const recoverableError = runEncounterHeadless({
     encounter: {
       ...firstStandardEncounterFixture,
+      move_budget_total: 2,
       validation: {
         validation_lookup: {
           snapshot_version: "test",

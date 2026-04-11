@@ -12,6 +12,7 @@ export * from "./damage/damageModelV1.js";
 
 export * from "./board/createInitialBoard.js";
 export * from "./board/collapseColumns.js";
+export * from "./board/consumeTiles.js";
 export * from "./board/refillBoard.js";
 export * from "./board/applyBubbleRise.js";
 export * from "./board/hasPlayableWord.js";
