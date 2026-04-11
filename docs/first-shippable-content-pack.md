@@ -13,6 +13,12 @@ This document is intentionally smaller than the full long-term content roadmap.
 It does **not** replace broader Milestone 2 planning constants.
 It defines the first shippable, trust-building content slice inside the currently locked early-content lineage.
 
+### Normative precedence
+
+- `docs/implementation-contracts.md` and `docs/milestone-locked-constants.md` remain authoritative for runtime schema/version pins.
+- This document is authoritative for first external-quality content composition and acceptance framing.
+- Any conflicts must be resolved using the standard conflict template in `AGENTS.md`.
+
 Use this together with:
 
 - `docs/early-content-lock.md`
