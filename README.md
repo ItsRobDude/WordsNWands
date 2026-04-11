@@ -48,3 +48,6 @@ When docs conflict, resolve deliberately and document the decision with the conf
 - Do not add heavy dependencies without clear justification.
 - Do not treat unfinished ideas as shipped behavior.
 - Do not prioritize cleverness over readability, determinism, and player trust.
+
+The product philosophy, identity framing, and design intent have been moved into a dedicated appendix document to keep this README focused on operational guidance.
+Read `docs/project-identity.md` for the full vision, design pillars, and identity boundaries that should shape product decisions.
