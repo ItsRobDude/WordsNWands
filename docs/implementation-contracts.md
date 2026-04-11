@@ -1609,6 +1609,7 @@ Load-time requirements:
 
 - missing any required field above is a hard load failure (`schema_invalid`)
 - `content_version`, `validation_snapshot_version`, `battle_rules_version`, and `board_generator_version` must match active runtime pins before activation (`version_pin_mismatch` on failure)
+- For active M1-M2 content, runtime pins must match docs/early-content-lock.md section 1 canonical versions exactly.
 - `schema_versions.*` identifiers must match known runtime-supported schema IDs (`schema_invalid` on failure)
 - loaders must validate manifest first, then creature/encounter/snapshot payloads; do not partially activate package content on manifest failure
 
@@ -2252,6 +2253,7 @@ Rules:
 - the next mainline encounter for unlock purposes is derived only from that canonical order
 - boss encounters may appear in mainline chapter order
 - event encounters do not gate mainline progression by default in Milestone 2
+- for the active M1-M2 lock, `progression_version` must be `progression_m2_chapter_linear_v1`
 
 ### 8.6 Phase rule contract *(Active in M2)*
 

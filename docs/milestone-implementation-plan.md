@@ -370,6 +370,7 @@ At minimum:
 - unit tests for win/loss transitions
 - unit tests for encounter snapshot serialization and restoration
 - integration tests for startup routing into first-time flow, Home, active encounter, and result state
+- startup routing integration tests must explicitly assert starter-gate truth using `has_completed_starter_encounter`
 
 ### Required manual checks before Milestone 1 is complete
 At minimum:
