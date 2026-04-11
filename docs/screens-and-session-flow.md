@@ -548,6 +548,10 @@ When the player casts a valid word, the resolution should happen in a stable, re
 9. if countdown expires, creature spell resolves
 10. player regains control
 
+Sequencing clarification (loss edge case):
+
+- If a valid cast leaves the creature alive, drops countdown to `0`, and also spends the final remaining move, the creature spell in step 9 still resolves first; only after that resolution is complete should the encounter finalize to loss/result.
+
 ### Animation clarity rule
 Even if the animations are polished, the resolution order must remain easy to follow.
 
@@ -575,6 +579,10 @@ If the countdown reaches zero and the creature survives the player’s cast:
 4. countdown resets
 5. the updated board is clearly visible
 6. player regains control
+
+Terminal-result ordering lock:
+
+- A move-budget loss triggered by the same cast does not bypass this sequence. The spell presentation/effect completes first, then the game transitions to the loss result.
 
 ### Readability rule
 The player must be able to understand:
