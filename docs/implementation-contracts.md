@@ -1200,6 +1200,8 @@ export interface ActiveEncounterSnapshotRecord {
   spark_shuffle_retry_cap: number;
   spark_shuffle_retries_attempted: number;
   spark_shuffle_fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end';
+  assist_policy_version: 'assist_policy_v1' | null;
+  active_assist_state_json: string | null; // serialized ActiveEncounterAssistState for current attempt
   cosmetic_currency_balance_snapshot: number;
   cosmetic_unlock_records_json_snapshot: string; // JSON array of CosmeticUnlockRecord values mirrored from PlayerProfileRecord
   last_surface: AppPrimarySurface;
@@ -1216,6 +1218,7 @@ Rules:
 - `rng_stream_states_json` must serialize all required substreams (`board_init`, `board_refill`, `spell_targeting`, `spark_shuffle`)
 - `terminal_reason_code` is required whenever `session_state` is terminal and must preserve recoverable-error reason across warm/cold resume
 - `spark_shuffle_retry_cap`, `spark_shuffle_retries_attempted`, and `spark_shuffle_fallback_outcome` are required restore/debug fields for Spark Shuffle retry-cap traces
+- `assist_policy_version` and `active_assist_state_json` are required once repeated-loss assist state exists for an attempt and must preserve one-attempt assist behavior across warm/cold restore.
 - `cosmetic_currency_balance_snapshot` and `cosmetic_unlock_records_json_snapshot` must mirror the latest persisted profile cosmetic state at snapshot write time.
 - this table stores exact restore truth, not a lossy summary
 - a terminal `session_state` may still remain here briefly until the result screen is acknowledged and cleanup rules run
@@ -1366,6 +1369,18 @@ export interface EncounterAssistRuntimePolicyConfig {
   assist_star_cap_behavior: AssistStarCapBehavior;
 }
 
+export interface EasierVariantMechanicalOverrides {
+  move_budget_delta?: 0 | 1; // additive to encounter move budget for assisted attempt
+  countdown_delta?: -1 | 0; // additive to creature countdown floor-clamped to 1
+}
+
+export interface ActiveEncounterAssistState {
+  active_level: EncounterAssistLevel | null;
+  tip_copy_id: string | null; // stable copy key for loss-#2 one-time strategy tip
+  tip_text: string | null; // optional resolved fallback copy payload when id lookup is unavailable
+  mechanical_overrides: EasierVariantMechanicalOverrides | null;
+}
+
 export interface MilestoneAssistRuntimeConfigMap {
   M1: EncounterAssistRuntimePolicyConfig;
   M2: EncounterAssistRuntimePolicyConfig;
@@ -1406,7 +1421,22 @@ export const MILESTONE_ASSIST_RUNTIME_CONFIG: MilestoneAssistRuntimeConfigMap = 
 Rules:
 
 - Runtime assist behavior must be selected from `MILESTONE_ASSIST_RUNTIME_CONFIG` and must not be hardcoded ad hoc in UI or encounter logic.
-- `assist_policy_version` must be persisted with encounter session snapshots once assist state is present so restores replay the same policy contract.
+- This section is the implementation-level runtime counterpart to `docs/creature-and-encounter-rules.md` section **"Repeated-loss assistance contract (encounter layer)"**; both docs must stay semantically aligned.
+- Runtime must materialize `ActiveEncounterAssistState` per encounter attempt; this state is reset/recomputed when a new attempt begins.
+- loss-#2 (`tip_only`) contract: `active_level = 'tip_only'`, exactly one of (`tip_copy_id`, `tip_text`) should be populated for that attempt-level payload, and `mechanical_overrides` must remain `null`.
+- loss-#3 (`gentle_board_bias`) contract is deterministic and one-attempt scoped:
+  - allowed parameter change: temporarily raise `RuntimeBoardConfig.boardQualityPolicy.minVowelClassCount` by `+1` for that attempt only.
+  - clamp rule: effective value is `min(baseMinVowelClassCount + 1, rows * cols)` where base comes from authored encounter runtime config.
+  - scope rule: applies to **`board_init` generation only** for the assisted attempt; `board_refill` acceptance rules/thresholds remain exactly as authored baseline.
+  - RNG lineage rule: quality-gate retries caused by this temporary threshold must consume additional draws from `board_init` only, preserve the same `board_init` substream lineage, and must not consume/borrow from `board_refill`, `spell_targeting`, or `spark_shuffle`.
+- loss-#4 (`easier_variant`) contract is deterministic and one-attempt scoped:
+  - `mechanical_overrides` allows only `move_budget_delta` and `countdown_delta`; other keys are invalid.
+  - bounds: `move_budget_delta` allowed values are `0 | 1`; `countdown_delta` allowed values are `-1 | 0`.
+  - stacking rule: within one attempt, each override key is applied at most once; values are not cumulatively stacked across multiple assists/prompts.
+  - application rule: `effective_move_budget = authored_move_budget + move_budget_delta`; `effective_countdown = max(1, authored_countdown + countdown_delta)`.
+  - expiry rule: overrides expire immediately after that assisted attempt resolves (win/loss/recoverable terminal), and future attempts must recompute eligibility from repeated-loss thresholds.
+  - restore/replay rule: assisted attempts must remain deterministic and restorable using persisted snapshot payloads plus pinned versions; restores must not re-roll or reinterpret override values.
+- `assist_policy_version` and serialized `ActiveEncounterAssistState` must be persisted in `active_encounter_snapshots` (section 7.5) once assist state is present so restores replay the same policy contract.
 - Star-cap resolution for an encounter must apply the minimum cap implied by all assists used in that run.
 - If a level is missing from `enabled_assist_levels`, runtime must treat that level as unavailable even if UI copy exists.
 - `M3_PLUS` is the canonical config for Milestone 3 and every later milestone unless this contract is intentionally revised.
