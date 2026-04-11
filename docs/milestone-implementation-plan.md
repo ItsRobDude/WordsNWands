@@ -433,6 +433,7 @@ At minimum:
 - progression does not clutter the app
 - a returning player can quickly understand what to do next
 - the game still feels warm and family-friendly rather than stressful
+- first external-quality shippable readiness checks must be evaluated against `docs/first-shippable-content-pack.md` as the acceptance framing source
 
 ---
 
