@@ -218,7 +218,7 @@ This rule is a deliberate tone and stress-level choice.
 
 ---
 
-## 5. Board Rules
+## 5. Board and Tile Rules
 
 The battle board is one of the most important trust systems in Words 'n Wands!.
 
@@ -254,11 +254,39 @@ When a word is successfully cast:
 
 1. the selected letters are consumed
 2. the selected tiles disappear
-3. tiles above fall downward into empty spaces
-4. new letters enter from the top
-5. the board returns to a full 6x6 state
+3. within each column, surviving tiles collapse strictly vertically into empty spaces (row index increases downward from row `0` at top to row `5` at bottom)
+4. empty columns do **not** pull neighboring columns horizontally; no sideways gravity occurs during normal collapse/refill
+5. after vertical collapse, each column refills itself by spawning new letters from row `0` downward within that same column until all empty slots are filled
+6. the board returns to a full 6x6 state
 
 This resolution order must remain consistent.
+
+### Column movement constraint (normal gravity)
+Outside explicitly documented creature spell primitives, board movement from cast resolution is column-local only:
+
+- collapse is vertical only
+- refill is vertical only
+- no horizontal column slide is allowed
+
+Movement exceptions are creature-driven and must use the row/column spell primitives in **Section 12, “Row/column movement effects.”**
+
+### Worked example: fully emptied single column after cast
+Single-column view with row `0` at top and row `5` at bottom.
+
+- after letter consumption, column `C2` is fully empty at rows `0..5`
+- no other column moves sideways into `C2`
+- refill then spawns six new letters only in `C2`, from row `0` downward until row `5` is filled
+
+Example refill outcome for `C2`:
+
+- row `0` = `T`
+- row `1` = `A`
+- row `2` = `R`
+- row `3` = `E`
+- row `4` = `N`
+- row `5` = `L`
+
+Any sideways movement in this situation is invalid unless a creature spell explicitly applies a row/column shift primitive.
 
 ### Board readability rule
 The player should always be able to understand:
@@ -320,8 +348,8 @@ Every successful player turn follows this exact order.
 3. The game determines the word’s element.
 4. The game checks whether the word includes a Wand tile.
 5. The letters are consumed and disappear.
-6. The board collapses downward.
-7. New letters refill from the top.
+6. The board collapses strictly downward within each affected column (no horizontal slide).
+7. New letters refill from row `0` downward inside each column until all empty slots are filled.
 8. Damage is calculated.
 9. Damage is applied to the creature.
 10. If the creature reaches zero HP, the encounter ends immediately in victory.
@@ -334,6 +362,8 @@ Every successful player turn follows this exact order.
 17. Control returns to the player.
 
 This order must remain consistent.
+
+Normal turn-flow gravity/refill in steps 6-7 is column-local only. Any row/column displacement beyond this flow must come from creature spell primitives described in Section 12, “Row/column movement effects.”
 
 ### Victory-interrupt rule
 If the creature is defeated by the player’s word:
