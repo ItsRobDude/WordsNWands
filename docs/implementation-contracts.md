@@ -1892,7 +1892,7 @@ Rules:
 - `clue_charges_available` is decremented only on successful clue action commit.
 - `clue_uses_*` counters are per-encounter counters and reset on fresh run creation.
 - `clue_cooldown_successful_casts_remaining` tracks cooldown in units of successful valid casts.
-- `clue_star_cap_from_usage` is null before clue use; then records strict cap (`2` after `reveal_starter_letter` or `highlight_legal_path`, `1` after `reroll_local_tiles`) and always resolves to the minimum cap seen so far.
+- `clue_star_cap_from_usage` is null before clue use; then records strict cap values that mirror `docs/milestone-locked-constants.md` section 3.3.e exactly (`reveal_starter_letter`/`highlight_legal_path` -> cap `2`, `reroll_local_tiles` -> cap `1`) and always resolves to the minimum cap seen so far.
 
 Canonical deterministic candidate-selection contract for:
 - `reveal_starter_letter`
@@ -1966,9 +1966,10 @@ export interface PlayerClueEconomyState {
 
 Rules:
 
-- runtime must enforce daily earn cap `3`, daily purchase cap `3`, and inventory cap `9`.
+- runtime must enforce daily earn cap, daily purchase cap, and inventory cap exactly as locked in `docs/milestone-locked-constants.md` section 3.3.e.
 - cap logic is UTC-date keyed and must not rely on local device timezone interpretation.
 - paid and non-paid clue charges draw from the same encounter runtime budget constraints.
+- If clue-economy lock values change, update `docs/milestone-locked-constants.md` section 3.3.e first, then mirror the updated values here in the same change.
 
 #### 8.2.b Encounter balance metadata and waiver contract
 
