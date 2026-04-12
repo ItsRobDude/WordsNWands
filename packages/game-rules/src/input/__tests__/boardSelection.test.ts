@@ -241,6 +241,68 @@ test("trace payload ignores out-of-order timestamps, mismatched pointers, and ou
   ]);
 });
 
+test("trace payload preserves diagonal swipes and supports immediate backtracking", () => {
+  const started = applyTraceSelectionPayload({
+    candidate: createEmptyBoardSelectionCandidate(),
+    payload: {
+      trace_id: "trace-4",
+      phase: "start",
+      samples: [{ pointer_id: 2, x_px: 10, y_px: 10, t_ms: 1 }],
+    },
+    bounds: {
+      board_left_px: 0,
+      board_top_px: 0,
+      board_width_px: 180,
+      board_height_px: 180,
+      rows: 3,
+      cols: 3,
+    },
+  });
+
+  const moved = applyTraceSelectionPayload({
+    candidate: started.candidate,
+    payload: {
+      trace_id: "trace-4",
+      phase: "move",
+      samples: [
+        { pointer_id: 2, x_px: 70, y_px: 70, t_ms: 2 },
+        { pointer_id: 2, x_px: 130, y_px: 130, t_ms: 3 },
+        { pointer_id: 2, x_px: 70, y_px: 70, t_ms: 4 },
+      ],
+    },
+    bounds: {
+      board_left_px: 0,
+      board_top_px: 0,
+      board_width_px: 180,
+      board_height_px: 180,
+      rows: 3,
+      cols: 3,
+    },
+  });
+
+  const ended = applyTraceSelectionPayload({
+    candidate: moved.candidate,
+    payload: {
+      trace_id: "trace-4",
+      phase: "end",
+      samples: [],
+    },
+    bounds: {
+      board_left_px: 0,
+      board_top_px: 0,
+      board_width_px: 180,
+      board_height_px: 180,
+      rows: 3,
+      cols: 3,
+    },
+  });
+
+  assert.deepEqual(ended.committed_selection, [
+    { row: 0, col: 0 },
+    { row: 1, col: 1 },
+  ]);
+});
+
 test("blocked or cancelled input clears candidate state without committing", () => {
   let candidate: BoardSelectionCandidate = createEmptyBoardSelectionCandidate();
   candidate = applyTapSelectionPosition({

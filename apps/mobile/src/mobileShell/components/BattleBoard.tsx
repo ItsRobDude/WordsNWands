@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { useMemo, useRef } from "react";
+import { Text, View } from "react-native";
 
 import type {
   BoardPosition,
@@ -13,11 +13,9 @@ import type { TileTouchFrame } from "../screens/boardTouch.ts";
 export function BattleBoard(props: {
   state: EncounterRuntimeState;
   selected_path: readonly BoardPosition[];
-  on_tile_press: (tile: BoardTile) => void;
   on_tile_layout?: (frame: TileTouchFrame) => void;
 }): JSX.Element[] {
   const selectedKeys = new Set(props.selected_path.map(toPositionKey));
-  const [rowOffsets, setRowOffsets] = useState<Record<number, number>>({});
   const tilesByPosition = useMemo(
     () =>
       new Map(
@@ -30,21 +28,7 @@ export function BattleBoard(props: {
   );
 
   return Array.from({ length: props.state.board.height }, (_, rowIndex) => (
-    <View
-      key={`row-${rowIndex}`}
-      style={styles.boardRow}
-      onLayout={(event) => {
-        const nextOffset = event.nativeEvent.layout.y;
-        setRowOffsets((current) =>
-          current[rowIndex] === nextOffset
-            ? current
-            : {
-                ...current,
-                [rowIndex]: nextOffset,
-              },
-        );
-      }}
-    >
+    <View key={`row-${rowIndex}`} style={styles.boardRow}>
       {Array.from({ length: props.state.board.width }, (_, colIndex) => {
         const tile = tilesByPosition.get(`${rowIndex}:${colIndex}`);
 
@@ -61,7 +45,6 @@ export function BattleBoard(props: {
             key={tile.id}
             tile={tile}
             is_selected={isSelected}
-            on_tile_press={props.on_tile_press}
             on_tile_layout={
               props.on_tile_layout
                 ? (frame) =>
@@ -69,8 +52,6 @@ export function BattleBoard(props: {
                       ...frame,
                       row: rowIndex,
                       col: colIndex,
-                      tile_top_px:
-                        frame.tile_top_px + (rowOffsets[rowIndex] ?? 0),
                     })
                 : undefined
             }
@@ -84,18 +65,34 @@ export function BattleBoard(props: {
 function BattleTile(props: {
   tile: BoardTile;
   is_selected: boolean;
-  on_tile_press: (tile: BoardTile) => void;
   on_tile_layout?: (frame: Omit<TileTouchFrame, "row" | "col">) => void;
 }): JSX.Element {
+  const tileRef = useRef<View | null>(null);
+
   return (
-    <Pressable
-      onPress={() => props.on_tile_press(props.tile)}
+    <View
+      ref={(node) => {
+        tileRef.current = node;
+      }}
       onLayout={(event) => {
-        props.on_tile_layout?.({
+        const fallbackFrame = {
           tile_left_px: event.nativeEvent.layout.x,
           tile_top_px: event.nativeEvent.layout.y,
           tile_width_px: event.nativeEvent.layout.width,
           tile_height_px: event.nativeEvent.layout.height,
+        };
+        if (!tileRef.current) {
+          props.on_tile_layout?.(fallbackFrame);
+          return;
+        }
+
+        tileRef.current.measureInWindow((left, top, width, height) => {
+          props.on_tile_layout?.({
+            tile_left_px: left,
+            tile_top_px: top,
+            tile_width_px: width || fallbackFrame.tile_width_px,
+            tile_height_px: height || fallbackFrame.tile_height_px,
+          });
         });
       }}
       style={[
@@ -112,7 +109,7 @@ function BattleTile(props: {
           </Text>
         ) : null}
       </View>
-    </Pressable>
+    </View>
   );
 }
 

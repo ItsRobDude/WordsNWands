@@ -20,7 +20,7 @@ export interface TileTouchFrame {
 }
 
 export interface BoardTouchNativeEvent {
-  identifier?: number;
+  identifier?: number | string;
   pageX?: number;
   pageY?: number;
   locationX?: number;
@@ -31,7 +31,7 @@ export interface BoardTouchNativeEvent {
 }
 
 export interface BoardTouchPoint {
-  identifier?: number;
+  identifier?: number | string;
   pageX?: number;
   pageY?: number;
   locationX?: number;
@@ -66,7 +66,7 @@ export const createTraceSampleFromNativeEvent = (input: {
   }
 
   return {
-    pointer_id: point.identifier ?? 0,
+    pointer_id: typeof point.identifier === "number" ? point.identifier : 0,
     x_px: localPoint.x_px,
     y_px: localPoint.y_px,
     t_ms: point.timestamp ?? Date.now(),
@@ -121,34 +121,20 @@ export const resolveBoardPositionFromTileFrames = (input: {
   edge_slop_px?: number;
 }): { row: number; col: number } | null => {
   const edgeSlopPx = input.edge_slop_px ?? 10;
-  let bestMatch: TileTouchFrame | null = null;
-  let bestDistance = Number.POSITIVE_INFINITY;
-
-  for (const tileFrame of input.tile_frames) {
-    const insideX =
-      input.point.x_px >= tileFrame.tile_left_px - edgeSlopPx &&
-      input.point.x_px <=
-        tileFrame.tile_left_px + tileFrame.tile_width_px + edgeSlopPx;
-    const insideY =
-      input.point.y_px >= tileFrame.tile_top_px - edgeSlopPx &&
-      input.point.y_px <=
-        tileFrame.tile_top_px + tileFrame.tile_height_px + edgeSlopPx;
-    if (!insideX || !insideY) {
-      continue;
-    }
-
-    const centerX = tileFrame.tile_left_px + tileFrame.tile_width_px / 2;
-    const centerY = tileFrame.tile_top_px + tileFrame.tile_height_px / 2;
-    const distance = Math.hypot(
-      input.point.x_px - centerX,
-      input.point.y_px - centerY,
-    );
-
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      bestMatch = tileFrame;
-    }
-  }
+  const exactMatch = selectClosestTileFrame({
+    point: input.point,
+    tile_frames: input.tile_frames,
+    edge_slop_px: 0,
+  });
+  const bestMatch =
+    exactMatch ??
+    (edgeSlopPx > 0
+      ? selectClosestTileFrame({
+          point: input.point,
+          tile_frames: input.tile_frames,
+          edge_slop_px: edgeSlopPx,
+        })
+      : null);
 
   if (!bestMatch) {
     return null;
@@ -207,6 +193,96 @@ const resolveBoardTouchPoint = (
   nativeEvent: BoardTouchNativeEvent,
 ): BoardTouchPoint =>
   nativeEvent.changedTouches?.[0] ?? nativeEvent.touches?.[0] ?? nativeEvent;
+
+const selectClosestTileFrame = (input: {
+  point: { x_px: number; y_px: number };
+  tile_frames: readonly TileTouchFrame[];
+  edge_slop_px: number;
+}): TileTouchFrame | null => {
+  let bestMatch: TileTouchFrame | null = null;
+  let bestRectDistance = Number.POSITIVE_INFINITY;
+  let bestCenterDistance = Number.POSITIVE_INFINITY;
+
+  for (const tileFrame of input.tile_frames) {
+    if (
+      !isPointWithinExpandedTileFrame({
+        point: input.point,
+        tile_frame: tileFrame,
+        edge_slop_px: input.edge_slop_px,
+      })
+    ) {
+      continue;
+    }
+
+    const rectDistance = distanceFromPointToTileFrame({
+      point: input.point,
+      tile_frame: tileFrame,
+    });
+    const centerDistance = distanceFromPointToTileCenter({
+      point: input.point,
+      tile_frame: tileFrame,
+    });
+
+    if (
+      rectDistance < bestRectDistance ||
+      (rectDistance === bestRectDistance && centerDistance < bestCenterDistance)
+    ) {
+      bestMatch = tileFrame;
+      bestRectDistance = rectDistance;
+      bestCenterDistance = centerDistance;
+    }
+  }
+
+  return bestMatch;
+};
+
+const isPointWithinExpandedTileFrame = (input: {
+  point: { x_px: number; y_px: number };
+  tile_frame: TileTouchFrame;
+  edge_slop_px: number;
+}): boolean =>
+  input.point.x_px >= input.tile_frame.tile_left_px - input.edge_slop_px &&
+  input.point.x_px <=
+    input.tile_frame.tile_left_px +
+      input.tile_frame.tile_width_px +
+      input.edge_slop_px &&
+  input.point.y_px >= input.tile_frame.tile_top_px - input.edge_slop_px &&
+  input.point.y_px <=
+    input.tile_frame.tile_top_px +
+      input.tile_frame.tile_height_px +
+      input.edge_slop_px;
+
+const distanceFromPointToTileFrame = (input: {
+  point: { x_px: number; y_px: number };
+  tile_frame: TileTouchFrame;
+}): number => {
+  const dx = Math.max(
+    input.tile_frame.tile_left_px - input.point.x_px,
+    0,
+    input.point.x_px -
+      (input.tile_frame.tile_left_px + input.tile_frame.tile_width_px),
+  );
+  const dy = Math.max(
+    input.tile_frame.tile_top_px - input.point.y_px,
+    0,
+    input.point.y_px -
+      (input.tile_frame.tile_top_px + input.tile_frame.tile_height_px),
+  );
+
+  return Math.hypot(dx, dy);
+};
+
+const distanceFromPointToTileCenter = (input: {
+  point: { x_px: number; y_px: number };
+  tile_frame: TileTouchFrame;
+}): number => {
+  const centerX =
+    input.tile_frame.tile_left_px + input.tile_frame.tile_width_px / 2;
+  const centerY =
+    input.tile_frame.tile_top_px + input.tile_frame.tile_height_px / 2;
+
+  return Math.hypot(input.point.x_px - centerX, input.point.y_px - centerY);
+};
 
 const resolveLocalBoardTouchPoint = (input: {
   point: BoardTouchPoint;

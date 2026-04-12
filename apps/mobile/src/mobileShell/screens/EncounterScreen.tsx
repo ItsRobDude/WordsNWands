@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Text, View } from "react-native";
+import { PanResponder, Text, View } from "react-native";
 
 import type {
   BoardPosition,
@@ -17,9 +17,7 @@ import {
   createPageTouchPointFromNativeEvent,
   resolveBoardPositionFromTileFrames,
   sampleBoardPositionsFromTileFrames,
-  shouldActivateTraceGesture,
   type BoardTouchNativeEvent,
-  type BoardTouchFrame,
   type TileTouchFrame,
 } from "./boardTouch.ts";
 import { resolvePauseExitLabel } from "./screenFlow.ts";
@@ -45,15 +43,11 @@ export function EncounterScreen(props: {
   on_clear_selection: MobileAppStoreState["actions"]["clearSelection"];
   on_submit_selection: MobileAppStoreState["actions"]["submitSelection"];
 }): JSX.Element {
-  const boardRef = useRef<View | null>(null);
-  const pendingTraceStartRef = useRef<{
-    point: { x_px: number; y_px: number };
-    position: BoardPosition;
-    latest_point: { x_px: number; y_px: number };
-  } | null>(null);
   const lastTracePointRef = useRef<{ x_px: number; y_px: number } | null>(null);
-  const traceIsActiveRef = useRef(false);
-  const [boardFrame, setBoardFrame] = useState<BoardTouchFrame | null>(null);
+  const traceActiveRef = useRef(false);
+  const traceStartPositionRef = useRef<BoardPosition | null>(null);
+  const [pendingTraceStartPosition, setPendingTraceStartPosition] =
+    useState<BoardPosition | null>(null);
   const [tileFramesByKey, setTileFramesByKey] = useState<
     Record<string, TileTouchFrame>
   >({});
@@ -61,10 +55,154 @@ export function EncounterScreen(props: {
     () => Object.values(tileFramesByKey),
     [tileFramesByKey],
   );
+  const displayedPreviewPath = useMemo(
+    () =>
+      deriveDisplayedPreviewPath({
+        preview_path: props.preview_path,
+        pending_start_position: pendingTraceStartPosition,
+      }),
+    [pendingTraceStartPosition, props.preview_path],
+  );
 
   useEffect(() => {
     setTileFramesByKey({});
+    setPendingTraceStartPosition(null);
   }, [props.active_state?.encounter_session_id]);
+
+  const boardPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: (event) =>
+          resolveStartPosition({
+            event: event.nativeEvent,
+            tile_frames: tileFrames,
+          }) !== null,
+        onStartShouldSetPanResponderCapture: (event) =>
+          resolveStartPosition({
+            event: event.nativeEvent,
+            tile_frames: tileFrames,
+          }) !== null,
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          if (tileFrames.length === 0) {
+            return false;
+          }
+
+          const position = resolveBoardPositionFromTileFrames({
+            point: {
+              x_px: gestureState.x0,
+              y_px: gestureState.y0,
+            },
+            tile_frames: tileFrames,
+          });
+          if (!position) {
+            return false;
+          }
+
+          return Math.hypot(gestureState.dx, gestureState.dy) >= 10;
+        },
+        onPanResponderGrant: (event, gestureState) => {
+          const startPoint = resolvePagePoint(event.nativeEvent);
+          const startPosition = resolveStartPosition({
+            event: event.nativeEvent,
+            tile_frames: tileFrames,
+          });
+          if (!startPosition) {
+            return;
+          }
+
+          traceStartPositionRef.current = startPosition;
+          setPendingTraceStartPosition(
+            props.preview_path_length === 0 ? startPosition : null,
+          );
+          lastTracePointRef.current =
+            startPoint ??
+            ({
+              x_px: gestureState.x0,
+              y_px: gestureState.y0,
+            } as const);
+          traceActiveRef.current = false;
+        },
+        onPanResponderMove: (_, gestureState) => {
+          const startPosition = traceStartPositionRef.current;
+          const lastPoint = lastTracePointRef.current;
+          if (!lastPoint || !startPosition || tileFrames.length === 0) {
+            return;
+          }
+
+          const nextPoint = {
+            x_px: gestureState.moveX,
+            y_px: gestureState.moveY,
+          };
+          if (!traceActiveRef.current) {
+            if (
+              Math.hypot(
+                nextPoint.x_px - lastPoint.x_px,
+                nextPoint.y_px - lastPoint.y_px,
+              ) < 10
+            ) {
+              return;
+            }
+
+            props.on_start_trace_selection(startPosition);
+            traceActiveRef.current = true;
+            setPendingTraceStartPosition(null);
+          }
+
+          applyInterpolatedTracePositions({
+            from_point: lastPoint,
+            to_point: nextPoint,
+            tile_frames: tileFrames,
+            start_position: startPosition,
+            on_extend: props.on_extend_trace_selection,
+          });
+          lastTracePointRef.current = nextPoint;
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          const startPosition = traceStartPositionRef.current;
+          const lastPoint = lastTracePointRef.current;
+          setPendingTraceStartPosition(null);
+          if (traceActiveRef.current && lastPoint && tileFrames.length > 0) {
+            const nextPoint = {
+              x_px: gestureState.moveX || gestureState.x0,
+              y_px: gestureState.moveY || gestureState.y0,
+            };
+            applyInterpolatedTracePositions({
+              from_point: lastPoint,
+              to_point: nextPoint,
+              tile_frames: tileFrames,
+              start_position: traceStartPositionRef.current,
+              on_extend: props.on_extend_trace_selection,
+            });
+            void props.on_submit_selection();
+          } else if (startPosition) {
+            props.on_select_board_position(startPosition);
+          }
+
+          traceStartPositionRef.current = null;
+          lastTracePointRef.current = null;
+          traceActiveRef.current = false;
+        },
+        onPanResponderTerminate: () => {
+          if (traceActiveRef.current) {
+            props.on_cancel_trace_selection();
+          }
+          setPendingTraceStartPosition(null);
+          traceStartPositionRef.current = null;
+          lastTracePointRef.current = null;
+          traceActiveRef.current = false;
+        },
+        onPanResponderTerminationRequest: () => true,
+      }),
+    [
+      props.on_cancel_trace_selection,
+      props.on_extend_trace_selection,
+      props.on_select_board_position,
+      props.on_start_trace_selection,
+      props.preview_path_length,
+      props.on_submit_selection,
+      tileFrames,
+    ],
+  );
 
   if (!props.active_state) {
     return (
@@ -147,158 +285,10 @@ export function EncounterScreen(props: {
         <Text style={styles.boardCaption}>
           Current preview: {props.preview_word || "none"}
         </Text>
-        <View
-          ref={(node) => {
-            boardRef.current = node;
-          }}
-          style={styles.board}
-          onLayout={(event) => {
-            const fallbackFrame = {
-              board_left_px: 0,
-              board_top_px: 0,
-              board_width_px: event.nativeEvent.layout.width,
-              board_height_px: event.nativeEvent.layout.height,
-            };
-            setBoardFrame(fallbackFrame);
-            boardRef.current?.measureInWindow((left, top, width, height) => {
-              setBoardFrame({
-                board_left_px: left,
-                board_top_px: top,
-                board_width_px: width,
-                board_height_px: height,
-              });
-            });
-          }}
-          onTouchStart={(event: unknown) => {
-            const point = createPagePoint(event, boardFrame);
-            if (!point || tileFrames.length === 0) {
-              pendingTraceStartRef.current = null;
-              return;
-            }
-
-            const position = resolveBoardPositionFromTileFrames({
-              point,
-              tile_frames: tileFrames,
-            });
-            if (!position) {
-              pendingTraceStartRef.current = null;
-              return;
-            }
-
-            pendingTraceStartRef.current = {
-              point,
-              position,
-              latest_point: point,
-            };
-          }}
-          onTouchEnd={() => {
-            if (!traceIsActiveRef.current) {
-              pendingTraceStartRef.current = null;
-            }
-          }}
-          onMoveShouldSetResponder={(event: unknown) => {
-            const pendingStart = pendingTraceStartRef.current;
-            const currentPoint = createPagePoint(event, boardFrame);
-            if (!pendingStart || !currentPoint) {
-              return false;
-            }
-
-            pendingStart.latest_point = currentPoint;
-            return shouldActivateTraceGesture({
-              start_sample: {
-                pointer_id: 0,
-                x_px: pendingStart.point.x_px,
-                y_px: pendingStart.point.y_px,
-                t_ms: 0,
-              },
-              current_sample: {
-                pointer_id: 0,
-                x_px: currentPoint.x_px,
-                y_px: currentPoint.y_px,
-                t_ms: 0,
-              },
-            });
-          }}
-          onResponderGrant={() => {
-            const pendingStart = pendingTraceStartRef.current;
-            if (!pendingStart || tileFrames.length === 0) {
-              return;
-            }
-
-            traceIsActiveRef.current = true;
-            lastTracePointRef.current = pendingStart.point;
-
-            props.on_start_trace_selection(pendingStart.position);
-            applyInterpolatedTracePositions({
-              from_point: pendingStart.point,
-              to_point: pendingStart.latest_point,
-              tile_frames: tileFrames,
-              start_position: pendingStart.position,
-              on_extend: props.on_extend_trace_selection,
-            });
-            lastTracePointRef.current = pendingStart.latest_point;
-          }}
-          onResponderMove={(event: unknown) => {
-            const currentPoint = createPagePoint(event, boardFrame);
-            const lastPoint = lastTracePointRef.current;
-            if (
-              !traceIsActiveRef.current ||
-              !currentPoint ||
-              !lastPoint ||
-              tileFrames.length === 0
-            ) {
-              return;
-            }
-
-            applyInterpolatedTracePositions({
-              from_point: lastPoint,
-              to_point: currentPoint,
-              tile_frames: tileFrames,
-              start_position: null,
-              on_extend: props.on_extend_trace_selection,
-            });
-            lastTracePointRef.current = currentPoint;
-          }}
-          onResponderRelease={(event: unknown) => {
-            const currentPoint = createPagePoint(event, boardFrame);
-            const lastPoint = lastTracePointRef.current;
-            if (
-              traceIsActiveRef.current &&
-              currentPoint &&
-              lastPoint &&
-              tileFrames.length > 0
-            ) {
-              applyInterpolatedTracePositions({
-                from_point: lastPoint,
-                to_point: currentPoint,
-                tile_frames: tileFrames,
-                start_position: null,
-                on_extend: props.on_extend_trace_selection,
-              });
-              lastTracePointRef.current = currentPoint;
-              void props.on_submit_selection();
-            }
-
-            traceIsActiveRef.current = false;
-            pendingTraceStartRef.current = null;
-            lastTracePointRef.current = null;
-          }}
-          onResponderTerminate={() => {
-            if (traceIsActiveRef.current) {
-              props.on_cancel_trace_selection();
-            }
-
-            traceIsActiveRef.current = false;
-            pendingTraceStartRef.current = null;
-            lastTracePointRef.current = null;
-          }}
-        >
+        <View style={styles.board} {...boardPanResponder.panHandlers}>
           <BattleBoard
             state={activeState}
-            selected_path={props.preview_path}
-            on_tile_press={(tile) =>
-              props.on_select_board_position(tile.position)
-            }
+            selected_path={displayedPreviewPath}
             on_tile_layout={(frame) => {
               const key = `${frame.row}:${frame.col}`;
               setTileFramesByKey((current) => {
@@ -375,17 +365,39 @@ export function EncounterScreen(props: {
   );
 }
 
-function createPagePoint(event: unknown, boardFrame: BoardTouchFrame | null) {
-  const nativeEvent = (
-    event as {
-      nativeEvent?: BoardTouchNativeEvent;
-    }
-  ).nativeEvent;
-
+function resolvePagePoint(
+  nativeEvent: BoardTouchNativeEvent,
+): { x_px: number; y_px: number } | null {
   return createPageTouchPointFromNativeEvent({
-    native_event: nativeEvent ?? {},
-    frame: boardFrame,
+    native_event: nativeEvent,
+    frame: null,
   });
+}
+
+function resolveStartPosition(input: {
+  event: BoardTouchNativeEvent;
+  tile_frames: readonly TileTouchFrame[];
+}): BoardPosition | null {
+  const point = resolvePagePoint(input.event);
+  if (!point) {
+    return null;
+  }
+
+  return resolveBoardPositionFromTileFrames({
+    point,
+    tile_frames: input.tile_frames,
+  });
+}
+
+function deriveDisplayedPreviewPath(input: {
+  preview_path: readonly BoardPosition[];
+  pending_start_position: BoardPosition | null;
+}): readonly BoardPosition[] {
+  if (input.preview_path.length > 0 || !input.pending_start_position) {
+    return input.preview_path;
+  }
+
+  return [input.pending_start_position];
 }
 
 function applyInterpolatedTracePositions(input: {

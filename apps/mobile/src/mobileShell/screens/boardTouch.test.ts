@@ -207,6 +207,47 @@ test("resolveBoardPositionFromTileFrames uses measured tile boxes instead of abs
   });
 });
 
+test("resolveBoardPositionFromTileFrames prefers exact containment over neighboring slop overlap", () => {
+  const position = resolveBoardPositionFromTileFrames({
+    point: {
+      x_px: 116,
+      y_px: 169,
+    },
+    tile_frames: tileFrames,
+  });
+
+  assert.deepEqual(position, {
+    row: 0,
+    col: 1,
+  });
+});
+
+test("resolveBoardPositionFromTileFrames uses nearest tile edge when touch lands in the gap", () => {
+  const leftGapPosition = resolveBoardPositionFromTileFrames({
+    point: {
+      x_px: 92,
+      y_px: 145,
+    },
+    tile_frames: tileFrames,
+  });
+  const rightGapPosition = resolveBoardPositionFromTileFrames({
+    point: {
+      x_px: 93,
+      y_px: 145,
+    },
+    tile_frames: tileFrames,
+  });
+
+  assert.deepEqual(leftGapPosition, {
+    row: 0,
+    col: 0,
+  });
+  assert.deepEqual(rightGapPosition, {
+    row: 0,
+    col: 1,
+  });
+});
+
 test("sampleBoardPositionsFromTileFrames interpolates across successive tiles", () => {
   const positions = sampleBoardPositionsFromTileFrames({
     from_point: {
@@ -228,6 +269,32 @@ test("sampleBoardPositionsFromTileFrames interpolates across successive tiles", 
     },
     {
       row: 0,
+      col: 1,
+    },
+  ]);
+});
+
+test("sampleBoardPositionsFromTileFrames follows diagonal swipes across measured tile frames", () => {
+  const positions = sampleBoardPositionsFromTileFrames({
+    from_point: {
+      x_px: 60,
+      y_px: 145,
+    },
+    to_point: {
+      x_px: 118,
+      y_px: 199,
+    },
+    tile_frames: tileFrames,
+    step_px: 8,
+  });
+
+  assert.deepEqual(positions, [
+    {
+      row: 0,
+      col: 0,
+    },
+    {
+      row: 1,
       col: 1,
     },
   ]);
