@@ -121,6 +121,19 @@ export const createLocalBoardTouchPointFromNativeEvent = (input: {
 }): { x_px: number; y_px: number } | null => {
   const point = resolveBoardTouchPoint(input.native_event);
 
+  if (
+    input.frame &&
+    input.frame.board_width_px > 0 &&
+    input.frame.board_height_px > 0 &&
+    point.pageX !== undefined &&
+    point.pageY !== undefined
+  ) {
+    return {
+      x_px: point.pageX - input.frame.board_left_px,
+      y_px: point.pageY - input.frame.board_top_px,
+    };
+  }
+
   if (point.locationX !== undefined && point.locationY !== undefined) {
     return {
       x_px: point.locationX,
@@ -128,20 +141,7 @@ export const createLocalBoardTouchPointFromNativeEvent = (input: {
     };
   }
 
-  if (
-    !input.frame ||
-    input.frame.board_width_px <= 0 ||
-    input.frame.board_height_px <= 0 ||
-    point.pageX === undefined ||
-    point.pageY === undefined
-  ) {
-    return null;
-  }
-
-  return {
-    x_px: point.pageX - input.frame.board_left_px,
-    y_px: point.pageY - input.frame.board_top_px,
-  };
+  return null;
 };
 
 export const resolveBoardPositionFromTileFrames = (input: {

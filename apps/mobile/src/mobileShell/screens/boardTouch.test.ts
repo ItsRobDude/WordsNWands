@@ -54,7 +54,7 @@ const tileFrames: TileTouchFrame[] = [
   },
 ];
 
-test("createTraceSampleFromNativeEvent prefers board-local coordinates when available", () => {
+test("createTraceSampleFromNativeEvent prefers page coordinates relative to the measured board frame", () => {
   const sample = createTraceSampleFromNativeEvent({
     native_event: {
       identifier: 7,
@@ -69,22 +69,17 @@ test("createTraceSampleFromNativeEvent prefers board-local coordinates when avai
 
   assert.deepEqual(sample, {
     pointer_id: 7,
-    x_px: 210,
+    x_px: 270,
     y_px: 270,
     t_ms: 1234,
   });
 });
 
-test("createTraceSampleFromNativeEvent falls back to frame-adjusted page coordinates", () => {
+test("createTraceSampleFromNativeEvent falls back to location coordinates when page coordinates are unavailable", () => {
   const sample = createTraceSampleFromNativeEvent({
     native_event: {
       changedTouches: [
-        {
-          identifier: 11,
-          pageX: 275,
-          pageY: 405,
-          timestamp: 4321,
-        },
+        { identifier: 11, locationX: 235, locationY: 285, timestamp: 4321 },
       ],
     },
     frame,
