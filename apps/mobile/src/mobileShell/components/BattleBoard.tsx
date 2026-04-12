@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import type {
   BoardPosition,
@@ -12,6 +12,7 @@ import { styles } from "../mobileStyles.ts";
 export function BattleBoard(props: {
   state: EncounterRuntimeState;
   selected_path: readonly BoardPosition[];
+  on_tile_press: (tile: BoardTile) => void;
 }): JSX.Element[] {
   const selectedKeys = new Set(props.selected_path.map(toPositionKey));
   const tilesByPosition = useMemo(
@@ -39,7 +40,12 @@ export function BattleBoard(props: {
         const isSelected = selectedKeys.has(toPositionKey(tile.position));
 
         return (
-          <BattleTile key={tile.id} tile={tile} is_selected={isSelected} />
+          <BattleTile
+            key={tile.id}
+            tile={tile}
+            is_selected={isSelected}
+            on_tile_press={props.on_tile_press}
+          />
         );
       })}
     </View>
@@ -49,9 +55,11 @@ export function BattleBoard(props: {
 function BattleTile(props: {
   tile: BoardTile;
   is_selected: boolean;
+  on_tile_press: (tile: BoardTile) => void;
 }): JSX.Element {
   return (
-    <View
+    <Pressable
+      onPress={() => props.on_tile_press(props.tile)}
       style={[
         styles.tile,
         props.is_selected ? styles.tileSelected : null,
@@ -66,7 +74,7 @@ function BattleTile(props: {
           </Text>
         ) : null}
       </View>
-    </View>
+    </Pressable>
   );
 }
 
