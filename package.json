@@ -7,6 +7,7 @@
     "content:generate:encounters": "node packages/content/src/generation/cli/generateEncounters.js",
     "validation:snapshot:import-frequency-bootstrap": "node scripts/import-frequency-bootstrap-candidates.mjs",
     "validation:snapshot:seed-inputs": "node scripts/seed-validation-snapshot-inputs.mjs",
+    "validation:snapshot:sync-review-sheet": "node scripts/sync-validation-review-sheet.mjs",
     "validation:snapshot:build": "node scripts/build-validation-snapshot.mjs",
     "lint": "pnpm -r --workspace-concurrency=1 --if-present run lint",
     "test": "pnpm -r --workspace-concurrency=1 --if-present run test",

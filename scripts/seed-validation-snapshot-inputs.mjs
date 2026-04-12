@@ -26,6 +26,7 @@ const snapshotPath = path.join(
 const candidateSeedPath = path.join(inputDir, "candidates.core_seed.txt");
 const tutorialPath = path.join(inputDir, "candidates.tutorial_and_ch1.txt");
 const blockedPath = path.join(inputDir, "blocked.family_safe_v1.txt");
+const quarantinePath = path.join(inputDir, "quarantine.family_safe_v1.json");
 const reviewSheetPath = path.join(
   reviewDir,
   `tag_review_sheet.${manifest.validation_snapshot_version}.csv`,
@@ -78,6 +79,17 @@ const tutorialAndChapterOneWords = normalizeWords([
 ]);
 const reviewHeader =
   "word_normalized,source_file,tier,proposed_decision,proposed_element,frequency_familiarity_evidence_source,tone_classification,element_rationale,confidence_score,reviewer_primary,reviewer_secondary,final_decision,override_required,override_rationale,content_owner_signoff,decision_timestamp_utc\n";
+const defaultQuarantineRules = {
+  metadata: {
+    version: "family_safe_quarantine_v1",
+    description:
+      "Authoring-time exact and prefix rules for words that should never be auto-accepted into the battle lexicon.",
+  },
+  hard_reject_exact: [],
+  hard_reject_prefixes: [],
+  review_required_exact: [],
+  review_required_prefixes: [],
+};
 
 fs.mkdirSync(inputDir, { recursive: true });
 fs.mkdirSync(reviewDir, { recursive: true });
@@ -85,6 +97,7 @@ fs.mkdirSync(reviewDir, { recursive: true });
 writeIfMissing(candidateSeedPath, `${coreSeedWords.join("\n")}\n`);
 writeIfMissing(tutorialPath, `${tutorialAndChapterOneWords.join("\n")}\n`);
 writeIfMissing(blockedPath, "");
+writeIfMissing(quarantinePath, `${JSON.stringify(defaultQuarantineRules, null, 2)}\n`);
 writeIfMissing(reviewSheetPath, reviewHeader);
 
 console.log(
@@ -98,6 +111,7 @@ console.log(
         core_seed: relativePath(candidateSeedPath),
         tutorial_and_ch1: relativePath(tutorialPath),
         blocked_list: relativePath(blockedPath),
+        quarantine_rules: relativePath(quarantinePath),
         review_sheet: relativePath(reviewSheetPath),
       },
       current_snapshot_word_count: coreSeedWords.length,

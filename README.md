@@ -33,6 +33,7 @@ Validation snapshot bootstrap helpers:
 ```bash
 pnpm validation:snapshot:import-frequency-bootstrap
 pnpm validation:snapshot:seed-inputs
+pnpm validation:snapshot:sync-review-sheet
 pnpm validation:snapshot:build -- --dry-run
 pnpm validation:snapshot:build
 ```

@@ -21,6 +21,7 @@ Operational commands:
 ```bash
 pnpm validation:snapshot:import-frequency-bootstrap
 pnpm validation:snapshot:seed-inputs
+pnpm validation:snapshot:sync-review-sheet
 pnpm validation:snapshot:build -- --dry-run
 pnpm validation:snapshot:build
 ```
@@ -29,7 +30,8 @@ Workflow note:
 
 - `validation:snapshot:import-frequency-bootstrap` stages a large frequency-ranked ordinary-English candidate file and merges a family-safe bootstrap blocklist from documented public sources
 - `validation:snapshot:seed-inputs` creates the required working input files when bootstrapping from an existing pinned snapshot
-- `validation:snapshot:build` writes both the runtime snapshot JSON and the deterministic normalized candidate list used for review
+- `validation:snapshot:sync-review-sheet` pre-fills the adjudication sheet for staged candidates using conservative family-safe quarantine rules, while preserving existing manual edits
+- `validation:snapshot:build` writes the runtime snapshot JSON only from accepted review rows plus curated anchors, and also emits the deterministic normalized candidate list used for review
 
 ---
 

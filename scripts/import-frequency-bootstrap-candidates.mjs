@@ -36,6 +36,10 @@ const commonWordsOutputPath = path.join(
   validationDir,
   `common_words.${manifest.validation_snapshot_version}.json`,
 );
+const commonWordsCandidateOutputPath = path.join(
+  importDir,
+  `common_words_candidates.${manifest.validation_snapshot_version}.json`,
+);
 const blockedPath = path.join(inputDir, "blocked.family_safe_v1.txt");
 const importMetadataPath = path.join(
   importDir,
@@ -81,6 +85,24 @@ const commonWords = prioritizedCommonWords.filter(
 fs.writeFileSync(candidateOutputPath, `${importedCandidates.join("\n")}\n`);
 fs.writeFileSync(blockedPath, `${mergedBlockedWords.join("\n")}\n`);
 fs.writeFileSync(
+  commonWordsCandidateOutputPath,
+  `${JSON.stringify(
+    {
+      metadata: {
+        snapshot_version: manifest.validation_snapshot_version,
+        generated_at_utc: new Date()
+          .toISOString()
+          .replace(/\.\d{3}Z$/, ".000Z"),
+        source: "subtlex_frequency_bootstrap",
+        word_count: commonWords.length,
+      },
+      common_words: commonWords,
+    },
+    null,
+    2,
+  )}\n`,
+);
+fs.writeFileSync(
   commonWordsOutputPath,
   `${JSON.stringify(
     {
@@ -90,6 +112,7 @@ fs.writeFileSync(
           .toISOString()
           .replace(/\.\d{3}Z$/, ".000Z"),
         source: "subtlex_frequency_bootstrap",
+        candidate_source_path: relativePath(commonWordsCandidateOutputPath),
         word_count: commonWords.length,
       },
       common_words: commonWords,
@@ -130,6 +153,9 @@ console.log(
       package_root: relativePath(packageRoot),
       candidate_output_path: relativePath(candidateOutputPath),
       common_words_output_path: relativePath(commonWordsOutputPath),
+      common_words_candidate_output_path: relativePath(
+        commonWordsCandidateOutputPath,
+      ),
       blocked_output_path: relativePath(blockedPath),
       import_metadata_path: relativePath(importMetadataPath),
       imported_candidate_count: importedCandidates.length,
