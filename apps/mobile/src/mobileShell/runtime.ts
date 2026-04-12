@@ -45,10 +45,18 @@ export const ensureMobileRuntimeInitialized = (): Promise<void> => {
   return initializationPromise;
 };
 
+export type RoutePath =
+  | "/loading"
+  | "/error"
+  | "/starter"
+  | "/home"
+  | "/encounter"
+  | "/result";
+
 export const resolveRoutePath = (input: {
   hydration_status: MobileAppStoreState["mobileSlice"]["hydration_status"];
   surface: MobileAppStoreState["sessionSlice"]["app_primary_surface"];
-}): "/loading" | "/error" | "/starter" | "/home" | "/encounter" | "/result" => {
+}): RoutePath => {
   if (input.hydration_status === "error") {
     return "/error";
   }

@@ -1,6 +1,7 @@
 import { useStore } from "zustand";
 
 import { MobileScreenFrame } from "../src/mobileShell/components/MobileScreenFrame.tsx";
+import { RouteGate } from "../src/mobileShell/components/RouteGate.tsx";
 import { EncounterScreen } from "../src/mobileShell/screens/EncounterScreen.tsx";
 import { mobileRuntime } from "../src/mobileShell/runtime.ts";
 import { describeStarterHint } from "../src/verticalSlice/formatters.ts";
@@ -40,42 +41,44 @@ export default function EncounterRoute(): JSX.Element {
     : null;
 
   return (
-    <MobileScreenFrame show_header={false}>
-      <EncounterScreen
-        active_state={activeState}
-        starter_encounter_id={mobileRuntime.starterEncounterId}
-        has_completed_starter_encounter={hasCompletedStarterEncounter}
-        preview_path_length={previewPath.length}
-        preview_path={previewPath}
-        preview_word={previewWord}
-        starter_hint={starterHint}
-        last_transcript_entry={lastTranscriptEntry}
-        pause_overlay_open={pauseOverlayOpen}
-        on_open_pause_menu={
-          mobileRuntime.store.getState().actions.openPauseMenu
-        }
-        on_close_pause_menu={
-          mobileRuntime.store.getState().actions.closePauseMenu
-        }
-        on_restart_encounter={
-          mobileRuntime.store.getState().actions.restartEncounter
-        }
-        on_leave_encounter={
-          mobileRuntime.store.getState().actions.leaveEncounter
-        }
-        on_select_board_position={
-          mobileRuntime.store.getState().actions.selectBoardPosition
-        }
-        on_apply_trace_selection={
-          mobileRuntime.store.getState().actions.applyTraceSelection
-        }
-        on_clear_selection={
-          mobileRuntime.store.getState().actions.clearSelection
-        }
-        on_submit_selection={
-          mobileRuntime.store.getState().actions.submitSelection
-        }
-      />
-    </MobileScreenFrame>
+    <RouteGate route_path="/encounter">
+      <MobileScreenFrame show_header={false}>
+        <EncounterScreen
+          active_state={activeState}
+          starter_encounter_id={mobileRuntime.starterEncounterId}
+          has_completed_starter_encounter={hasCompletedStarterEncounter}
+          preview_path_length={previewPath.length}
+          preview_path={previewPath}
+          preview_word={previewWord}
+          starter_hint={starterHint}
+          last_transcript_entry={lastTranscriptEntry}
+          pause_overlay_open={pauseOverlayOpen}
+          on_open_pause_menu={
+            mobileRuntime.store.getState().actions.openPauseMenu
+          }
+          on_close_pause_menu={
+            mobileRuntime.store.getState().actions.closePauseMenu
+          }
+          on_restart_encounter={
+            mobileRuntime.store.getState().actions.restartEncounter
+          }
+          on_leave_encounter={
+            mobileRuntime.store.getState().actions.leaveEncounter
+          }
+          on_select_board_position={
+            mobileRuntime.store.getState().actions.selectBoardPosition
+          }
+          on_apply_trace_selection={
+            mobileRuntime.store.getState().actions.applyTraceSelection
+          }
+          on_clear_selection={
+            mobileRuntime.store.getState().actions.clearSelection
+          }
+          on_submit_selection={
+            mobileRuntime.store.getState().actions.submitSelection
+          }
+        />
+      </MobileScreenFrame>
+    </RouteGate>
   );
 }

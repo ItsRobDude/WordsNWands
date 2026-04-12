@@ -1,6 +1,7 @@
 import { useStore } from "zustand";
 
 import { MobileScreenFrame } from "../src/mobileShell/components/MobileScreenFrame.tsx";
+import { RouteGate } from "../src/mobileShell/components/RouteGate.tsx";
 import { ResultScreen } from "../src/mobileShell/screens/ResultScreen.tsx";
 import { mobileRuntime } from "../src/mobileShell/runtime.ts";
 import { describeCastResolution } from "../src/verticalSlice/formatters.ts";
@@ -20,15 +21,17 @@ export default function ResultRoute(): JSX.Element {
   );
 
   return (
-    <MobileScreenFrame>
-      <ResultScreen
-        active_state={activeState}
-        starter_encounter_id={mobileRuntime.starterEncounterId}
-        has_completed_starter_encounter={hasCompletedStarterEncounter}
-        on_advance={mobileRuntime.store.getState().actions.advanceFromResult}
-        on_return={mobileRuntime.store.getState().actions.returnFromResult}
-        last_feedback={describeCastResolution(lastTranscriptEntry)}
-      />
-    </MobileScreenFrame>
+    <RouteGate route_path="/result">
+      <MobileScreenFrame>
+        <ResultScreen
+          active_state={activeState}
+          starter_encounter_id={mobileRuntime.starterEncounterId}
+          has_completed_starter_encounter={hasCompletedStarterEncounter}
+          on_advance={mobileRuntime.store.getState().actions.advanceFromResult}
+          on_return={mobileRuntime.store.getState().actions.returnFromResult}
+          last_feedback={describeCastResolution(lastTranscriptEntry)}
+        />
+      </MobileScreenFrame>
+    </RouteGate>
   );
 }
