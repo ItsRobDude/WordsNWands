@@ -7,6 +7,6 @@
     "allowImportingTsExtensions": true,
     "types": ["node"]
   },
-  "include": ["./App.tsx", "./src/**/*.ts", "./**/*.d.ts"],
+  "include": ["./App.tsx", "./src/**/*.ts", "./src/**/*.tsx", "./**/*.d.ts"],
   "exclude": ["node_modules"]
 }

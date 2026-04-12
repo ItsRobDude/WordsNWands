@@ -158,6 +158,61 @@ test("initialize restores a terminal snapshot to the result surface", async () =
   assert.equal(store.getState().uiSlice.result_ack_pending, 1);
 });
 
+test("pause controls preserve the active encounter and restart creates a fresh attempt", async () => {
+  const persistence = createInMemoryAppPersistence();
+  const content = loadBundledContentRuntime();
+  const store = createMobileAppStore({ persistence, content });
+
+  await store.getState().actions.initialize();
+  await store.getState().actions.launchEncounter("enc_starter_001");
+  const firstSessionId =
+    store.getState().encounterSlice.runtime_state?.encounter_session_id;
+
+  store.getState().actions.openPauseMenu();
+  assert.equal(store.getState().uiSlice.pause_overlay_open, 1);
+
+  store.getState().actions.closePauseMenu();
+  assert.equal(store.getState().uiSlice.pause_overlay_open, 0);
+
+  await store.getState().actions.restartEncounter();
+
+  assert.equal(store.getState().sessionSlice.app_primary_surface, "encounter");
+  assert.equal(store.getState().uiSlice.pause_overlay_open, 0);
+  assert.equal(
+    store.getState().mobileSlice.attempts_by_encounter.enc_starter_001,
+    2,
+  );
+  assert.notEqual(
+    store.getState().encounterSlice.runtime_state?.encounter_session_id,
+    firstSessionId,
+  );
+});
+
+test("leaving an encounter returns to the starter intro while keeping resume available", async () => {
+  const persistence = createInMemoryAppPersistence();
+  const content = loadBundledContentRuntime();
+  const store = createMobileAppStore({ persistence, content });
+
+  await store.getState().actions.initialize();
+  await store.getState().actions.launchEncounter("enc_starter_001");
+
+  store.getState().actions.openPauseMenu();
+  store.getState().actions.leaveEncounter();
+
+  assert.equal(
+    store.getState().sessionSlice.app_primary_surface,
+    "starter_flow",
+  );
+  assert.equal(store.getState().uiSlice.pause_overlay_open, 0);
+  assert.equal(
+    store.getState().encounterSlice.runtime_state?.session_state,
+    "in_progress",
+  );
+
+  store.getState().actions.resumeEncounter();
+  assert.equal(store.getState().sessionSlice.app_primary_surface, "encounter");
+});
+
 function loadBundledContentRuntime() {
   const bundleRoot = path.resolve(
     process.cwd(),

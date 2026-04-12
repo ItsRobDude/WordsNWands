@@ -847,6 +847,9 @@ After a loss:
 - primary CTA: `Retry`
 - secondary CTA: `Return to Home`
 
+Starter-gate exception:
+- if the starter gate is still uncleared, the secondary loss CTA should return to the starter intro/title flow instead of normal Home progression
+
 After Spark Shuffle recoverable-error end:
 - primary CTA: `Retry Encounter`
 - secondary CTA: `Return to Home`

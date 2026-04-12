@@ -66,6 +66,9 @@ export interface MobileAppStoreActions {
   initialize(): Promise<void>;
   launchEncounter(encounterId: string): Promise<void>;
   resumeEncounter(): void;
+  openPauseMenu(): void;
+  closePauseMenu(): void;
+  restartEncounter(): Promise<void>;
   selectBoardPosition(position: BoardPosition): void;
   applyTraceSelection(
     payload: CastTracePayload,
@@ -232,7 +235,40 @@ export const createMobileAppStore = (input: {
                 : "encounter",
             last_route_change_at_utc: nowUtcIso(),
           },
+          uiSlice: {
+            ...state.uiSlice,
+            pause_overlay_open: 0,
+          },
         }));
+      },
+
+      openPauseMenu(): void {
+        set((state) => ({
+          ...state,
+          uiSlice: {
+            ...state.uiSlice,
+            pause_overlay_open: 1,
+          },
+        }));
+      },
+
+      closePauseMenu(): void {
+        set((state) => ({
+          ...state,
+          uiSlice: {
+            ...state.uiSlice,
+            pause_overlay_open: 0,
+          },
+        }));
+      },
+
+      async restartEncounter(): Promise<void> {
+        const encounterId = get().encounterSlice.runtime_state?.encounter_id;
+        if (!encounterId) {
+          return;
+        }
+
+        await get().actions.launchEncounter(encounterId);
       },
 
       selectBoardPosition(position: BoardPosition): void {
@@ -376,6 +412,11 @@ export const createMobileAppStore = (input: {
             app_primary_surface: nextSurface,
             last_route_change_at_utc: nowUtcIso(),
           },
+          uiSlice: createInitialUiSlice(),
+          mobileSlice: {
+            ...state.mobileSlice,
+            input_candidate: createEmptyBoardSelectionCandidate(),
+          },
         }));
       },
 
@@ -417,6 +458,10 @@ export const createMobileAppStore = (input: {
             ...state.sessionSlice,
             app_primary_surface: surface,
             last_route_change_at_utc: nowUtcIso(),
+          },
+          uiSlice: {
+            ...state.uiSlice,
+            pause_overlay_open: 0,
           },
         }));
       },
@@ -680,6 +725,7 @@ const resolveCommittedSelection = async (input: {
       ...current.uiSlice,
       swipe_preview_path: [],
       highlighted_word_preview: "",
+      pause_overlay_open: 0,
       result_ack_pending: isTerminal ? 1 : 0,
     },
     mobileSlice: {
