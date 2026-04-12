@@ -13,6 +13,8 @@ import {
   clearBoardSelectionCandidate,
   commitBoardSelectionCandidate,
   createEmptyBoardSelectionCandidate,
+  extendBoardSelectionCandidate,
+  startBoardSelectionCandidate,
   type BoardSelectionCandidate,
   type CastTracePayload,
   type TraceBoardBounds,
@@ -69,6 +71,9 @@ export interface MobileAppStoreActions {
   openPauseMenu(): void;
   closePauseMenu(): void;
   restartEncounter(): Promise<void>;
+  startTraceSelection(position: BoardPosition): void;
+  extendTraceSelection(position: BoardPosition): void;
+  cancelTraceSelection(): void;
   selectBoardPosition(position: BoardPosition): void;
   applyTraceSelection(
     payload: CastTracePayload,
@@ -271,6 +276,64 @@ export const createMobileAppStore = (input: {
         await get().actions.launchEncounter(encounterId);
       },
 
+      startTraceSelection(position: BoardPosition): void {
+        const state = get();
+        const runtimeState = state.encounterSlice.runtime_state;
+        if (!runtimeState || runtimeState.session_state !== "in_progress") {
+          return;
+        }
+
+        const nextCandidate = startBoardSelectionCandidate(position);
+        const highlightedWordPreview = deriveWordPreviewFromSelection({
+          runtime_state: runtimeState,
+          selected_positions: nextCandidate.selected_positions,
+        });
+
+        setPreviewCandidate({
+          set,
+          candidate: nextCandidate,
+          highlighted_word_preview: highlightedWordPreview,
+        });
+      },
+
+      extendTraceSelection(position: BoardPosition): void {
+        const state = get();
+        const runtimeState = state.encounterSlice.runtime_state;
+        if (!runtimeState || runtimeState.session_state !== "in_progress") {
+          return;
+        }
+
+        const nextCandidate = extendBoardSelectionCandidate({
+          candidate: state.mobileSlice.input_candidate,
+          position,
+        });
+        const highlightedWordPreview = deriveWordPreviewFromSelection({
+          runtime_state: runtimeState,
+          selected_positions: nextCandidate.selected_positions,
+        });
+
+        setPreviewCandidate({
+          set,
+          candidate: nextCandidate,
+          highlighted_word_preview: highlightedWordPreview,
+        });
+      },
+
+      cancelTraceSelection(): void {
+        set((state) => ({
+          ...state,
+          uiSlice: {
+            ...state.uiSlice,
+            swipe_preview_path: [],
+            highlighted_word_preview: "",
+          },
+          mobileSlice: {
+            ...state.mobileSlice,
+            input_candidate: clearBoardSelectionCandidate(),
+          },
+        }));
+      },
+
       selectBoardPosition(position: BoardPosition): void {
         const state = get();
         const runtimeState = state.encounterSlice.runtime_state;
@@ -287,18 +350,11 @@ export const createMobileAppStore = (input: {
           selected_positions: nextCandidate.selected_positions,
         });
 
-        set((current) => ({
-          ...current,
-          uiSlice: {
-            ...current.uiSlice,
-            swipe_preview_path: nextCandidate.selected_positions,
-            highlighted_word_preview: highlightedWordPreview.toUpperCase(),
-          },
-          mobileSlice: {
-            ...current.mobileSlice,
-            input_candidate: nextCandidate,
-          },
-        }));
+        setPreviewCandidate({
+          set,
+          candidate: nextCandidate,
+          highlighted_word_preview: highlightedWordPreview,
+        });
       },
 
       async applyTraceSelection(
@@ -323,18 +379,11 @@ export const createMobileAppStore = (input: {
           selected_positions: nextPreviewPositions,
         });
 
-        set((current) => ({
-          ...current,
-          uiSlice: {
-            ...current.uiSlice,
-            swipe_preview_path: traced.candidate.selected_positions,
-            highlighted_word_preview: highlightedWordPreview.toUpperCase(),
-          },
-          mobileSlice: {
-            ...current.mobileSlice,
-            input_candidate: traced.candidate,
-          },
-        }));
+        setPreviewCandidate({
+          set,
+          candidate: traced.candidate,
+          highlighted_word_preview: highlightedWordPreview,
+        });
 
         if (!traced.committed_selection) {
           return;
@@ -428,6 +477,20 @@ export const createMobileAppStore = (input: {
         }
 
         if (runtimeState.session_state === "won") {
+          if (
+            runtimeState.encounter_id === getStarterEncounterId(input.content)
+          ) {
+            await clearEncounterAfterResult({
+              store,
+              persistence: input.persistence,
+              next_surface: "home",
+            });
+            await get().actions.launchEncounter(
+              getPrimaryEncounterId(input.content),
+            );
+            return;
+          }
+
           await clearEncounterAfterResult({
             store,
             persistence: input.persistence,
@@ -622,6 +685,25 @@ const clearEncounterAfterResult = async (input: {
   }));
 
   await input.persistence.saveActiveSnapshot(null);
+};
+
+const setPreviewCandidate = (input: {
+  set: StoreApi<MobileAppStoreState>["setState"];
+  candidate: BoardSelectionCandidate;
+  highlighted_word_preview: string;
+}): void => {
+  input.set((current) => ({
+    ...current,
+    uiSlice: {
+      ...current.uiSlice,
+      swipe_preview_path: input.candidate.selected_positions,
+      highlighted_word_preview: input.highlighted_word_preview.toUpperCase(),
+    },
+    mobileSlice: {
+      ...current.mobileSlice,
+      input_candidate: input.candidate,
+    },
+  }));
 };
 
 const persistSnapshotIfNeeded = async (input: {

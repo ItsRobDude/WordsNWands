@@ -7,6 +7,8 @@ import {
   clearBoardSelectionCandidate,
   commitBoardSelectionCandidate,
   createEmptyBoardSelectionCandidate,
+  extendBoardSelectionCandidate,
+  startBoardSelectionCandidate,
   type BoardSelectionCandidate,
 } from "../boardSelection.ts";
 
@@ -24,6 +26,28 @@ test("tap selection appends adjacent tiles and ignores illegal jumps", () => {
   candidate = applyTapSelectionPosition({
     candidate,
     position: { row: 2, col: 2 },
+  });
+
+  assert.deepEqual(candidate.selected_positions, [
+    { row: 0, col: 0 },
+    { row: 0, col: 1 },
+  ]);
+});
+
+test("explicit trace-style start and extend reuse the same path semantics", () => {
+  let candidate = startBoardSelectionCandidate({ row: 0, col: 0 });
+
+  candidate = extendBoardSelectionCandidate({
+    candidate,
+    position: { row: 0, col: 1 },
+  });
+  candidate = extendBoardSelectionCandidate({
+    candidate,
+    position: { row: 1, col: 1 },
+  });
+  candidate = extendBoardSelectionCandidate({
+    candidate,
+    position: { row: 0, col: 1 },
   });
 
   assert.deepEqual(candidate.selected_positions, [

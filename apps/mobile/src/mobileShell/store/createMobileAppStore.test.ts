@@ -114,6 +114,45 @@ test("trace selection commits through the same shared submission pipeline", asyn
   assert.equal(state.encounterSlice.runtime_state?.casts_resolved_count, 1);
 });
 
+test("starter win advance launches a fresh chapter one encounter with a different board", async () => {
+  const persistence = createInMemoryAppPersistence();
+  const content = loadBundledContentRuntime();
+  const store = createMobileAppStore({ persistence, content });
+
+  await store.getState().actions.initialize();
+  await store.getState().actions.launchEncounter("enc_starter_001");
+
+  const starterBoardRows = toBoardRows(
+    store.getState().encounterSlice.runtime_state!,
+  );
+
+  store.setState((state) => ({
+    ...state,
+    sessionSlice: {
+      ...state.sessionSlice,
+      has_completed_starter_encounter: 1,
+      app_primary_surface: "result",
+    },
+    encounterSlice: {
+      ...state.encounterSlice,
+      runtime_state: state.encounterSlice.runtime_state
+        ? {
+            ...state.encounterSlice.runtime_state,
+            session_state: "won",
+            terminal_reason_code: "normal_win",
+          }
+        : null,
+    },
+  }));
+
+  await store.getState().actions.advanceFromResult();
+
+  const nextState = store.getState().encounterSlice.runtime_state;
+  assert.equal(store.getState().sessionSlice.app_primary_surface, "encounter");
+  assert.equal(nextState?.encounter_id, "enc_meadow_001");
+  assert.notDeepEqual(toBoardRows(nextState!), starterBoardRows);
+});
+
 test("initialize restores an unresolved active encounter snapshot", async () => {
   const content = loadBundledContentRuntime();
   const created = createFreshEncounterRuntime({
@@ -244,4 +283,26 @@ function loadBundledContentRuntime() {
 
 function readJsonFile(filePath: string) {
   return JSON.parse(fs.readFileSync(filePath, "utf-8"));
+}
+
+function toBoardRows(runtimeState: {
+  board: {
+    height: number;
+    width: number;
+    tiles: Array<{
+      letter: string;
+      position: { row: number; col: number };
+    }>;
+  };
+}) {
+  return Array.from({ length: runtimeState.board.height }, (_, rowIndex) =>
+    Array.from({ length: runtimeState.board.width }, (_, colIndex) => {
+      const tile = runtimeState.board.tiles.find(
+        (candidate) =>
+          candidate.position.row === rowIndex &&
+          candidate.position.col === colIndex,
+      );
+      return tile?.letter ?? "?";
+    }).join(""),
+  );
 }

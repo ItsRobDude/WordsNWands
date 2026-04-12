@@ -3,12 +3,14 @@ import type { EncounterRngStreamStates } from "../contracts/board.js";
 const UINT32_RANGE = 0x1_0000_0000;
 
 const hashStringToUint32 = (value: string): number => {
-  let hash = 2166136261;
+  let hash = 1779033703;
   for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
+    hash = Math.imul(hash ^ value.charCodeAt(index), 3432918353);
+    hash = (hash << 13) | (hash >>> 19);
   }
-  return hash >>> 0;
+  hash = Math.imul(hash ^ (hash >>> 16), 2246822507);
+  hash = Math.imul(hash ^ (hash >>> 13), 3266489909);
+  return (hash ^ (hash >>> 16)) >>> 0;
 };
 
 const parseStreamState = (
@@ -38,7 +40,10 @@ export const drawUint32FromStreamState = (
   stream_state: string,
 ): { value: number; next_stream_state: string } => {
   const parsed = parseStreamState(stream_state);
-  const value = hashStringToUint32(`${parsed.prefix}::${parsed.counter}`);
+  const seed = hashStringToUint32(parsed.prefix);
+  const value = mixUint32(
+    (seed + Math.imul(parsed.counter >>> 0, 0x9e3779b9)) >>> 0,
+  );
 
   return {
     value,
@@ -67,3 +72,13 @@ export const withAdvancedBoardFillStream = (
   ...rng_stream_states,
   board_fill_stream_state: next_stream_state,
 });
+
+const mixUint32 = (value: number): number => {
+  let mixed = (value + 0x9e3779b9) >>> 0;
+  mixed ^= mixed >>> 16;
+  mixed = Math.imul(mixed, 0x85ebca6b);
+  mixed ^= mixed >>> 13;
+  mixed = Math.imul(mixed, 0xc2b2ae35);
+  mixed ^= mixed >>> 16;
+  return mixed >>> 0;
+};

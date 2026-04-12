@@ -72,14 +72,30 @@ test("runEncounterHeadless diverges deterministically for changed cast list", ()
 
 test("runEncounterHeadless terminal reason semantics parity for won, lost, and recoverable_error", () => {
   const impossibleWordPrefixes = new Set(["z", "zz", "zzz"]);
-  const lossWords = ["cab", "dii"];
-  const lossPrefixes = new Set(
-    lossWords.flatMap((word) =>
-      Array.from({ length: word.length }, (_, index) =>
-        word.slice(0, index + 1),
-      ),
-    ),
-  );
+  const lossLookup = {
+    snapshot_version: "loss-test",
+    metadata: {
+      snapshot_version: "loss-test",
+      language: "en",
+      word_count: 2,
+      tagged_word_count: 2,
+      generated_at_utc: "2026-04-11T00:00:00.000Z",
+    },
+    hasWord: (normalized_word: string) =>
+      normalized_word === "dog" || normalized_word === "cat",
+    hasPrefix: (normalized_prefix: string) =>
+      normalized_prefix === "d" ||
+      normalized_prefix === "do" ||
+      normalized_prefix === "dog" ||
+      normalized_prefix === "c" ||
+      normalized_prefix === "ca" ||
+      normalized_prefix === "cat",
+    getEntry: (normalized_word: string) =>
+      normalized_word === "dog" || normalized_word === "cat"
+        ? { normalized_word, element: "flame" as const }
+        : null,
+    getMaxWordLength: () => 3,
+  } as const;
 
   const won = runEncounterHeadless({
     encounter: starterEncounterFixture,
@@ -88,33 +104,69 @@ test("runEncounterHeadless terminal reason semantics parity for won, lost, and r
 
   const lost = runEncounterHeadless({
     encounter: {
-      ...starterEncounterFixture,
+      ...firstStandardEncounterFixture,
+      encounter_session_id: "loss-session-001",
+      encounter_id: "encounter-loss-001",
+      encounter_seed: "loss-seed-001",
+      board: {
+        width: 3,
+        height: 2,
+        tiles: [
+          {
+            id: "loss-0-0",
+            letter: "D",
+            position: { row: 0, col: 0 },
+            state: null,
+            special_marker: null,
+          },
+          {
+            id: "loss-0-1",
+            letter: "O",
+            position: { row: 0, col: 1 },
+            state: null,
+            special_marker: null,
+          },
+          {
+            id: "loss-0-2",
+            letter: "G",
+            position: { row: 0, col: 2 },
+            state: null,
+            special_marker: null,
+          },
+          {
+            id: "loss-1-0",
+            letter: "C",
+            position: { row: 1, col: 0 },
+            state: null,
+            special_marker: null,
+          },
+          {
+            id: "loss-1-1",
+            letter: "A",
+            position: { row: 1, col: 1 },
+            state: null,
+            special_marker: null,
+          },
+          {
+            id: "loss-1-2",
+            letter: "T",
+            position: { row: 1, col: 2 },
+            state: null,
+            special_marker: null,
+          },
+        ],
+      },
+      letter_pool: ["D", "O", "G", "C", "A", "T"],
       move_budget_total: 1,
       creature: {
-        ...starterEncounterFixture.creature,
+        ...firstStandardEncounterFixture.creature,
         hp_current: 20,
         hp_max: 20,
         spell_countdown_current: 5,
         spell_countdown_reset: 5,
       },
       validation: {
-        validation_lookup: {
-          snapshot_version: "loss-test",
-          metadata: {
-            snapshot_version: "loss-test",
-            language: "en",
-            word_count: lossWords.length,
-            tagged_word_count: lossWords.length,
-            generated_at_utc: "2026-04-11T00:00:00.000Z",
-          },
-          hasWord: (normalized_word) => lossWords.includes(normalized_word),
-          hasPrefix: (normalized_prefix) => lossPrefixes.has(normalized_prefix),
-          getEntry: (normalized_word) =>
-            lossWords.includes(normalized_word)
-              ? { normalized_word, element: "flame" }
-              : null,
-          getMaxWordLength: () => 3,
-        },
+        validation_lookup: lossLookup,
       },
     },
     cast_submissions: [
@@ -122,9 +174,9 @@ test("runEncounterHeadless terminal reason semantics parity for won, lost, and r
         selected_positions: [
           { row: 0, col: 0 },
           { row: 0, col: 1 },
-          { row: 1, col: 0 },
+          { row: 0, col: 2 },
         ],
-        traced_word_display: "CAB",
+        traced_word_display: "DOG",
       },
     ],
   });

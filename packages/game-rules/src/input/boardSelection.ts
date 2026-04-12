@@ -66,6 +66,24 @@ export const applyTapSelectionPosition = (input: {
   ),
 });
 
+export const startBoardSelectionCandidate = (
+  position: BoardPosition,
+): BoardSelectionCandidate => ({
+  ...createEmptyBoardSelectionCandidate(),
+  selected_positions: [clonePosition(position)],
+});
+
+export const extendBoardSelectionCandidate = (input: {
+  candidate: BoardSelectionCandidate;
+  position: BoardPosition;
+}): BoardSelectionCandidate => ({
+  ...createEmptyBoardSelectionCandidate(),
+  selected_positions: appendSelectionPosition(
+    input.candidate.selected_positions,
+    input.position,
+  ),
+});
+
 export const applyTraceSelectionPayload = (input: {
   candidate: BoardSelectionCandidate;
   payload: CastTracePayload;

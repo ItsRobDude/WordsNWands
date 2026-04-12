@@ -172,6 +172,12 @@ export const styles = StyleSheet.create({
     minHeight: 0,
     paddingVertical: 4,
   },
+  tileContent: {
+    flex: 1,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   tileSelected: {
     backgroundColor: "#433316",
     borderColor: "#fbbf24",
