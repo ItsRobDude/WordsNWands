@@ -7,6 +7,14 @@
     "allowImportingTsExtensions": true,
     "types": ["node"]
   },
-  "include": ["./App.tsx", "./src/**/*.ts", "./src/**/*.tsx", "./**/*.d.ts"],
+  "include": [
+    "./app/**/*.ts",
+    "./app/**/*.tsx",
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
+    "./.expo/types/**/*.ts",
+    "./expo-env.d.ts",
+    "./**/*.d.ts"
+  ],
   "exclude": ["node_modules"]
 }

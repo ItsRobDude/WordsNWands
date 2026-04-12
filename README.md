@@ -5,7 +5,7 @@
 Words 'n Wands! is an Android-first, portrait-first magical word battle game where players cast spells by forming valid words from adjacent letters, either by tracing across the board or by tap-selecting tiles in order.
 This repository is still docs-first, but it is no longer docs-only: shared packages contain working battle, validation, and content-loading pieces, and `apps/mobile` now ships a first playable local encounter slice wired into those shared packages.
 The current app slice is a first playable local encounter slice covering starter flow, an active encounter board, result routing, and a minimal Home continuation surface.
-Current repo note: the mobile slice now supports both trace/swipe release-casting and tap-selected path building on one shared selection pipeline, uses a real Zustand-backed app store plus SQLite-backed active-encounter restore, loads the launch bundle through a shared bundled-content runtime helper, and splits the app shell into dedicated starter/home/encounter/result screen modules around those seams. Roadmap/build-order details for fuller Expo Router route ownership, broader progression persistence, and later app expansion live in `docs/milestone-implementation-plan.md` and `docs/technical-architecture.md`.
+Current repo note: the mobile slice now supports both trace/swipe release-casting and tap-selected path building on one shared selection pipeline, uses a real Zustand-backed app store plus SQLite-backed active-encounter restore, loads the launch bundle through a shared bundled-content runtime helper, and now uses Expo Router-backed route ownership for the implemented `loading`, `starter`, `home`, `encounter`, `result`, and `error` surfaces. Roadmap/build-order details for broader progression persistence and later app expansion live in `docs/milestone-implementation-plan.md` and `docs/technical-architecture.md`.
 The main goal right now is to keep gameplay rules, UX flow, and implementation contracts aligned.
 Treat focused docs in `docs/` as product truth; this file is a fast entry point.
 For contributor execution rules and scope discipline, read `AGENTS.md`.
@@ -39,6 +39,7 @@ If local setup or dependency installation behaves unexpectedly, use [docs/develo
 ## Source-of-truth docs
 
 Start with `docs/engineering-standards.md` for coding and validation contract.
+Use `docs/mobile-ux-verification-checklist.md` for the current manual device-pass checklist covering launch, battle, pause, restore, and result UX.
 Start with `docs/development-setup-and-dependency-troubleshooting.md` for local bootstrap, dependency install, or workspace-command troubleshooting.
 Then read only the focused docs for your task area (battle rules, RNG, UX, economy, etc.) using `AGENTS.md` section 2.
 Implementation and runtime boundaries: `docs/implementation-contracts.md` + `docs/technical-architecture.md`.

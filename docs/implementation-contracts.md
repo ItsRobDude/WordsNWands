@@ -3016,7 +3016,7 @@ Required behavior:
 ## 13. App Store State Orchestration Contracts _(Active in M1)_
 
 This section defines the canonical Zustand-facing app orchestration state described in `docs/technical-architecture.md` section 13.1–13.4.
-Current repo note: the shared `AppStoreState` contract is now represented by a real `apps/mobile` Zustand store plus SQLite persistence gateway in the current mobile slice, and the app shell now consumes those slices through dedicated starter/home/encounter/result screen modules. The fuller target Expo Router/module layout described below still remains target-state architecture rather than a claim that every suggested path already exists.
+Current repo note: the shared `AppStoreState` contract is now represented by a real `apps/mobile` Zustand store plus SQLite persistence gateway in the current mobile slice, and the app shell now consumes those slices through dedicated starter/home/encounter/result screen modules with Expo Router-backed route ownership for the implemented surfaces. Broader target route groups and later module layout described below still remain target-state architecture rather than a claim that every suggested path already exists.
 It intentionally separates:
 
 - engine-owned battle truth

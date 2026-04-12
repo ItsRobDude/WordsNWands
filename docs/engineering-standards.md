@@ -720,6 +720,8 @@ Real Android manual testing is required for:
 - result clarity
 - no fake unfinished screens
 
+Use `docs/mobile-ux-verification-checklist.md` as the repo-owned manual pass list for the current mobile slice unless a more specific milestone checklist replaces it.
+
 ---
 
 ## 15. CI Standards

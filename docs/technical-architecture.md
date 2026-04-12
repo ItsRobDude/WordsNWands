@@ -32,7 +32,7 @@ Current repo status as of 2026-04-11:
 - `packages/game-rules`, `packages/validation`, and `packages/content` contain the main implemented shared logic
 - `apps/mobile` now contains a first playable local encounter slice covering starter flow, active encounter, result routing, and a minimal Home continuation surface using the shared gameplay and validation packages
 - the current mobile slice now supports both continuous trace/swipe release-casting and tap-selected path building through one shared board-selection pipeline, and the launch bundle now hydrates through a shared mobile-safe bundled runtime helper rather than a mobile-only content shape
-- the current mobile slice now ships a real Zustand-backed app store plus SQLite-backed active-encounter restore/profile/settings persistence, and its app shell is now split into dedicated starter/home/encounter/result screen modules around those seams, but it still does not realize the full Expo Router route ownership or broader progression/history architecture described later in this document
+- the current mobile slice now ships a real Zustand-backed app store plus SQLite-backed active-encounter restore/profile/settings persistence, its app shell is split into dedicated starter/home/encounter/result screen modules, and those implemented surfaces now sit behind Expo Router-backed route ownership; broader progression/history architecture described later in this document still remains follow-up work
 - when current code and target architecture differ, contributors must either align the code or mark the target-only architecture explicitly instead of treating future structure as already shipped
 
 ---
