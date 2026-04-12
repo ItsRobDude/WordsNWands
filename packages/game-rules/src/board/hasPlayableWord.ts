@@ -12,6 +12,7 @@ export interface HasPlayableWordInput {
   repeated_words: readonly string[];
   validation_lookup: ValidationSnapshotLookup;
   minimum_length?: number;
+  allowed_words?: ReadonlySet<string>;
 }
 
 export interface CountPlayableWordsInput extends HasPlayableWordInput {
@@ -23,12 +24,14 @@ export const hasPlayableWord = ({
   repeated_words,
   validation_lookup,
   minimum_length = 3,
+  allowed_words,
 }: HasPlayableWordInput): boolean =>
   hasPlayableWordFromValidation({
     board: toPlayableBoardGrid(board),
     repeated_words: new Set(repeated_words),
     validation_lookup,
     minimum_length,
+    allowed_words,
   });
 
 export const countPlayableWordsUpToLimit = ({
@@ -37,6 +40,7 @@ export const countPlayableWordsUpToLimit = ({
   validation_lookup,
   minimum_length = 3,
   limit,
+  allowed_words,
 }: CountPlayableWordsInput): number =>
   countPlayableWordsFromValidation({
     board: toPlayableBoardGrid(board),
@@ -44,6 +48,7 @@ export const countPlayableWordsUpToLimit = ({
     validation_lookup,
     minimum_length,
     limit,
+    allowed_words,
   });
 
 const toPlayableBoardGrid = (board: BoardSnapshot): PlayableBoardGrid => {

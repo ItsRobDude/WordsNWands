@@ -100,3 +100,24 @@ test("countPlayableWordsUpToLimit deduplicates paths and stops at the requested 
 
   assert.equal(count, 2);
 });
+
+test("countPlayableWordsUpToLimit can restrict results to priority words only", () => {
+  const count = countPlayableWordsUpToLimit({
+    board: [
+      [
+        { letter: "c", blocked: false },
+        { letter: "a", blocked: false },
+      ],
+      [
+        { letter: "t", blocked: false },
+        { letter: "r", blocked: false },
+      ],
+    ],
+    repeated_words: new Set(),
+    validation_lookup: createLookup(["cat", "car", "cart"]),
+    allowed_words: new Set(["cat"]),
+    limit: 3,
+  });
+
+  assert.equal(count, 1);
+});

@@ -17,7 +17,9 @@ const packageRoot = path.resolve(
 const validationDir = path.join(packageRoot, "validation");
 const inputDir = path.join(validationDir, "work", "input");
 const importDir = path.join(validationDir, "work", "import");
+const manifest = readJson(path.join(packageRoot, "manifest.json"));
 const topRows = Number(args.top_rows ?? 30000);
+const commonWordRows = Number(args.common_word_rows ?? 5000);
 const minLength = Number(args.min_length ?? 3);
 const maxLength = Number(args.max_length ?? 10);
 const subtlexUrl =
@@ -29,6 +31,10 @@ const blocklistUrl =
 const candidateOutputPath = path.join(
   inputDir,
   `candidates.frequency_bootstrap_subtlex_top${topRows}.txt`,
+);
+const commonWordsOutputPath = path.join(
+  validationDir,
+  `common_words.${manifest.validation_snapshot_version}.json`,
 );
 const blockedPath = path.join(inputDir, "blocked.family_safe_v1.txt");
 const importMetadataPath = path.join(
@@ -50,6 +56,12 @@ const importedCandidates = collectCandidates({
   min_length: minLength,
   max_length: maxLength,
 });
+const prioritizedCommonWords = collectCandidates({
+  rows: subtlexRows,
+  top_rows: commonWordRows,
+  min_length: minLength,
+  max_length: Math.min(6, maxLength),
+});
 const importedBlockedWords = normalizeTokenList(blocklistText, {
   min_length: minLength,
 });
@@ -61,9 +73,31 @@ const existingBlockedWords = fs.existsSync(blockedPath)
 const mergedBlockedWords = Array.from(
   new Set([...existingBlockedWords, ...importedBlockedWords]),
 ).sort();
+const blockedWordSet = new Set(mergedBlockedWords);
+const commonWords = prioritizedCommonWords.filter(
+  (word) => !blockedWordSet.has(word),
+);
 
 fs.writeFileSync(candidateOutputPath, `${importedCandidates.join("\n")}\n`);
 fs.writeFileSync(blockedPath, `${mergedBlockedWords.join("\n")}\n`);
+fs.writeFileSync(
+  commonWordsOutputPath,
+  `${JSON.stringify(
+    {
+      metadata: {
+        snapshot_version: manifest.validation_snapshot_version,
+        generated_at_utc: new Date()
+          .toISOString()
+          .replace(/\.\d{3}Z$/, ".000Z"),
+        source: "subtlex_frequency_bootstrap",
+        word_count: commonWords.length,
+      },
+      common_words: commonWords,
+    },
+    null,
+    2,
+  )}\n`,
+);
 fs.writeFileSync(
   importMetadataPath,
   `${JSON.stringify(
@@ -75,12 +109,14 @@ fs.writeFileSync(
       },
       parameters: {
         top_rows: topRows,
+        common_word_rows: commonWordRows,
         min_length: minLength,
         max_length: maxLength,
         lowercase_only: true,
         alpha_only: true,
       },
       imported_candidate_count: importedCandidates.length,
+      prioritized_common_word_count: commonWords.length,
       merged_blocked_word_count: mergedBlockedWords.length,
     },
     null,
@@ -93,11 +129,14 @@ console.log(
     {
       package_root: relativePath(packageRoot),
       candidate_output_path: relativePath(candidateOutputPath),
+      common_words_output_path: relativePath(commonWordsOutputPath),
       blocked_output_path: relativePath(blockedPath),
       import_metadata_path: relativePath(importMetadataPath),
       imported_candidate_count: importedCandidates.length,
+      prioritized_common_word_count: commonWords.length,
       merged_blocked_word_count: mergedBlockedWords.length,
       top_rows: topRows,
+      common_word_rows: commonWordRows,
       min_length: minLength,
       max_length: maxLength,
     },
@@ -196,4 +235,8 @@ function normalizeTokenList(tokens, options = {}) {
 
 function relativePath(filePath) {
   return path.relative(repoRoot, filePath).replaceAll("\\", "/");
+}
+
+function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, "utf-8"));
 }

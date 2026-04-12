@@ -1,16 +1,18 @@
 {
-  "generated_at_utc": "2026-04-12T04:01:32.000Z",
+  "generated_at_utc": "2026-04-12T04:20:06.000Z",
   "source_urls": {
     "subtlex": "https://raw.githubusercontent.com/words/subtlex-word-frequencies/master/index.json",
     "blocklist": "https://raw.githubusercontent.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/master/en"
   },
   "parameters": {
     "top_rows": 30000,
+    "common_word_rows": 5000,
     "min_length": 3,
     "max_length": 10,
     "lowercase_only": true,
     "alpha_only": true
   },
   "imported_candidate_count": 22340,
+  "prioritized_common_word_count": 2554,
   "merged_blocked_word_count": 274
 }

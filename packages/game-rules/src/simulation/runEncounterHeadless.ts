@@ -59,6 +59,13 @@ export interface HeadlessEncounterDefinition {
   minimum_playable_word_count_after_refill?: number;
   target_playable_word_count_after_refill?: number;
   playable_word_count_search_limit_after_refill?: number;
+  priority_words_after_refill?: ReadonlySet<string>;
+  minimum_priority_word_count_after_refill?: number;
+  target_priority_word_count_after_refill?: number;
+  priority_word_search_limit_after_refill?: number;
+  minimum_straight_priority_word_count_after_refill?: number;
+  target_straight_priority_word_count_after_refill?: number;
+  straight_priority_word_search_limit_after_refill?: number;
   minimum_vowel_class_count?: number | null;
   vowel_class_includes_y?: boolean;
   refill_candidate_search_attempts?: number;
@@ -225,6 +232,19 @@ export const runEncounterHeadless = ({
                 encounter.minimum_playable_word_count_after_refill,
               playable_word_count_search_limit:
                 encounter.playable_word_count_search_limit_after_refill,
+              priority_words: encounter.priority_words_after_refill,
+              minimum_priority_word_count:
+                encounter.minimum_priority_word_count_after_refill,
+              target_priority_word_count:
+                encounter.target_priority_word_count_after_refill,
+              priority_word_search_limit:
+                encounter.priority_word_search_limit_after_refill,
+              minimum_straight_priority_word_count:
+                encounter.minimum_straight_priority_word_count_after_refill,
+              target_straight_priority_word_count:
+                encounter.target_straight_priority_word_count_after_refill,
+              straight_priority_word_search_limit:
+                encounter.straight_priority_word_search_limit_after_refill,
               repeated_words: before_state.repeated_words,
               validation_lookup: encounter.validation.validation_lookup,
               minimum_length: encounter.validation.minimum_word_length,

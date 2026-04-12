@@ -166,6 +166,15 @@ test("starter win advance launches a fresh chapter one encounter with a differen
     }) >= 6,
     true,
   );
+  assert.equal(
+    boardContainsStraightWord(toBoardRows(nextState!), [
+      "sea",
+      "rain",
+      "wave",
+      "tide",
+    ]),
+    true,
+  );
 });
 
 test("initialize restores an unresolved active encounter snapshot", async () => {
@@ -320,4 +329,35 @@ function toBoardRows(runtimeState: {
       return tile?.letter ?? "?";
     }).join(""),
   );
+}
+
+function boardContainsStraightWord(
+  rows: readonly string[],
+  candidateWords: readonly string[],
+): boolean {
+  const height = rows.length;
+  const width = rows[0]?.length ?? 0;
+  const lowercaseRows = rows.map((row) => row.toLowerCase());
+
+  for (const word of candidateWords) {
+    const target = word.toLowerCase();
+
+    for (let row = 0; row < height; row += 1) {
+      if (lowercaseRows[row]?.includes(target)) {
+        return true;
+      }
+    }
+
+    for (let col = 0; col < width; col += 1) {
+      let vertical = "";
+      for (let row = 0; row < height; row += 1) {
+        vertical += lowercaseRows[row]?.[col] ?? "";
+      }
+      if (vertical.includes(target)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }

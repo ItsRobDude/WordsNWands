@@ -16,6 +16,7 @@ import {
   normalizeTracedBoardLetters,
   type ValidationSnapshotLookup,
 } from "../../../../packages/validation/src/index.ts";
+import commonWordsJson from "../../../../content/packages/content_m2_launch_v1/validation/common_words.val_snapshot_m2_launch_v1.json" with { type: "json" };
 import type {
   BundledContentRuntime,
   RuntimeEncounterPayload,
@@ -30,6 +31,19 @@ export interface ActiveEncounterContext {
   letter_pool: string[];
   attempt_number: number;
 }
+
+const EARLY_COMMON_WORDS = new Set(
+  (commonWordsJson.common_words as string[]).map((word) => word.toLowerCase()),
+);
+const WEAKNESS_SPOTLIGHT_WORDS: Record<string, readonly string[]> = {
+  flame: ["fire", "burn", "heat", "ember"],
+  tide: ["sea", "rain", "wave", "tide"],
+  bloom: ["leaf", "vine", "root", "moss"],
+  storm: ["wind", "gust", "storm", "bolt"],
+  stone: ["rock", "stone", "sand", "clay"],
+  light: ["sun", "glow", "beam", "shine"],
+  arcane: ["magic", "spell", "charm", "aura"],
+};
 
 export const getBundledProgression = (content: BundledContentRuntime) =>
   content.progression;
@@ -237,6 +251,25 @@ export const applySelectionToEncounterRuntime = (input: {
         resolveRefillPlayableWordCountSearchLimit(
           input.context.encounter_payload,
         ),
+      minimum_priority_word_count_after_refill:
+        resolveRefillMinimumPriorityWordCount(input.context.encounter_payload),
+      target_priority_word_count_after_refill:
+        resolveRefillTargetPriorityWordCount(input.context.encounter_payload),
+      priority_word_search_limit_after_refill:
+        resolveRefillPriorityWordSearchLimit(input.context.encounter_payload),
+      minimum_straight_priority_word_count_after_refill:
+        resolveRefillMinimumStraightPriorityWordCount(
+          input.context.encounter_payload,
+        ),
+      target_straight_priority_word_count_after_refill:
+        resolveRefillTargetStraightPriorityWordCount(
+          input.context.encounter_payload,
+        ),
+      straight_priority_word_search_limit_after_refill:
+        resolveRefillStraightPriorityWordSearchLimit(
+          input.context.encounter_payload,
+        ),
+      priority_words_after_refill: EARLY_COMMON_WORDS,
       minimum_vowel_class_count:
         input.context.encounter_payload.encounter.boardConfig.boardQualityPolicy
           ?.minVowelClassCount ?? null,
@@ -299,18 +332,22 @@ const resolveOpeningBoard = (input: {
     board: current_board_base,
     letter_pool: input.letter_pool,
   });
+  const initial_candidate_board = decorateEarlyEncounterBoard({
+    encounter_payload: input.encounter_payload,
+    board: initial_candidate.board,
+  });
   const acceptance_policy = createOpeningBoardAcceptancePolicy({
     encounter_payload: input.encounter_payload,
     validation_lookup: input.validation_lookup,
   });
 
   if (!acceptance_policy) {
-    return initial_candidate.board;
+    return initial_candidate_board;
   }
 
   return selectBestBoardCandidate({
     initial_candidate: {
-      board: initial_candidate.board,
+      board: initial_candidate_board,
       rng_stream_states: initial_candidate.board.rng_stream_states,
     },
     candidate_search_attempts: resolveOpeningCandidateSearchAttempts(
@@ -328,9 +365,13 @@ const resolveOpeningBoard = (input: {
         board: current_board_base,
         letter_pool: input.letter_pool,
       });
+      const decorated_board = decorateEarlyEncounterBoard({
+        encounter_payload: input.encounter_payload,
+        board: next_candidate.board,
+      });
 
       return {
-        board: next_candidate.board,
+        board: decorated_board,
         rng_stream_states: next_candidate.board.rng_stream_states,
       };
     },
@@ -360,6 +401,113 @@ const resolveEncounterSeed = (input: {
   }
 
   return `${input.encounter_payload.id}-attempt-${input.attempt_number}`;
+};
+
+const decorateEarlyEncounterBoard = (input: {
+  encounter_payload: RuntimeEncounterPayload;
+  board: EncounterRuntimeState["board"];
+}) => {
+  if (
+    input.encounter_payload.encounter.isStarterEncounter ||
+    input.encounter_payload.encounter.balanceMetadata.authoredFailRateBand !==
+      "low"
+  ) {
+    return input.board;
+  }
+
+  const spotlightWords =
+    WEAKNESS_SPOTLIGHT_WORDS[input.encounter_payload.creature.weakness] ?? [];
+  if (spotlightWords.length === 0) {
+    return input.board;
+  }
+
+  return injectSpotlightWord({
+    board: input.board,
+    spotlight_words: spotlightWords,
+  });
+};
+
+const injectSpotlightWord = (input: {
+  board: EncounterRuntimeState["board"];
+  spotlight_words: readonly string[];
+}) => {
+  let bestBoard = input.board;
+  let bestCost = Number.POSITIVE_INFINITY;
+
+  for (const word of input.spotlight_words) {
+    const placements = enumerateHorizontalPlacements({
+      board: input.board,
+      word,
+    });
+
+    for (const placement of placements) {
+      if (placement.cost < bestCost) {
+        bestCost = placement.cost;
+        bestBoard = placement.board;
+      }
+    }
+  }
+
+  return bestBoard;
+};
+
+const enumerateHorizontalPlacements = (input: {
+  board: EncounterRuntimeState["board"];
+  word: string;
+}) => {
+  const uppercaseWord = input.word.toUpperCase();
+  const placements: Array<{
+    board: EncounterRuntimeState["board"];
+    cost: number;
+  }> = [];
+
+  for (let row = 0; row < input.board.height; row += 1) {
+    for (
+      let col = 0;
+      col <= input.board.width - uppercaseWord.length;
+      col += 1
+    ) {
+      let cost = 0;
+      const replacementLetters = new Map<string, string>();
+      let valid = true;
+
+      for (let index = 0; index < uppercaseWord.length; index += 1) {
+        const currentCol = col + index;
+        const tile = input.board.tiles.find(
+          (candidate) =>
+            candidate.position.row === row &&
+            candidate.position.col === currentCol,
+        );
+        if (!tile || tile.state === "frozen") {
+          valid = false;
+          break;
+        }
+
+        const nextLetter = uppercaseWord[index] ?? tile.letter;
+        replacementLetters.set(tile.id, nextLetter);
+        if (tile.letter !== nextLetter) {
+          cost += 1;
+        }
+      }
+
+      if (!valid) {
+        continue;
+      }
+
+      placements.push({
+        cost,
+        board: {
+          ...input.board,
+          tiles: input.board.tiles.map((tile) => ({
+            ...tile,
+            letter: replacementLetters.get(tile.id) ?? tile.letter,
+          })),
+        },
+      });
+    }
+  }
+
+  return placements;
 };
 
 const inferAttemptNumberFromSerializedState = (
@@ -409,6 +557,25 @@ const createOpeningBoardAcceptancePolicy = (input: {
       ?.minVowelClassCount ?? null,
   vowel_class_includes_y:
     input.encounter_payload.encounter.boardConfig.vowelClassIncludesY,
+  priority_words: EARLY_COMMON_WORDS,
+  minimum_priority_word_count: resolveOpeningMinimumPriorityWordCount(
+    input.encounter_payload,
+  ),
+  target_priority_word_count: resolveOpeningTargetPriorityWordCount(
+    input.encounter_payload,
+  ),
+  priority_word_search_limit: resolveOpeningPriorityWordSearchLimit(
+    input.encounter_payload,
+  ),
+  minimum_straight_priority_word_count:
+    resolveOpeningMinimumStraightPriorityWordCount(input.encounter_payload),
+  target_straight_priority_word_count:
+    resolveOpeningTargetStraightPriorityWordCount(input.encounter_payload),
+  straight_priority_word_search_limit:
+    resolveOpeningStraightPriorityWordSearchLimit(input.encounter_payload),
+  straight_priority_minimum_length: resolveOpeningStraightPriorityMinimumLength(
+    input.encounter_payload,
+  ),
 });
 
 const resolveOpeningMinimumPlayableWordCount = (
@@ -439,17 +606,78 @@ const resolveOpeningPlayableWordCountSearchLimit = (
   encounter_payload: RuntimeEncounterPayload,
 ): number => resolveOpeningTargetPlayableWordCount(encounter_payload) + 2;
 
+const resolveOpeningMinimumPriorityWordCount = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  encounter_payload.encounter.isStarterEncounter
+    ? 10
+    : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+      ? 8
+      : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
+          "medium"
+        ? 5
+        : 3;
+
+const resolveOpeningTargetPriorityWordCount = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  encounter_payload.encounter.isStarterEncounter
+    ? 14
+    : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+      ? 10
+      : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
+          "medium"
+        ? 6
+        : 4;
+
+const resolveOpeningPriorityWordSearchLimit = (
+  encounter_payload: RuntimeEncounterPayload,
+): number => resolveOpeningTargetPriorityWordCount(encounter_payload) + 4;
+
+const resolveOpeningMinimumStraightPriorityWordCount = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  encounter_payload.encounter.isStarterEncounter
+    ? 5
+    : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+      ? 4
+      : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
+          "medium"
+        ? 2
+        : 1;
+
+const resolveOpeningTargetStraightPriorityWordCount = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  encounter_payload.encounter.isStarterEncounter
+    ? 7
+    : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+      ? 5
+      : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
+          "medium"
+        ? 3
+        : 2;
+
+const resolveOpeningStraightPriorityWordSearchLimit = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  resolveOpeningTargetStraightPriorityWordCount(encounter_payload) + 2;
+
+const resolveOpeningStraightPriorityMinimumLength = (
+  encounter_payload: RuntimeEncounterPayload,
+): number => (encounter_payload.encounter.isStarterEncounter ? 3 : 4);
+
 const resolveOpeningCandidateSearchAttempts = (
   encounter_payload: RuntimeEncounterPayload,
 ): number =>
   encounter_payload.encounter.isStarterEncounter
-    ? 16
+    ? 80
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 14
+      ? 80
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
-        ? 8
-        : 6;
+        ? 40
+        : 20;
 
 const resolveRefillMinimumPlayableWordCount = (
   encounter_payload: RuntimeEncounterPayload,
@@ -479,14 +707,71 @@ const resolveRefillPlayableWordCountSearchLimit = (
   encounter_payload: RuntimeEncounterPayload,
 ): number => resolveRefillTargetPlayableWordCount(encounter_payload) + 2;
 
+const resolveRefillMinimumPriorityWordCount = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  encounter_payload.encounter.isStarterEncounter
+    ? 7
+    : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+      ? 5
+      : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
+          "medium"
+        ? 3
+        : 2;
+
+const resolveRefillTargetPriorityWordCount = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  encounter_payload.encounter.isStarterEncounter
+    ? 9
+    : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+      ? 7
+      : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
+          "medium"
+        ? 4
+        : 3;
+
+const resolveRefillPriorityWordSearchLimit = (
+  encounter_payload: RuntimeEncounterPayload,
+): number => resolveRefillTargetPriorityWordCount(encounter_payload) + 4;
+
+const resolveRefillMinimumStraightPriorityWordCount = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  encounter_payload.encounter.isStarterEncounter
+    ? 3
+    : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+      ? 2
+      : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
+          "medium"
+        ? 1
+        : 0;
+
+const resolveRefillTargetStraightPriorityWordCount = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  encounter_payload.encounter.isStarterEncounter
+    ? 5
+    : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+      ? 3
+      : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
+          "medium"
+        ? 2
+        : 1;
+
+const resolveRefillStraightPriorityWordSearchLimit = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  resolveRefillTargetStraightPriorityWordCount(encounter_payload) + 2;
+
 const resolveRefillCandidateSearchAttempts = (
   encounter_payload: RuntimeEncounterPayload,
 ): number =>
   encounter_payload.encounter.isStarterEncounter
-    ? 14
+    ? 36
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 10
+      ? 30
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
-        ? 6
-        : 4;
+        ? 18
+        : 10;

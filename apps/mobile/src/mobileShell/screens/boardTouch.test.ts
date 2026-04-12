@@ -15,10 +15,12 @@ const frame: BoardTouchFrame = {
   board_height_px: 300,
 };
 
-test("createTraceSampleFromNativeEvent keeps absolute board coordinates", () => {
+test("createTraceSampleFromNativeEvent prefers board-local coordinates when available", () => {
   const sample = createTraceSampleFromNativeEvent({
     native_event: {
       identifier: 7,
+      locationX: 210,
+      locationY: 270,
       pageX: 310,
       pageY: 390,
       timestamp: 1234,
@@ -28,13 +30,13 @@ test("createTraceSampleFromNativeEvent keeps absolute board coordinates", () => 
 
   assert.deepEqual(sample, {
     pointer_id: 7,
-    x_px: 310,
-    y_px: 390,
+    x_px: 210,
+    y_px: 270,
     t_ms: 1234,
   });
 });
 
-test("createTraceSampleFromNativeEvent reads changed touches when direct coordinates are absent", () => {
+test("createTraceSampleFromNativeEvent falls back to frame-adjusted page coordinates", () => {
   const sample = createTraceSampleFromNativeEvent({
     native_event: {
       changedTouches: [
@@ -51,8 +53,8 @@ test("createTraceSampleFromNativeEvent reads changed touches when direct coordin
 
   assert.deepEqual(sample, {
     pointer_id: 11,
-    x_px: 275,
-    y_px: 405,
+    x_px: 235,
+    y_px: 285,
     t_ms: 4321,
   });
 });
@@ -124,8 +126,8 @@ test("createTraceBounds preserves measured board frame and grid shape", () => {
       cols: 6,
     }),
     {
-      board_left_px: 40,
-      board_top_px: 120,
+      board_left_px: 0,
+      board_top_px: 0,
       board_width_px: 300,
       board_height_px: 300,
       rows: 6,

@@ -13,6 +13,7 @@ export interface HasPlayableWordInput {
   repeated_words: ReadonlySet<string>;
   validation_lookup: ValidationSnapshotLookup;
   minimum_length?: number;
+  allowed_words?: ReadonlySet<string>;
 }
 
 export interface CountPlayableWordsInput extends HasPlayableWordInput {
@@ -99,7 +100,11 @@ function dfs(
 
   if (pathLetters.length >= minimumLength) {
     const isRepeated = input.repeated_words.has(normalizedWord);
-    if (!isRepeated && input.validation_lookup.hasWord(normalizedWord)) {
+    if (
+      !isRepeated &&
+      input.validation_lookup.hasWord(normalizedWord) &&
+      (!input.allowed_words || input.allowed_words.has(normalizedWord))
+    ) {
       foundWords.add(normalizedWord);
       if (foundWords.size >= limit) {
         visited[row][col] = false;

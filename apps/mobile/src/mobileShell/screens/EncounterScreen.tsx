@@ -141,14 +141,11 @@ export function EncounterScreen(props: {
           onLayout={(event) => {
             const measuredWidth = event.nativeEvent.layout.width;
             const measuredHeight = event.nativeEvent.layout.height;
-
-            boardRef.current?.measureInWindow((pageX, pageY, width, height) => {
-              setBoardFrame({
-                board_left_px: pageX,
-                board_top_px: pageY,
-                board_width_px: width || measuredWidth,
-                board_height_px: height || measuredHeight,
-              });
+            setBoardFrame({
+              board_left_px: 0,
+              board_top_px: 0,
+              board_width_px: measuredWidth,
+              board_height_px: measuredHeight,
             });
           }}
           onTouchStart={(event: unknown) => {
