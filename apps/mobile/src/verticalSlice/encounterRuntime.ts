@@ -3,6 +3,7 @@ import {
   createEncounterRuntimeState,
   createInitialBoard,
   createSeededEncounterRngStreamStates,
+  isBoardAccepted,
   restoreEncounterRuntimeState,
   runEncounterHeadless,
   type BoardPosition,
@@ -103,6 +104,7 @@ export const createFreshEncounterRuntime = (input: {
     encounter_payload: context.encounter_payload,
     board_base: boardBase,
     letter_pool: context.letter_pool,
+    validation_lookup: context.validation_lookup,
   });
 
   return {
@@ -227,6 +229,14 @@ export const applySelectionToEncounterRuntime = (input: {
       validation: {
         validation_lookup: input.context.validation_lookup,
       },
+      minimum_playable_word_count_after_refill:
+        resolveRefillMinimumPlayableWordCount(input.context.encounter_payload),
+      minimum_vowel_class_count:
+        input.context.encounter_payload.encounter.boardConfig.boardQualityPolicy
+          ?.minVowelClassCount ?? null,
+      vowel_class_includes_y:
+        input.context.encounter_payload.encounter.boardConfig
+          .vowelClassIncludesY,
       creature_spell_primitives:
         input.context.encounter_payload.creature.spellPrimitives,
     },
@@ -259,6 +269,7 @@ const resolveOpeningBoard = (input: {
   encounter_payload: RuntimeEncounterPayload;
   board_base: Parameters<typeof createInitialBoard>[0]["board"];
   letter_pool: string[];
+  validation_lookup: ValidationSnapshotLookup;
 }) => {
   const starterOpening =
     input.encounter_payload.encounter.starterTutorialScript?.starterBoardOpening
@@ -274,10 +285,42 @@ const resolveOpeningBoard = (input: {
     }).board;
   }
 
-  return createInitialBoard({
-    board: input.board_base,
+  let current_board_base = input.board_base;
+  let accepted_board = createInitialBoard({
+    board: current_board_base,
     letter_pool: input.letter_pool,
   }).board;
+  const acceptance_policy = createOpeningBoardAcceptancePolicy({
+    encounter_payload: input.encounter_payload,
+    validation_lookup: input.validation_lookup,
+  });
+
+  if (!acceptance_policy) {
+    return accepted_board;
+  }
+
+  for (let attempt_index = 0; attempt_index < 64; attempt_index += 1) {
+    if (
+      isBoardAccepted({
+        board: accepted_board,
+        policy: acceptance_policy,
+      })
+    ) {
+      return accepted_board;
+    }
+
+    current_board_base = {
+      width: accepted_board.width,
+      height: accepted_board.height,
+      rng_stream_states: accepted_board.rng_stream_states,
+    };
+    accepted_board = createInitialBoard({
+      board: current_board_base,
+      letter_pool: input.letter_pool,
+    }).board;
+  }
+
+  return accepted_board;
 };
 
 const resolveEncounterSeed = (input: {
@@ -331,3 +374,43 @@ const buildVersionPins = (
   battle_rules_version_pin: content.manifest.battle_rules_version,
   board_generator_version_pin: content.manifest.board_generator_version,
 });
+
+const createOpeningBoardAcceptancePolicy = (input: {
+  encounter_payload: RuntimeEncounterPayload;
+  validation_lookup: ValidationSnapshotLookup;
+}) => ({
+  minimum_playable_word_count: resolveOpeningMinimumPlayableWordCount(
+    input.encounter_payload,
+  ),
+  repeated_words: [],
+  validation_lookup: input.validation_lookup,
+  minimum_vowel_class_count:
+    input.encounter_payload.encounter.boardConfig.boardQualityPolicy
+      ?.minVowelClassCount ?? null,
+  vowel_class_includes_y:
+    input.encounter_payload.encounter.boardConfig.vowelClassIncludesY,
+});
+
+const resolveOpeningMinimumPlayableWordCount = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  encounter_payload.encounter.isStarterEncounter
+    ? 6
+    : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+      ? 5
+      : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
+          "medium"
+        ? 3
+        : 2;
+
+const resolveRefillMinimumPlayableWordCount = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  encounter_payload.encounter.isStarterEncounter
+    ? 4
+    : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+      ? 3
+      : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
+          "medium"
+        ? 2
+        : 1;

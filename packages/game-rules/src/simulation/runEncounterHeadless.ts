@@ -16,6 +16,7 @@ import type {
   EncounterTerminalReasonCode,
 } from "../contracts/core.ts";
 import { applyBubbleRise } from "../board/applyBubbleRise.ts";
+import { isBoardAccepted } from "../board/boardAcceptance.ts";
 import { collapseColumns } from "../board/collapseColumns.ts";
 import { consumeTiles } from "../board/consumeTiles.ts";
 import { drawUint32FromStreamState } from "../board/deterministicRng.ts";
@@ -55,6 +56,9 @@ export interface HeadlessEncounterDefinition {
     validation_lookup: ValidationSnapshotLookup;
     minimum_word_length?: number;
   };
+  minimum_playable_word_count_after_refill?: number;
+  minimum_vowel_class_count?: number | null;
+  vowel_class_includes_y?: boolean;
   creature_spell_primitives?: readonly CreatureSpellPrimitive[] | null;
   creature_spell_primitive?: CreatureSpellPrimitive | null;
 }
@@ -195,12 +199,46 @@ export const runEncounterHeadless = ({
           collapseColumns({
             board,
           }),
-        refill_board: ({ board, rng_stream_states }) =>
-          refillBoard({
+        refill_board: ({ board, rng_stream_states }) => {
+          let refill_result = refillBoard({
             board,
             rng_stream_states,
             letter_pool: encounter.letter_pool,
-          }),
+          });
+
+          if (!encounter.minimum_playable_word_count_after_refill) {
+            return refill_result;
+          }
+
+          for (let attempt_index = 0; attempt_index < 32; attempt_index += 1) {
+            if (
+              isBoardAccepted({
+                board: refill_result.board,
+                policy: {
+                  minimum_playable_word_count:
+                    encounter.minimum_playable_word_count_after_refill,
+                  repeated_words: before_state.repeated_words,
+                  validation_lookup: encounter.validation.validation_lookup,
+                  minimum_length: encounter.validation.minimum_word_length,
+                  minimum_vowel_class_count:
+                    encounter.minimum_vowel_class_count,
+                  vowel_class_includes_y:
+                    encounter.vowel_class_includes_y ?? false,
+                },
+              })
+            ) {
+              return refill_result;
+            }
+
+            refill_result = refillBoard({
+              board,
+              rng_stream_states: refill_result.rng_stream_states,
+              letter_pool: encounter.letter_pool,
+            });
+          }
+
+          return refill_result;
+        },
         apply_bubble_rise: ({ board }) =>
           applyBubbleRise({
             board,

@@ -3,10 +3,14 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { serializeActiveEncounterSnapshot } from "../../../../../packages/game-rules/src/index.ts";
+import {
+  countPlayableWordsUpToLimit,
+  serializeActiveEncounterSnapshot,
+} from "../../../../../packages/game-rules/src/index.ts";
 import { createBundledContentRuntime } from "../../../../../packages/content/src/runtime/createBundledContentRuntime.ts";
 import type { RuntimeContentPackageManifest } from "../../../../../packages/content/src/runtime/contracts/manifest.ts";
 import type { RuntimeProgressionDefinition } from "../../../../../packages/content/src/runtime/contracts/progression.ts";
+import { InMemoryValidationSnapshotLookup } from "../../../../../packages/validation/src/index.ts";
 import type { RuntimeValidationSnapshot } from "../../../../../packages/validation/src/contracts/types.js";
 import { createInMemoryAppPersistence } from "../persistence/createInMemoryAppPersistence.ts";
 import { createMobileAppStore } from "./createMobileAppStore.ts";
@@ -151,6 +155,17 @@ test("starter win advance launches a fresh chapter one encounter with a differen
   assert.equal(store.getState().sessionSlice.app_primary_surface, "encounter");
   assert.equal(nextState?.encounter_id, "enc_meadow_001");
   assert.notDeepEqual(toBoardRows(nextState!), starterBoardRows);
+  assert.equal(
+    countPlayableWordsUpToLimit({
+      board: nextState!.board,
+      repeated_words: [],
+      validation_lookup: new InMemoryValidationSnapshotLookup(
+        content.validation_snapshot,
+      ),
+      limit: 5,
+    }),
+    5,
+  );
 });
 
 test("initialize restores an unresolved active encounter snapshot", async () => {

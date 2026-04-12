@@ -2,22 +2,28 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { InMemoryValidationSnapshotLookup } from "./ValidationSnapshotLookup.ts";
-import { hasPlayableWord } from "./hasPlayableWord.ts";
+import {
+  countPlayableWordsUpToLimit,
+  hasPlayableWord,
+} from "./hasPlayableWord.ts";
 
-const createLookup = () =>
+const createLookup = (
+  castable_words = ["leaf", "sun", "path", "calm"],
+  element_tags = {
+    leaf: "bloom",
+    sun: "light",
+  } as const,
+) =>
   new InMemoryValidationSnapshotLookup({
     metadata: {
       snapshot_version: "test_snapshot_v1",
       language: "en",
-      word_count: 4,
-      tagged_word_count: 2,
+      word_count: castable_words.length,
+      tagged_word_count: Object.keys(element_tags).length,
       generated_at_utc: "2026-01-01T00:00:00.000Z",
     },
-    castable_words: ["leaf", "sun", "path", "calm"],
-    element_tags: {
-      leaf: "bloom",
-      sun: "light",
-    },
+    castable_words,
+    element_tags,
   });
 
 test("lookup exposes prefix checks and max word length for pruning", () => {
@@ -73,4 +79,24 @@ test("hasPlayableWord respects repeated words and returns false when no fresh wo
     }),
     false,
   );
+});
+
+test("countPlayableWordsUpToLimit deduplicates paths and stops at the requested limit", () => {
+  const count = countPlayableWordsUpToLimit({
+    board: [
+      [
+        { letter: "c", blocked: false },
+        { letter: "a", blocked: false },
+      ],
+      [
+        { letter: "t", blocked: false },
+        { letter: "r", blocked: false },
+      ],
+    ],
+    repeated_words: new Set(),
+    validation_lookup: createLookup(["cat", "car", "cart"]),
+    limit: 2,
+  });
+
+  assert.equal(count, 2);
 });

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Text, View } from "react-native";
 
 import type {
@@ -17,9 +17,11 @@ import {
   type BoardTouchNativeEvent,
 } from "./boardTouch.ts";
 import {
-  extractTouchPointFromNativeEvent,
-  findBoardPositionFromFrames,
-  type TileTouchFrame,
+  extractLocalTouchPointFromNativeEvent,
+  resolveBoardPositionFromGrid,
+  sampleBoardPositionsAlongSegment,
+  type BoardGridLayout,
+  type TouchPoint,
 } from "./encounterTrace.ts";
 import { resolvePauseExitLabel } from "./screenFlow.ts";
 
@@ -56,10 +58,9 @@ export function EncounterScreen(props: {
     row: number;
     col: number;
   } | null>(null);
+  const activeTracePointRef = useRef<TouchPoint | null>(null);
   const traceIsActiveRef = useRef(false);
-  const [tileFrames, setTileFrames] = useState<Record<string, TileTouchFrame>>(
-    {},
-  );
+  const [boardLayout, setBoardLayout] = useState<BoardGridLayout | null>(null);
 
   if (!props.active_state) {
     return (
@@ -71,11 +72,8 @@ export function EncounterScreen(props: {
     );
   }
 
+  const activeState = props.active_state;
   const currentFeedback = describeCastResolution(props.last_transcript_entry);
-  const orderedTileFrames = useMemo(
-    () => Object.values(tileFrames),
-    [tileFrames],
-  );
 
   return (
     <View style={styles.encounterScreen}>
@@ -147,6 +145,14 @@ export function EncounterScreen(props: {
         </Text>
         <View
           style={styles.board}
+          onLayout={(event) => {
+            setBoardLayout({
+              width_px: event.nativeEvent.layout.width,
+              height_px: event.nativeEvent.layout.height,
+              rows: activeState.board.height,
+              cols: activeState.board.width,
+            });
+          }}
           onTouchStart={(event: unknown) => {
             const sample = createTraceSample(event);
             if (!sample) {
@@ -157,10 +163,16 @@ export function EncounterScreen(props: {
 
             const point = resolveTouchPoint(event);
             pendingTraceStartRef.current = sample;
+            activeTracePointRef.current = point;
             pendingTraceStartPositionRef.current = point
-              ? findBoardPositionFromFrames({
+              ? resolveBoardPositionFromGrid({
                   point,
-                  tile_frames: orderedTileFrames,
+                  layout: boardLayout ?? {
+                    width_px: 0,
+                    height_px: 0,
+                    rows: activeState.board.height,
+                    cols: activeState.board.width,
+                  },
                 })
               : null;
           }}
@@ -168,6 +180,7 @@ export function EncounterScreen(props: {
             if (!traceIsActiveRef.current) {
               pendingTraceStartRef.current = null;
               pendingTraceStartPositionRef.current = null;
+              activeTracePointRef.current = null;
             }
           }}
           onMoveShouldSetResponder={(event: unknown) => {
@@ -188,29 +201,55 @@ export function EncounterScreen(props: {
             }
 
             traceIsActiveRef.current = true;
+            activeTracePointRef.current = pendingTraceStartRef.current
+              ? {
+                  x_px: pendingTraceStartRef.current.x_px,
+                  y_px: pendingTraceStartRef.current.y_px,
+                }
+              : null;
             props.on_start_trace_selection(startingPosition);
           }}
           onResponderMove={(event: unknown) => {
-            if (!traceIsActiveRef.current) {
+            if (!traceIsActiveRef.current || !boardLayout) {
               return;
             }
 
             const point = resolveTouchPoint(event);
-            if (!point) {
+            const previousPoint = activeTracePointRef.current;
+            if (!point || !previousPoint) {
               return;
             }
 
-            const position = findBoardPositionFromFrames({
-              point,
-              tile_frames: orderedTileFrames,
+            const positions = sampleBoardPositionsAlongSegment({
+              from_point: previousPoint,
+              to_point: point,
+              layout: boardLayout,
             });
-            if (!position) {
-              return;
+
+            for (const position of positions) {
+              props.on_extend_trace_selection(position);
             }
 
-            props.on_extend_trace_selection(position);
+            activeTracePointRef.current = point;
           }}
-          onResponderRelease={() => {
+          onResponderRelease={(event: unknown) => {
+            if (traceIsActiveRef.current && boardLayout) {
+              const point = resolveTouchPoint(event);
+              const previousPoint = activeTracePointRef.current;
+
+              if (point && previousPoint) {
+                const positions = sampleBoardPositionsAlongSegment({
+                  from_point: previousPoint,
+                  to_point: point,
+                  layout: boardLayout,
+                });
+
+                for (const position of positions) {
+                  props.on_extend_trace_selection(position);
+                }
+              }
+            }
+
             if (traceIsActiveRef.current) {
               void props.on_submit_selection();
             }
@@ -218,6 +257,7 @@ export function EncounterScreen(props: {
             traceIsActiveRef.current = false;
             pendingTraceStartRef.current = null;
             pendingTraceStartPositionRef.current = null;
+            activeTracePointRef.current = null;
           }}
           onResponderTerminate={() => {
             if (traceIsActiveRef.current) {
@@ -227,17 +267,12 @@ export function EncounterScreen(props: {
             traceIsActiveRef.current = false;
             pendingTraceStartRef.current = null;
             pendingTraceStartPositionRef.current = null;
+            activeTracePointRef.current = null;
           }}
         >
           <BattleBoard
-            state={props.active_state}
+            state={activeState}
             selected_path={props.preview_path}
-            on_tile_frame={(frame) => {
-              setTileFrames((current) => ({
-                ...current,
-                [`${frame.position.row}:${frame.position.col}`]: frame,
-              }));
-            }}
             on_tile_press={(tile) =>
               props.on_select_board_position(tile.position)
             }
@@ -318,7 +353,7 @@ function resolveTouchPoint(event: unknown) {
     }
   ).nativeEvent;
 
-  return extractTouchPointFromNativeEvent({
+  return extractLocalTouchPointFromNativeEvent({
     native_event: nativeEvent ?? {},
   });
 }
