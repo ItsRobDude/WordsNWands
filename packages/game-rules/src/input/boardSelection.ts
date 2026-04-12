@@ -60,7 +60,7 @@ export const applyTapSelectionPosition = (input: {
   position: BoardPosition;
 }): BoardSelectionCandidate => ({
   ...createEmptyBoardSelectionCandidate(),
-  selected_positions: appendSelectionPosition(
+  selected_positions: appendBoardSelectionPosition(
     input.candidate.selected_positions,
     input.position,
   ),
@@ -78,7 +78,7 @@ export const extendBoardSelectionCandidate = (input: {
   position: BoardPosition;
 }): BoardSelectionCandidate => ({
   ...createEmptyBoardSelectionCandidate(),
-  selected_positions: appendSelectionPosition(
+  selected_positions: appendBoardSelectionPosition(
     input.candidate.selected_positions,
     input.position,
   ),
@@ -140,7 +140,7 @@ export const applyTraceSelectionPayload = (input: {
       continue;
     }
 
-    candidate.selected_positions = appendSelectionPosition(
+    candidate.selected_positions = appendBoardSelectionPosition(
       candidate.selected_positions,
       snappedPosition,
     );
@@ -162,7 +162,7 @@ export const applyTraceSelectionPayload = (input: {
   };
 };
 
-const appendSelectionPosition = (
+export const appendBoardSelectionPosition = (
   currentPath: readonly BoardPosition[],
   nextPosition: BoardPosition,
 ): BoardPosition[] => {

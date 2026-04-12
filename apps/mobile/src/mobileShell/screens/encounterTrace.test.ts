@@ -85,7 +85,7 @@ test("sampleBoardPositionsAlongSegment interpolates through skipped cells", () =
   ]);
 });
 
-test("appendStableTracePosition keeps extending swipe paths but ignores accidental backtracking", () => {
+test("appendStableTracePosition mirrors shared selection backtracking rules", () => {
   let path = appendStableTracePosition({
     current_path: [],
     next_position: { row: 0, col: 0 },
@@ -107,11 +107,10 @@ test("appendStableTracePosition keeps extending swipe paths but ignores accident
   assert.deepEqual(path, [
     { row: 0, col: 0 },
     { row: 0, col: 1 },
-    { row: 0, col: 2 },
   ]);
 });
 
-test("appendStableTracePosition ignores reused and non-adjacent positions during a swipe", () => {
+test("appendStableTracePosition rejects reused non-tail tiles and non-adjacent jumps", () => {
   let path = appendStableTracePosition({
     current_path: [{ row: 0, col: 0 }],
     next_position: { row: 1, col: 1 },
@@ -126,8 +125,5 @@ test("appendStableTracePosition ignores reused and non-adjacent positions during
     next_position: { row: 3, col: 3 },
   });
 
-  assert.deepEqual(path, [
-    { row: 0, col: 0 },
-    { row: 1, col: 1 },
-  ]);
+  assert.deepEqual(path, [{ row: 0, col: 0 }]);
 });

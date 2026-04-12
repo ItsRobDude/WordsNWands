@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { PanResponder, Text, View } from "react-native";
+import { useRef, useState } from "react";
+import { Text, View } from "react-native";
 
 import type {
   BoardPosition,
@@ -14,15 +14,19 @@ import { SectionCard } from "../components/SectionCard.tsx";
 import { StatPill } from "../components/StatPill.tsx";
 import { styles } from "../mobileStyles.ts";
 import {
-  createLocalBoardTouchPointFromNativeEvent,
-  resolveBoardPositionFromTileFrames,
-  sampleBoardPositionsFromTileFrames,
-  type BoardTouchFrame,
-  type BoardTouchNativeEvent,
-  type TileTouchFrame,
-} from "./boardTouch.ts";
-import { appendStableTracePosition } from "./encounterTrace.ts";
+  extractLocalTouchPointFromNativeEvent,
+  resolveBoardPositionFromGrid,
+  type BoardGridLayout,
+  type EncounterTraceNativeEvent,
+} from "./encounterTrace.ts";
 import { resolvePauseExitLabel } from "./screenFlow.ts";
+
+interface TraceSample {
+  pointer_id: number;
+  x_px: number;
+  y_px: number;
+  t_ms: number;
+}
 
 export function EncounterScreen(props: {
   active_state: EncounterRuntimeState | null;
@@ -38,194 +42,14 @@ export function EncounterScreen(props: {
   on_close_pause_menu: MobileAppStoreState["actions"]["closePauseMenu"];
   on_restart_encounter: MobileAppStoreState["actions"]["restartEncounter"];
   on_leave_encounter: MobileAppStoreState["actions"]["leaveEncounter"];
-  on_start_trace_selection: MobileAppStoreState["actions"]["startTraceSelection"];
-  on_extend_trace_selection: MobileAppStoreState["actions"]["extendTraceSelection"];
-  on_cancel_trace_selection: MobileAppStoreState["actions"]["cancelTraceSelection"];
+  on_apply_trace_selection: MobileAppStoreState["actions"]["applyTraceSelection"];
   on_select_board_position: MobileAppStoreState["actions"]["selectBoardPosition"];
   on_clear_selection: MobileAppStoreState["actions"]["clearSelection"];
   on_submit_selection: MobileAppStoreState["actions"]["submitSelection"];
 }): JSX.Element {
-  const boardRef = useRef<View | null>(null);
-  const lastTracePointRef = useRef<{ x_px: number; y_px: number } | null>(null);
-  const tracePathRef = useRef<BoardPosition[]>([]);
-  const traceActiveRef = useRef(false);
-  const traceStartPositionRef = useRef<BoardPosition | null>(null);
-  const [boardFrame, setBoardFrame] = useState<BoardTouchFrame | null>(null);
-  const [pendingTraceStartPosition, setPendingTraceStartPosition] =
-    useState<BoardPosition | null>(null);
-  const [tileFramesByKey, setTileFramesByKey] = useState<
-    Record<string, TileTouchFrame>
-  >({});
-  const tileFrames = useMemo(
-    () => Object.values(tileFramesByKey),
-    [tileFramesByKey],
-  );
-  const displayedPreviewPath = useMemo(
-    () =>
-      deriveDisplayedPreviewPath({
-        preview_path: props.preview_path,
-        pending_start_position: pendingTraceStartPosition,
-      }),
-    [pendingTraceStartPosition, props.preview_path],
-  );
-
-  useEffect(() => {
-    setTileFramesByKey({});
-    setBoardFrame(null);
-    setPendingTraceStartPosition(null);
-    tracePathRef.current = [];
-  }, [props.active_state?.encounter_session_id]);
-
-  const boardPanResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: (event) =>
-          resolveStartPosition({
-            event: event.nativeEvent,
-            board_frame: boardFrame,
-            tile_frames: tileFrames,
-          }) !== null,
-        onStartShouldSetPanResponderCapture: (event) =>
-          resolveStartPosition({
-            event: event.nativeEvent,
-            board_frame: boardFrame,
-            tile_frames: tileFrames,
-          }) !== null,
-        onMoveShouldSetPanResponder: (event, gestureState) => {
-          if (tileFrames.length === 0) {
-            return false;
-          }
-
-          const point = resolveBoardLocalPoint({
-            native_event: event.nativeEvent,
-            board_frame: boardFrame,
-          });
-          if (!point) {
-            return false;
-          }
-
-          const position = resolveBoardPositionFromTileFrames({
-            point,
-            tile_frames: tileFrames,
-          });
-          if (!position) {
-            return false;
-          }
-
-          return Math.hypot(gestureState.dx, gestureState.dy) >= 10;
-        },
-        onPanResponderGrant: (event) => {
-          const startPoint = resolveBoardLocalPoint({
-            native_event: event.nativeEvent,
-            board_frame: boardFrame,
-          });
-          const startPosition = resolveStartPosition({
-            event: event.nativeEvent,
-            board_frame: boardFrame,
-            tile_frames: tileFrames,
-          });
-          if (!startPosition) {
-            return;
-          }
-
-          traceStartPositionRef.current = startPosition;
-          tracePathRef.current = [startPosition];
-          setPendingTraceStartPosition(
-            props.preview_path_length === 0 ? startPosition : null,
-          );
-          lastTracePointRef.current = startPoint;
-          traceActiveRef.current = false;
-        },
-        onPanResponderMove: (event) => {
-          const startPosition = traceStartPositionRef.current;
-          const lastPoint = lastTracePointRef.current;
-          if (!lastPoint || !startPosition || tileFrames.length === 0) {
-            return;
-          }
-
-          const nextPoint = resolveBoardLocalPoint({
-            native_event: event.nativeEvent,
-            board_frame: boardFrame,
-          });
-          if (!nextPoint) {
-            return;
-          }
-
-          if (!traceActiveRef.current) {
-            if (
-              Math.hypot(
-                nextPoint.x_px - lastPoint.x_px,
-                nextPoint.y_px - lastPoint.y_px,
-              ) < 10
-            ) {
-              return;
-            }
-
-            props.on_start_trace_selection(startPosition);
-            traceActiveRef.current = true;
-            setPendingTraceStartPosition(null);
-            tracePathRef.current = [startPosition];
-          }
-
-          tracePathRef.current = applyInterpolatedTracePositions({
-            from_point: lastPoint,
-            to_point: nextPoint,
-            tile_frames: tileFrames,
-            current_trace_path: tracePathRef.current,
-            on_extend: props.on_extend_trace_selection,
-          });
-          lastTracePointRef.current = nextPoint;
-        },
-        onPanResponderRelease: (event) => {
-          const startPosition = traceStartPositionRef.current;
-          const lastPoint = lastTracePointRef.current;
-          setPendingTraceStartPosition(null);
-          if (traceActiveRef.current && lastPoint && tileFrames.length > 0) {
-            const nextPoint =
-              resolveBoardLocalPoint({
-                native_event: event.nativeEvent,
-                board_frame: boardFrame,
-              }) ?? lastPoint;
-            tracePathRef.current = applyInterpolatedTracePositions({
-              from_point: lastPoint,
-              to_point: nextPoint,
-              tile_frames: tileFrames,
-              current_trace_path: tracePathRef.current,
-              on_extend: props.on_extend_trace_selection,
-            });
-            void props.on_submit_selection();
-          } else if (startPosition) {
-            props.on_select_board_position(startPosition);
-          }
-
-          tracePathRef.current = [];
-          traceStartPositionRef.current = null;
-          lastTracePointRef.current = null;
-          traceActiveRef.current = false;
-        },
-        onPanResponderTerminate: () => {
-          if (traceActiveRef.current) {
-            props.on_cancel_trace_selection();
-          }
-          setPendingTraceStartPosition(null);
-          tracePathRef.current = [];
-          traceStartPositionRef.current = null;
-          lastTracePointRef.current = null;
-          traceActiveRef.current = false;
-        },
-        onPanResponderTerminationRequest: () => true,
-      }),
-    [
-      props.on_cancel_trace_selection,
-      props.on_extend_trace_selection,
-      props.on_select_board_position,
-      props.on_start_trace_selection,
-      props.preview_path_length,
-      props.on_submit_selection,
-      boardFrame,
-      tileFrames,
-    ],
-  );
+  const traceIdRef = useRef<string | null>(null);
+  const pendingTraceStartRef = useRef<TraceSample | null>(null);
+  const [boardLayout, setBoardLayout] = useState<BoardGridLayout | null>(null);
 
   if (!props.active_state) {
     return (
@@ -238,6 +62,16 @@ export function EncounterScreen(props: {
   }
 
   const activeState = props.active_state;
+  const boardBounds = boardLayout
+    ? {
+        board_left_px: 0,
+        board_top_px: 0,
+        board_width_px: boardLayout.width_px,
+        board_height_px: boardLayout.height_px,
+        rows: boardLayout.rows,
+        cols: boardLayout.cols,
+      }
+    : null;
   const currentFeedback = describeCastResolution(props.last_transcript_entry);
 
   return (
@@ -309,53 +143,123 @@ export function EncounterScreen(props: {
           Current preview: {props.preview_word || "none"}
         </Text>
         <View
-          ref={(node) => {
-            boardRef.current = node;
-          }}
           style={styles.board}
-          {...boardPanResponder.panHandlers}
           onLayout={(event) => {
-            const fallbackFrame = {
-              board_left_px: event.nativeEvent.layout.x,
-              board_top_px: event.nativeEvent.layout.y,
-              board_width_px: event.nativeEvent.layout.width,
-              board_height_px: event.nativeEvent.layout.height,
-            };
-            setBoardFrame(fallbackFrame);
-            boardRef.current?.measureInWindow((left, top, width, height) => {
-              setBoardFrame({
-                board_left_px: left,
-                board_top_px: top,
-                board_width_px: width || fallbackFrame.board_width_px,
-                board_height_px: height || fallbackFrame.board_height_px,
-              });
+            setBoardLayout((current) => {
+              const nextLayout = {
+                width_px: event.nativeEvent.layout.width,
+                height_px: event.nativeEvent.layout.height,
+                rows: activeState.board.height,
+                cols: activeState.board.width,
+              };
+
+              if (
+                current &&
+                current.width_px === nextLayout.width_px &&
+                current.height_px === nextLayout.height_px &&
+                current.rows === nextLayout.rows &&
+                current.cols === nextLayout.cols
+              ) {
+                return current;
+              }
+
+              return nextLayout;
             });
           }}
-        >
-          <BattleBoard
-            state={activeState}
-            selected_path={displayedPreviewPath}
-            on_tile_layout={(frame) => {
-              const key = `${frame.row}:${frame.col}`;
-              setTileFramesByKey((current) => {
-                const previous = current[key];
-                if (
-                  previous &&
-                  previous.tile_left_px === frame.tile_left_px &&
-                  previous.tile_top_px === frame.tile_top_px &&
-                  previous.tile_width_px === frame.tile_width_px &&
-                  previous.tile_height_px === frame.tile_height_px
-                ) {
-                  return current;
-                }
+          onStartShouldSetResponder={() => boardBounds !== null}
+          onResponderGrant={(event: unknown) => {
+            pendingTraceStartRef.current = createTraceSample(
+              event,
+              boardLayout,
+            );
+            traceIdRef.current = null;
+          }}
+          onResponderMove={(event: unknown) => {
+            if (!boardBounds) {
+              return;
+            }
 
-                return {
-                  ...current,
-                  [key]: frame,
-                };
-              });
-            }}
-          />
+            const startSample = pendingTraceStartRef.current;
+            const currentSample = createTraceSample(event, boardLayout);
+            if (!startSample || !currentSample) {
+              return;
+            }
+
+            if (!traceIdRef.current) {
+              if (
+                !shouldActivateTraceGesture({
+                  start_sample: startSample,
+                  current_sample: currentSample,
+                })
+              ) {
+                return;
+              }
+
+              const traceId = createTraceId();
+              traceIdRef.current = traceId;
+              void props.on_apply_trace_selection(
+                {
+                  trace_id: traceId,
+                  phase: "start",
+                  samples: [startSample],
+                },
+                boardBounds,
+              );
+            }
+
+            void props.on_apply_trace_selection(
+              {
+                trace_id: traceIdRef.current,
+                phase: "move",
+                samples: [currentSample],
+              },
+              boardBounds,
+            );
+          }}
+          onResponderRelease={(event: unknown) => {
+            const startSample = pendingTraceStartRef.current;
+            const currentSample = createTraceSample(event, boardLayout);
+            const traceId = traceIdRef.current;
+            pendingTraceStartRef.current = null;
+            traceIdRef.current = null;
+
+            if (traceId && boardBounds) {
+              void props.on_apply_trace_selection(
+                {
+                  trace_id: traceId,
+                  phase: "end",
+                  samples: currentSample ? [currentSample] : [],
+                },
+                boardBounds,
+              );
+              return;
+            }
+
+            const tapPosition = resolveTapPosition({
+              sample: currentSample ?? startSample,
+              board_layout: boardLayout,
+            });
+            if (tapPosition) {
+              props.on_select_board_position(tapPosition);
+            }
+          }}
+          onResponderTerminate={() => {
+            if (traceIdRef.current && boardBounds) {
+              void props.on_apply_trace_selection(
+                {
+                  trace_id: traceIdRef.current,
+                  phase: "cancel",
+                  samples: [],
+                },
+                boardBounds,
+              );
+            }
+
+            traceIdRef.current = null;
+            pendingTraceStartRef.current = null;
+          }}
+        >
+          <BattleBoard state={activeState} selected_path={props.preview_path} />
         </View>
         <View style={styles.actionsRow}>
           <ActionButton
@@ -411,75 +315,71 @@ export function EncounterScreen(props: {
   );
 }
 
-function resolveStartPosition(input: {
-  event: BoardTouchNativeEvent;
-  board_frame: BoardTouchFrame | null;
-  tile_frames: readonly TileTouchFrame[];
-}): BoardPosition | null {
-  const point = resolveBoardLocalPoint({
-    native_event: input.event,
-    board_frame: input.board_frame,
+function createTraceSample(
+  event: unknown,
+  boardLayout: BoardGridLayout | null,
+): TraceSample | null {
+  if (!boardLayout) {
+    return null;
+  }
+
+  const nativeEvent = (
+    event as {
+      nativeEvent?: EncounterTraceNativeEvent & {
+        identifier?: number | string;
+        timestamp?: number;
+      };
+    }
+  ).nativeEvent;
+  const point = extractLocalTouchPointFromNativeEvent({
+    native_event: nativeEvent ?? {},
   });
   if (!point) {
     return null;
   }
 
-  return resolveBoardPositionFromTileFrames({
-    point,
-    tile_frames: input.tile_frames,
-  });
+  return {
+    pointer_id:
+      typeof nativeEvent?.identifier === "number" ? nativeEvent.identifier : 0,
+    x_px: point.x_px,
+    y_px: point.y_px,
+    t_ms: nativeEvent?.timestamp ?? Date.now(),
+  };
 }
 
-function deriveDisplayedPreviewPath(input: {
-  preview_path: readonly BoardPosition[];
-  pending_start_position: BoardPosition | null;
-}): readonly BoardPosition[] {
-  if (input.preview_path.length > 0 || !input.pending_start_position) {
-    return input.preview_path;
+function resolveTapPosition(input: {
+  sample: TraceSample | null;
+  board_layout: BoardGridLayout | null;
+}): BoardPosition | null {
+  if (!input.sample || !input.board_layout) {
+    return null;
   }
 
-  return [input.pending_start_position];
-}
-
-function resolveBoardLocalPoint(input: {
-  native_event: BoardTouchNativeEvent;
-  board_frame: BoardTouchFrame | null;
-}): { x_px: number; y_px: number } | null {
-  return createLocalBoardTouchPointFromNativeEvent({
-    native_event: input.native_event,
-    frame: input.board_frame,
+  return resolveBoardPositionFromGrid({
+    point: {
+      x_px: input.sample.x_px,
+      y_px: input.sample.y_px,
+    },
+    layout: input.board_layout,
   });
 }
 
-function applyInterpolatedTracePositions(input: {
-  from_point: { x_px: number; y_px: number };
-  to_point: { x_px: number; y_px: number };
-  tile_frames: readonly TileTouchFrame[];
-  current_trace_path: readonly BoardPosition[];
-  on_extend: MobileAppStoreState["actions"]["extendTraceSelection"];
-}): BoardPosition[] {
-  const positions = sampleBoardPositionsFromTileFrames({
-    from_point: input.from_point,
-    to_point: input.to_point,
-    tile_frames: input.tile_frames,
-  });
-  let nextTracePath = input.current_trace_path.map((position) => ({
-    row: position.row,
-    col: position.col,
-  }));
-
-  for (const position of positions) {
-    const updatedTracePath = appendStableTracePosition({
-      current_path: nextTracePath,
-      next_position: position,
-    });
-    if (updatedTracePath.length === nextTracePath.length) {
-      continue;
-    }
-
-    nextTracePath = updatedTracePath;
-    input.on_extend(position);
+function shouldActivateTraceGesture(input: {
+  start_sample: TraceSample | null;
+  current_sample: TraceSample;
+  threshold_px?: number;
+}): boolean {
+  if (!input.start_sample) {
+    return false;
   }
 
-  return nextTracePath;
+  const thresholdPx = input.threshold_px ?? 10;
+  const deltaX = input.current_sample.x_px - input.start_sample.x_px;
+  const deltaY = input.current_sample.y_px - input.start_sample.y_px;
+
+  return Math.hypot(deltaX, deltaY) >= thresholdPx;
+}
+
+function createTraceId(): string {
+  return `trace-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }

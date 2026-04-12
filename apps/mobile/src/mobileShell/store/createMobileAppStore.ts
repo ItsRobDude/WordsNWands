@@ -13,8 +13,6 @@ import {
   clearBoardSelectionCandidate,
   commitBoardSelectionCandidate,
   createEmptyBoardSelectionCandidate,
-  extendBoardSelectionCandidate,
-  startBoardSelectionCandidate,
   type BoardSelectionCandidate,
   type CastTracePayload,
   type TraceBoardBounds,
@@ -71,9 +69,6 @@ export interface MobileAppStoreActions {
   openPauseMenu(): void;
   closePauseMenu(): void;
   restartEncounter(): Promise<void>;
-  startTraceSelection(position: BoardPosition): void;
-  extendTraceSelection(position: BoardPosition): void;
-  cancelTraceSelection(): void;
   selectBoardPosition(position: BoardPosition): void;
   applyTraceSelection(
     payload: CastTracePayload,
@@ -274,64 +269,6 @@ export const createMobileAppStore = (input: {
         }
 
         await get().actions.launchEncounter(encounterId);
-      },
-
-      startTraceSelection(position: BoardPosition): void {
-        const state = get();
-        const runtimeState = state.encounterSlice.runtime_state;
-        if (!runtimeState || runtimeState.session_state !== "in_progress") {
-          return;
-        }
-
-        const nextCandidate = startBoardSelectionCandidate(position);
-        const highlightedWordPreview = deriveWordPreviewFromSelection({
-          runtime_state: runtimeState,
-          selected_positions: nextCandidate.selected_positions,
-        });
-
-        setPreviewCandidate({
-          set,
-          candidate: nextCandidate,
-          highlighted_word_preview: highlightedWordPreview,
-        });
-      },
-
-      extendTraceSelection(position: BoardPosition): void {
-        const state = get();
-        const runtimeState = state.encounterSlice.runtime_state;
-        if (!runtimeState || runtimeState.session_state !== "in_progress") {
-          return;
-        }
-
-        const nextCandidate = extendBoardSelectionCandidate({
-          candidate: state.mobileSlice.input_candidate,
-          position,
-        });
-        const highlightedWordPreview = deriveWordPreviewFromSelection({
-          runtime_state: runtimeState,
-          selected_positions: nextCandidate.selected_positions,
-        });
-
-        setPreviewCandidate({
-          set,
-          candidate: nextCandidate,
-          highlighted_word_preview: highlightedWordPreview,
-        });
-      },
-
-      cancelTraceSelection(): void {
-        set((state) => ({
-          ...state,
-          uiSlice: {
-            ...state.uiSlice,
-            swipe_preview_path: [],
-            highlighted_word_preview: "",
-          },
-          mobileSlice: {
-            ...state.mobileSlice,
-            input_candidate: clearBoardSelectionCandidate(),
-          },
-        }));
       },
 
       selectBoardPosition(position: BoardPosition): void {
