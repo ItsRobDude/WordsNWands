@@ -44,6 +44,17 @@ const WEAKNESS_SPOTLIGHT_WORDS: Record<string, readonly string[]> = {
   light: ["sun", "glow", "beam", "shine"],
   arcane: ["magic", "spell", "charm", "aura"],
 };
+const LOW_PRESSURE_SUPPORT_WORDS = [
+  "sun",
+  "sea",
+  "run",
+  "red",
+  "dog",
+  "cat",
+  "hat",
+  "ham",
+  "doe",
+] as const;
 
 export const getBundledProgression = (content: BundledContentRuntime) =>
   content.progression;
@@ -417,13 +428,18 @@ const decorateEarlyEncounterBoard = (input: {
 
   const spotlightWords =
     WEAKNESS_SPOTLIGHT_WORDS[input.encounter_payload.creature.weakness] ?? [];
-  if (spotlightWords.length === 0) {
-    return input.board;
-  }
+
+  const weaknessBoard =
+    spotlightWords.length === 0
+      ? input.board
+      : injectSpotlightWord({
+          board: input.board,
+          spotlight_words: spotlightWords,
+        });
 
   return injectSpotlightWord({
-    board: input.board,
-    spotlight_words: spotlightWords,
+    board: weaknessBoard,
+    spotlight_words: LOW_PRESSURE_SUPPORT_WORDS,
   });
 };
 
@@ -584,7 +600,7 @@ const resolveOpeningMinimumPlayableWordCount = (
   encounter_payload.encounter.isStarterEncounter
     ? 7
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 6
+      ? 8
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 3
@@ -596,7 +612,7 @@ const resolveOpeningTargetPlayableWordCount = (
   encounter_payload.encounter.isStarterEncounter
     ? 10
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 9
+      ? 12
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 5
@@ -612,7 +628,7 @@ const resolveOpeningMinimumPriorityWordCount = (
   encounter_payload.encounter.isStarterEncounter
     ? 10
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 8
+      ? 10
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 5
@@ -624,7 +640,7 @@ const resolveOpeningTargetPriorityWordCount = (
   encounter_payload.encounter.isStarterEncounter
     ? 14
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 10
+      ? 14
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 6
@@ -640,7 +656,7 @@ const resolveOpeningMinimumStraightPriorityWordCount = (
   encounter_payload.encounter.isStarterEncounter
     ? 5
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 4
+      ? 5
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 2
@@ -652,7 +668,7 @@ const resolveOpeningTargetStraightPriorityWordCount = (
   encounter_payload.encounter.isStarterEncounter
     ? 7
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 5
+      ? 7
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 3
@@ -665,7 +681,11 @@ const resolveOpeningStraightPriorityWordSearchLimit = (
 
 const resolveOpeningStraightPriorityMinimumLength = (
   encounter_payload: RuntimeEncounterPayload,
-): number => (encounter_payload.encounter.isStarterEncounter ? 3 : 4);
+): number =>
+  encounter_payload.encounter.isStarterEncounter ||
+  encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+    ? 3
+    : 4;
 
 const resolveOpeningCandidateSearchAttempts = (
   encounter_payload: RuntimeEncounterPayload,
@@ -673,7 +693,7 @@ const resolveOpeningCandidateSearchAttempts = (
   encounter_payload.encounter.isStarterEncounter
     ? 80
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 80
+      ? 120
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 40
@@ -685,7 +705,7 @@ const resolveRefillMinimumPlayableWordCount = (
   encounter_payload.encounter.isStarterEncounter
     ? 6
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 5
+      ? 6
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 3
@@ -697,7 +717,7 @@ const resolveRefillTargetPlayableWordCount = (
   encounter_payload.encounter.isStarterEncounter
     ? 8
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 7
+      ? 9
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 4
@@ -713,7 +733,7 @@ const resolveRefillMinimumPriorityWordCount = (
   encounter_payload.encounter.isStarterEncounter
     ? 7
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 5
+      ? 7
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 3
@@ -725,7 +745,7 @@ const resolveRefillTargetPriorityWordCount = (
   encounter_payload.encounter.isStarterEncounter
     ? 9
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 7
+      ? 10
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 4
@@ -741,7 +761,7 @@ const resolveRefillMinimumStraightPriorityWordCount = (
   encounter_payload.encounter.isStarterEncounter
     ? 3
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 2
+      ? 3
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 1
@@ -753,7 +773,7 @@ const resolveRefillTargetStraightPriorityWordCount = (
   encounter_payload.encounter.isStarterEncounter
     ? 5
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 3
+      ? 5
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 2
@@ -770,7 +790,7 @@ const resolveRefillCandidateSearchAttempts = (
   encounter_payload.encounter.isStarterEncounter
     ? 36
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 30
+      ? 48
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 18

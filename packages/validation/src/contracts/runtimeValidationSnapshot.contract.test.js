@@ -122,7 +122,16 @@ test("authored runtime snapshot keeps ordinary short-word support for early play
   );
   const lookup = new InMemoryValidationSnapshotLookup(authoredSnapshot);
 
-  for (const word of ["ham", "hat", "cat", "dog", "run", "red", "farm"]) {
+  for (const word of [
+    "ham",
+    "hat",
+    "cat",
+    "dog",
+    "doe",
+    "run",
+    "red",
+    "farm",
+  ]) {
     assert.equal(
       lookup.hasWord(word),
       true,

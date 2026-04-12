@@ -2,9 +2,9 @@
   "metadata": {
     "snapshot_version": "val_snapshot_m2_launch_v1",
     "language": "en",
-    "word_count": 22252,
+    "word_count": 22253,
     "tagged_word_count": 32,
-    "generated_at_utc": "2026-04-12T04:20:06.000Z"
+    "generated_at_utc": "2026-04-12T04:48:29.000Z"
   },
   "castable_words": [
     "aardvark",
@@ -5775,6 +5775,7 @@
     "dodging",
     "dodgy",
     "dodo",
+    "doe",
     "doer",
     "does",
     "doesn",

@@ -65,8 +65,14 @@ export default function EncounterRoute(): JSX.Element {
           on_leave_encounter={
             mobileRuntime.store.getState().actions.leaveEncounter
           }
-          on_apply_trace_selection={
-            mobileRuntime.store.getState().actions.applyTraceSelection
+          on_start_trace_selection={
+            mobileRuntime.store.getState().actions.startTraceSelection
+          }
+          on_extend_trace_selection={
+            mobileRuntime.store.getState().actions.extendTraceSelection
+          }
+          on_cancel_trace_selection={
+            mobileRuntime.store.getState().actions.cancelTraceSelection
           }
           on_select_board_position={
             mobileRuntime.store.getState().actions.selectBoardPosition

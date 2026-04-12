@@ -2,10 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  createPageTouchPointFromNativeEvent,
   createTraceBounds,
   createTraceSampleFromNativeEvent,
+  resolveBoardPositionFromTileFrames,
+  sampleBoardPositionsFromTileFrames,
   shouldActivateTraceGesture,
   type BoardTouchFrame,
+  type TileTouchFrame,
 } from "./boardTouch.ts";
 
 const frame: BoardTouchFrame = {
@@ -14,6 +18,41 @@ const frame: BoardTouchFrame = {
   board_width_px: 300,
   board_height_px: 300,
 };
+
+const tileFrames: TileTouchFrame[] = [
+  {
+    row: 0,
+    col: 0,
+    tile_left_px: 40,
+    tile_top_px: 120,
+    tile_width_px: 50,
+    tile_height_px: 50,
+  },
+  {
+    row: 0,
+    col: 1,
+    tile_left_px: 94,
+    tile_top_px: 120,
+    tile_width_px: 50,
+    tile_height_px: 50,
+  },
+  {
+    row: 1,
+    col: 0,
+    tile_left_px: 40,
+    tile_top_px: 174,
+    tile_width_px: 50,
+    tile_height_px: 50,
+  },
+  {
+    row: 1,
+    col: 1,
+    tile_left_px: 94,
+    tile_top_px: 174,
+    tile_width_px: 50,
+    tile_height_px: 50,
+  },
+];
 
 test("createTraceSampleFromNativeEvent prefers board-local coordinates when available", () => {
   const sample = createTraceSampleFromNativeEvent({
@@ -68,6 +107,23 @@ test("createTraceSampleFromNativeEvent returns null without usable coordinates",
   });
 
   assert.equal(sample, null);
+});
+
+test("createPageTouchPointFromNativeEvent prefers absolute page coordinates", () => {
+  const point = createPageTouchPointFromNativeEvent({
+    native_event: {
+      pageX: 112,
+      pageY: 184,
+      locationX: 20,
+      locationY: 30,
+    },
+    frame,
+  });
+
+  assert.deepEqual(point, {
+    x_px: 112,
+    y_px: 184,
+  });
 });
 
 test("shouldActivateTraceGesture ignores tiny movement but accepts a real swipe", () => {
@@ -134,4 +190,45 @@ test("createTraceBounds preserves measured board frame and grid shape", () => {
       cols: 6,
     },
   );
+});
+
+test("resolveBoardPositionFromTileFrames uses measured tile boxes instead of abstract rows", () => {
+  const position = resolveBoardPositionFromTileFrames({
+    point: {
+      x_px: 116,
+      y_px: 145,
+    },
+    tile_frames: tileFrames,
+  });
+
+  assert.deepEqual(position, {
+    row: 0,
+    col: 1,
+  });
+});
+
+test("sampleBoardPositionsFromTileFrames interpolates across successive tiles", () => {
+  const positions = sampleBoardPositionsFromTileFrames({
+    from_point: {
+      x_px: 60,
+      y_px: 145,
+    },
+    to_point: {
+      x_px: 118,
+      y_px: 145,
+    },
+    tile_frames: tileFrames,
+    step_px: 8,
+  });
+
+  assert.deepEqual(positions, [
+    {
+      row: 0,
+      col: 0,
+    },
+    {
+      row: 0,
+      col: 1,
+    },
+  ]);
 });
