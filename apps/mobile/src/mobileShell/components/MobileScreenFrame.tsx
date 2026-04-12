@@ -1,10 +1,12 @@
-import { SafeAreaView, ScrollView, View } from "react-native";
+import type { ReactNode } from "react";
+import { ScrollView, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { styles } from "../mobileStyles.ts";
 import { AppHeader } from "./AppHeader.tsx";
 
 export function MobileScreenFrame(props: {
-  children?: JSX.Element | JSX.Element[] | null;
+  children?: ReactNode;
   show_header?: boolean;
 }): JSX.Element {
   return (

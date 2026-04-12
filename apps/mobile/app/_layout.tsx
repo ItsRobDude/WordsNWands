@@ -1,5 +1,11 @@
-import { Stack, router, usePathname } from "expo-router";
+import {
+  Stack,
+  router,
+  usePathname,
+  useRootNavigationState,
+} from "expo-router";
 import { useEffect } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useStore } from "zustand";
 
 import {
@@ -13,6 +19,7 @@ export const unstable_settings = {
 };
 
 export default function RootLayout(): JSX.Element {
+  const rootNavigationState = useRootNavigationState();
   const hydrationStatus = useStore(
     mobileRuntime.store,
     (state) => state.mobileSlice.hydration_status,
@@ -28,6 +35,10 @@ export default function RootLayout(): JSX.Element {
   }, []);
 
   useEffect(() => {
+    if (!rootNavigationState?.key) {
+      return;
+    }
+
     const targetPath = resolveRoutePath({
       hydration_status: hydrationStatus,
       surface,
@@ -36,7 +47,11 @@ export default function RootLayout(): JSX.Element {
     if (pathname !== targetPath) {
       router.replace(targetPath);
     }
-  }, [hydrationStatus, pathname, surface]);
+  }, [hydrationStatus, pathname, rootNavigationState?.key, surface]);
 
-  return <Stack screenOptions={{ headerShown: false, animation: "none" }} />;
+  return (
+    <SafeAreaProvider>
+      <Stack screenOptions={{ headerShown: false, animation: "none" }} />
+    </SafeAreaProvider>
+  );
 }

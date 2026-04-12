@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Text, View } from "react-native";
 
 import { styles } from "../mobileStyles.ts";
@@ -5,7 +6,7 @@ import { styles } from "../mobileStyles.ts";
 export function SectionCard(props: {
   eyebrow: string;
   title: string;
-  children?: JSX.Element | JSX.Element[] | null;
+  children?: ReactNode;
   accent?: "warm" | "cool";
 }): JSX.Element {
   return (
