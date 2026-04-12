@@ -14,9 +14,10 @@ import { SectionCard } from "../components/SectionCard.tsx";
 import { StatPill } from "../components/StatPill.tsx";
 import { styles } from "../mobileStyles.ts";
 import {
-  createPageTouchPointFromNativeEvent,
+  createLocalBoardTouchPointFromNativeEvent,
   resolveBoardPositionFromTileFrames,
   sampleBoardPositionsFromTileFrames,
+  type BoardTouchFrame,
   type BoardTouchNativeEvent,
   type TileTouchFrame,
 } from "./boardTouch.ts";
@@ -43,9 +44,11 @@ export function EncounterScreen(props: {
   on_clear_selection: MobileAppStoreState["actions"]["clearSelection"];
   on_submit_selection: MobileAppStoreState["actions"]["submitSelection"];
 }): JSX.Element {
+  const boardRef = useRef<View | null>(null);
   const lastTracePointRef = useRef<{ x_px: number; y_px: number } | null>(null);
   const traceActiveRef = useRef(false);
   const traceStartPositionRef = useRef<BoardPosition | null>(null);
+  const [boardFrame, setBoardFrame] = useState<BoardTouchFrame | null>(null);
   const [pendingTraceStartPosition, setPendingTraceStartPosition] =
     useState<BoardPosition | null>(null);
   const [tileFramesByKey, setTileFramesByKey] = useState<
@@ -66,6 +69,7 @@ export function EncounterScreen(props: {
 
   useEffect(() => {
     setTileFramesByKey({});
+    setBoardFrame(null);
     setPendingTraceStartPosition(null);
   }, [props.active_state?.encounter_session_id]);
 
@@ -75,23 +79,30 @@ export function EncounterScreen(props: {
         onStartShouldSetPanResponder: (event) =>
           resolveStartPosition({
             event: event.nativeEvent,
+            board_frame: boardFrame,
             tile_frames: tileFrames,
           }) !== null,
         onStartShouldSetPanResponderCapture: (event) =>
           resolveStartPosition({
             event: event.nativeEvent,
+            board_frame: boardFrame,
             tile_frames: tileFrames,
           }) !== null,
-        onMoveShouldSetPanResponder: (_, gestureState) => {
+        onMoveShouldSetPanResponder: (event, gestureState) => {
           if (tileFrames.length === 0) {
             return false;
           }
 
+          const point = resolveBoardLocalPoint({
+            native_event: event.nativeEvent,
+            board_frame: boardFrame,
+          });
+          if (!point) {
+            return false;
+          }
+
           const position = resolveBoardPositionFromTileFrames({
-            point: {
-              x_px: gestureState.x0,
-              y_px: gestureState.y0,
-            },
+            point,
             tile_frames: tileFrames,
           });
           if (!position) {
@@ -100,10 +111,14 @@ export function EncounterScreen(props: {
 
           return Math.hypot(gestureState.dx, gestureState.dy) >= 10;
         },
-        onPanResponderGrant: (event, gestureState) => {
-          const startPoint = resolvePagePoint(event.nativeEvent);
+        onPanResponderGrant: (event) => {
+          const startPoint = resolveBoardLocalPoint({
+            native_event: event.nativeEvent,
+            board_frame: boardFrame,
+          });
           const startPosition = resolveStartPosition({
             event: event.nativeEvent,
+            board_frame: boardFrame,
             tile_frames: tileFrames,
           });
           if (!startPosition) {
@@ -114,25 +129,24 @@ export function EncounterScreen(props: {
           setPendingTraceStartPosition(
             props.preview_path_length === 0 ? startPosition : null,
           );
-          lastTracePointRef.current =
-            startPoint ??
-            ({
-              x_px: gestureState.x0,
-              y_px: gestureState.y0,
-            } as const);
+          lastTracePointRef.current = startPoint;
           traceActiveRef.current = false;
         },
-        onPanResponderMove: (_, gestureState) => {
+        onPanResponderMove: (event) => {
           const startPosition = traceStartPositionRef.current;
           const lastPoint = lastTracePointRef.current;
           if (!lastPoint || !startPosition || tileFrames.length === 0) {
             return;
           }
 
-          const nextPoint = {
-            x_px: gestureState.moveX,
-            y_px: gestureState.moveY,
-          };
+          const nextPoint = resolveBoardLocalPoint({
+            native_event: event.nativeEvent,
+            board_frame: boardFrame,
+          });
+          if (!nextPoint) {
+            return;
+          }
+
           if (!traceActiveRef.current) {
             if (
               Math.hypot(
@@ -157,15 +171,16 @@ export function EncounterScreen(props: {
           });
           lastTracePointRef.current = nextPoint;
         },
-        onPanResponderRelease: (_, gestureState) => {
+        onPanResponderRelease: (event) => {
           const startPosition = traceStartPositionRef.current;
           const lastPoint = lastTracePointRef.current;
           setPendingTraceStartPosition(null);
           if (traceActiveRef.current && lastPoint && tileFrames.length > 0) {
-            const nextPoint = {
-              x_px: gestureState.moveX || gestureState.x0,
-              y_px: gestureState.moveY || gestureState.y0,
-            };
+            const nextPoint =
+              resolveBoardLocalPoint({
+                native_event: event.nativeEvent,
+                board_frame: boardFrame,
+              }) ?? lastPoint;
             applyInterpolatedTracePositions({
               from_point: lastPoint,
               to_point: nextPoint,
@@ -200,6 +215,7 @@ export function EncounterScreen(props: {
       props.on_start_trace_selection,
       props.preview_path_length,
       props.on_submit_selection,
+      boardFrame,
       tileFrames,
     ],
   );
@@ -285,7 +301,30 @@ export function EncounterScreen(props: {
         <Text style={styles.boardCaption}>
           Current preview: {props.preview_word || "none"}
         </Text>
-        <View style={styles.board} {...boardPanResponder.panHandlers}>
+        <View
+          ref={(node) => {
+            boardRef.current = node;
+          }}
+          style={styles.board}
+          {...boardPanResponder.panHandlers}
+          onLayout={(event) => {
+            const fallbackFrame = {
+              board_left_px: event.nativeEvent.layout.x,
+              board_top_px: event.nativeEvent.layout.y,
+              board_width_px: event.nativeEvent.layout.width,
+              board_height_px: event.nativeEvent.layout.height,
+            };
+            setBoardFrame(fallbackFrame);
+            boardRef.current?.measureInWindow((left, top, width, height) => {
+              setBoardFrame({
+                board_left_px: left,
+                board_top_px: top,
+                board_width_px: width || fallbackFrame.board_width_px,
+                board_height_px: height || fallbackFrame.board_height_px,
+              });
+            });
+          }}
+        >
           <BattleBoard
             state={activeState}
             selected_path={displayedPreviewPath}
@@ -365,20 +404,15 @@ export function EncounterScreen(props: {
   );
 }
 
-function resolvePagePoint(
-  nativeEvent: BoardTouchNativeEvent,
-): { x_px: number; y_px: number } | null {
-  return createPageTouchPointFromNativeEvent({
-    native_event: nativeEvent,
-    frame: null,
-  });
-}
-
 function resolveStartPosition(input: {
   event: BoardTouchNativeEvent;
+  board_frame: BoardTouchFrame | null;
   tile_frames: readonly TileTouchFrame[];
 }): BoardPosition | null {
-  const point = resolvePagePoint(input.event);
+  const point = resolveBoardLocalPoint({
+    native_event: input.event,
+    board_frame: input.board_frame,
+  });
   if (!point) {
     return null;
   }
@@ -398,6 +432,16 @@ function deriveDisplayedPreviewPath(input: {
   }
 
   return [input.pending_start_position];
+}
+
+function resolveBoardLocalPoint(input: {
+  native_event: BoardTouchNativeEvent;
+  board_frame: BoardTouchFrame | null;
+}): { x_px: number; y_px: number } | null {
+  return createLocalBoardTouchPointFromNativeEvent({
+    native_event: input.native_event,
+    frame: input.board_frame,
+  });
 }
 
 function applyInterpolatedTracePositions(input: {

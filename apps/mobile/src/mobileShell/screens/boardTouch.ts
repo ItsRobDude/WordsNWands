@@ -57,8 +57,8 @@ export const createTraceSampleFromNativeEvent = (input: {
   frame: BoardTouchFrame;
 }): TracePointerSample | null => {
   const point = resolveBoardTouchPoint(input.native_event);
-  const localPoint = resolveLocalBoardTouchPoint({
-    point,
+  const localPoint = createLocalBoardTouchPointFromNativeEvent({
+    native_event: input.native_event,
     frame: input.frame,
   });
   if (!localPoint) {
@@ -113,6 +113,35 @@ export const createPageTouchPointFromNativeEvent = (input: {
   }
 
   return null;
+};
+
+export const createLocalBoardTouchPointFromNativeEvent = (input: {
+  native_event: BoardTouchNativeEvent;
+  frame: BoardTouchFrame | null;
+}): { x_px: number; y_px: number } | null => {
+  const point = resolveBoardTouchPoint(input.native_event);
+
+  if (point.locationX !== undefined && point.locationY !== undefined) {
+    return {
+      x_px: point.locationX,
+      y_px: point.locationY,
+    };
+  }
+
+  if (
+    !input.frame ||
+    input.frame.board_width_px <= 0 ||
+    input.frame.board_height_px <= 0 ||
+    point.pageX === undefined ||
+    point.pageY === undefined
+  ) {
+    return null;
+  }
+
+  return {
+    x_px: point.pageX - input.frame.board_left_px,
+    y_px: point.pageY - input.frame.board_top_px,
+  };
 };
 
 export const resolveBoardPositionFromTileFrames = (input: {
@@ -282,33 +311,4 @@ const distanceFromPointToTileCenter = (input: {
     input.tile_frame.tile_top_px + input.tile_frame.tile_height_px / 2;
 
   return Math.hypot(input.point.x_px - centerX, input.point.y_px - centerY);
-};
-
-const resolveLocalBoardTouchPoint = (input: {
-  point: BoardTouchPoint;
-  frame: BoardTouchFrame;
-}): { x_px: number; y_px: number } | null => {
-  if (
-    input.point.locationX !== undefined &&
-    input.point.locationY !== undefined
-  ) {
-    return {
-      x_px: input.point.locationX,
-      y_px: input.point.locationY,
-    };
-  }
-
-  if (
-    input.point.pageX === undefined ||
-    input.point.pageY === undefined ||
-    input.frame.board_width_px <= 0 ||
-    input.frame.board_height_px <= 0
-  ) {
-    return null;
-  }
-
-  return {
-    x_px: input.point.pageX - input.frame.board_left_px,
-    y_px: input.point.pageY - input.frame.board_top_px,
-  };
 };

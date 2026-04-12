@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
 
 import type {
@@ -16,6 +16,7 @@ export function BattleBoard(props: {
   on_tile_layout?: (frame: TileTouchFrame) => void;
 }): JSX.Element[] {
   const selectedKeys = new Set(props.selected_path.map(toPositionKey));
+  const [rowOffsets, setRowOffsets] = useState<Record<number, number>>({});
   const tilesByPosition = useMemo(
     () =>
       new Map(
@@ -27,39 +28,58 @@ export function BattleBoard(props: {
     [props.state.board.tiles],
   );
 
-  return Array.from({ length: props.state.board.height }, (_, rowIndex) => (
-    <View key={`row-${rowIndex}`} style={styles.boardRow}>
-      {Array.from({ length: props.state.board.width }, (_, colIndex) => {
-        const tile = tilesByPosition.get(`${rowIndex}:${colIndex}`);
+  return Array.from({ length: props.state.board.height }, (_, rowIndex) => {
+    const rowTopPx = rowOffsets[rowIndex] ?? 0;
 
-        if (!tile) {
-          return (
-            <View key={`empty-${rowIndex}-${colIndex}`} style={styles.tile} />
+    return (
+      <View
+        key={`row-${rowIndex}`}
+        style={styles.boardRow}
+        onLayout={(event) => {
+          const nextOffset = event.nativeEvent.layout.y;
+          setRowOffsets((current) =>
+            current[rowIndex] === nextOffset
+              ? current
+              : {
+                  ...current,
+                  [rowIndex]: nextOffset,
+                },
           );
-        }
+        }}
+      >
+        {Array.from({ length: props.state.board.width }, (_, colIndex) => {
+          const tile = tilesByPosition.get(`${rowIndex}:${colIndex}`);
 
-        const isSelected = selectedKeys.has(toPositionKey(tile.position));
+          if (!tile) {
+            return (
+              <View key={`empty-${rowIndex}-${colIndex}`} style={styles.tile} />
+            );
+          }
 
-        return (
-          <BattleTile
-            key={tile.id}
-            tile={tile}
-            is_selected={isSelected}
-            on_tile_layout={
-              props.on_tile_layout
-                ? (frame) =>
-                    props.on_tile_layout?.({
-                      ...frame,
-                      row: rowIndex,
-                      col: colIndex,
-                    })
-                : undefined
-            }
-          />
-        );
-      })}
-    </View>
-  ));
+          const isSelected = selectedKeys.has(toPositionKey(tile.position));
+
+          return (
+            <BattleTile
+              key={tile.id}
+              tile={tile}
+              is_selected={isSelected}
+              on_tile_layout={
+                props.on_tile_layout
+                  ? (frame) =>
+                      props.on_tile_layout?.({
+                        ...frame,
+                        row: rowIndex,
+                        col: colIndex,
+                        tile_top_px: frame.tile_top_px + rowTopPx,
+                      })
+                  : undefined
+              }
+            />
+          );
+        })}
+      </View>
+    );
+  });
 }
 
 function BattleTile(props: {
@@ -67,32 +87,14 @@ function BattleTile(props: {
   is_selected: boolean;
   on_tile_layout?: (frame: Omit<TileTouchFrame, "row" | "col">) => void;
 }): JSX.Element {
-  const tileRef = useRef<View | null>(null);
-
   return (
     <View
-      ref={(node) => {
-        tileRef.current = node;
-      }}
       onLayout={(event) => {
-        const fallbackFrame = {
+        props.on_tile_layout?.({
           tile_left_px: event.nativeEvent.layout.x,
           tile_top_px: event.nativeEvent.layout.y,
           tile_width_px: event.nativeEvent.layout.width,
           tile_height_px: event.nativeEvent.layout.height,
-        };
-        if (!tileRef.current) {
-          props.on_tile_layout?.(fallbackFrame);
-          return;
-        }
-
-        tileRef.current.measureInWindow((left, top, width, height) => {
-          props.on_tile_layout?.({
-            tile_left_px: left,
-            tile_top_px: top,
-            tile_width_px: width || fallbackFrame.tile_width_px,
-            tile_height_px: height || fallbackFrame.tile_height_px,
-          });
         });
       }}
       style={[
