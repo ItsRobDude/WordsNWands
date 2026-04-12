@@ -1,11 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { createDeterministicRng } from "./rng.js";
 import { readJsonFile, validateRequestShape } from "./contracts.js";
 import { deriveEncounterNumbers, resolveTierProfile } from "./balance.js";
 import { renderReviewMarkdown } from "./review/renderReview.js";
 
-const ROOT = process.cwd();
+const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(MODULE_DIR, "../../../..");
 const BLUEPRINT_DIR = path.join(ROOT, "content/generation/blueprints");
 const SEED_DATA_PATH = path.join(
   ROOT,

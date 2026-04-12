@@ -6,7 +6,12 @@ declare namespace JSX {
 }
 
 declare module "react" {
+  export function useEffect(
+    effect: () => void | (() => void),
+    deps: readonly unknown[],
+  ): void;
   export function useMemo<T>(factory: () => T, deps: readonly unknown[]): T;
+  export function useRef<T>(initialValue: T): { current: T };
   export function useState<T>(
     initialValue: T,
   ): [T, (value: T | ((current: T) => T)) => void];

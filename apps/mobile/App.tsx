@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Pressable,
   SafeAreaView,
@@ -7,23 +7,23 @@ import {
   Text,
   View,
 } from "react-native";
+import { useStore } from "zustand";
 
-import {
-  type BoardPosition,
-  type BoardTile,
-  type EncounterRuntimeState,
-  type HeadlessTranscriptEntry,
+import type {
+  BoardPosition,
+  BoardTile,
+  EncounterRuntimeState,
 } from "../../packages/game-rules/src/index.ts";
-import type { AppPrimarySurface } from "../../packages/game-rules/src/contracts/core.ts";
-import { normalizeTracedBoardLetters } from "../../packages/validation/src/index.ts";
 
+import { createSQLiteAppPersistence } from "./src/app/persistence/createSQLiteAppPersistence.ts";
 import {
-  applySubmissionToEncounterRun,
-  createFreshEncounterRun,
+  createMobileAppStore,
+  getPrimaryEncounterId,
+} from "./src/app/store/createMobileAppStore.ts";
+import { getBundledPhaseOneContent } from "./src/verticalSlice/bundledContent.ts";
+import {
   getEncounterPayload,
-  getPrimaryChapter,
   getStarterEncounterId,
-  type MobileEncounterRun,
 } from "./src/verticalSlice/encounterRuntime.ts";
 import {
   describeCastResolution,
@@ -32,147 +32,152 @@ import {
 } from "./src/verticalSlice/formatters.ts";
 
 export default function App(): JSX.Element {
-  const starterEncounterId = useMemo(() => getStarterEncounterId(), []);
-  const primaryChapter = useMemo(() => getPrimaryChapter(), []);
-  const meadowEncounterId = primaryChapter.encounter_ids[0] ?? "enc_meadow_001";
-
-  const [surface, setSurface] = useState<AppPrimarySurface>("starter_flow");
-  const [hasCompletedStarterEncounter, setHasCompletedStarterEncounter] =
-    useState(false);
-  const [attemptsByEncounter, setAttemptsByEncounter] = useState<
-    Record<string, number>
-  >({});
-  const [completedEncounterIds, setCompletedEncounterIds] = useState<string[]>(
-    [],
+  const bundledContent = useMemo(() => getBundledPhaseOneContent(), []);
+  const starterEncounterId = useMemo(
+    () => getStarterEncounterId(bundledContent),
+    [bundledContent],
   );
-  const [activeRun, setActiveRun] = useState<MobileEncounterRun | null>(null);
-  const [selectedPath, setSelectedPath] = useState<BoardPosition[]>([]);
-  const [lastTranscriptEntry, setLastTranscriptEntry] =
-    useState<HeadlessTranscriptEntry | null>(null);
-
-  const activeState = activeRun?.runtime_state ?? null;
-  const tileMap = useMemo(() => buildTileMap(activeState), [activeState]);
-  const selectedWord = useMemo(
-    () => resolveSelectedWord(selectedPath, tileMap),
-    [selectedPath, tileMap],
+  const primaryEncounterId = useMemo(
+    () => getPrimaryEncounterId(bundledContent),
+    [bundledContent],
   );
+  const starterEncounter = useMemo(
+    () =>
+      getEncounterPayload({
+        content: bundledContent,
+        encounter_id: starterEncounterId,
+      }),
+    [bundledContent, starterEncounterId],
+  );
+  const primaryEncounter = useMemo(
+    () =>
+      getEncounterPayload({
+        content: bundledContent,
+        encounter_id: primaryEncounterId,
+      }),
+    [bundledContent, primaryEncounterId],
+  );
+  const traceIdRef = useRef<string | null>(null);
+  const pendingTraceStartRef = useRef<TraceSample | null>(null);
+  const [boardLayout, setBoardLayout] = useState<BoardLayout | null>(null);
+  const store = useMemo(
+    () =>
+      createMobileAppStore({
+        persistence: createSQLiteAppPersistence(),
+        content: bundledContent,
+      }),
+    [bundledContent],
+  );
+
+  useEffect(() => {
+    void store.getState().actions.initialize();
+  }, [store]);
+
+  const surface = useStore(
+    store,
+    (state) => state.sessionSlice.app_primary_surface,
+  );
+  const hasCompletedStarterEncounter = useStore(
+    store,
+    (state) => state.sessionSlice.has_completed_starter_encounter === 1,
+  );
+  const activeState = useStore(
+    store,
+    (state) => state.encounterSlice.runtime_state,
+  );
+  const previewPath = useStore(
+    store,
+    (state) => state.uiSlice.swipe_preview_path,
+  );
+  const previewWord = useStore(
+    store,
+    (state) => state.uiSlice.highlighted_word_preview,
+  );
+  const lastTranscriptEntry = useStore(
+    store,
+    (state) => state.mobileSlice.last_transcript_entry,
+  );
+  const completedEncounterIds = useStore(
+    store,
+    (state) => state.mobileSlice.completed_encounter_ids,
+  );
+  const hydrationStatus = useStore(
+    store,
+    (state) => state.mobileSlice.hydration_status,
+  );
+  const hydrationError = useStore(
+    store,
+    (state) => state.mobileSlice.hydration_error_message,
+  );
+  const canResumeEncounter = useStore(
+    store,
+    (state) =>
+      state.encounterSlice.runtime_state?.session_state === "in_progress",
+  );
+
   const currentFeedback = describeCastResolution(lastTranscriptEntry);
   const starterHint = activeState
     ? describeStarterHint({
         runtime_state: activeState,
         transcript_entry: lastTranscriptEntry,
-        encounter_id: activeRun?.encounter_id ?? "",
+        encounter_id: activeState.encounter_id,
       })
     : null;
-
-  const starterEncounter = useMemo(
-    () => getEncounterPayload(starterEncounterId),
-    [starterEncounterId],
-  );
-  const meadowEncounter = useMemo(
-    () => getEncounterPayload(meadowEncounterId),
-    [meadowEncounterId],
-  );
-
-  const launchEncounter = (encounterId: string): void => {
-    const attemptNumber = (attemptsByEncounter[encounterId] ?? 0) + 1;
-    setAttemptsByEncounter((current) => ({
-      ...current,
-      [encounterId]: attemptNumber,
-    }));
-    setActiveRun(
-      createFreshEncounterRun({
-        encounter_id: encounterId,
-        attempt_number: attemptNumber,
-      }),
-    );
-    setLastTranscriptEntry(null);
-    setSelectedPath([]);
-    setSurface("encounter");
-  };
-
-  const handleTilePress = (tile: BoardTile): void => {
-    if (!activeState || activeState.session_state !== "in_progress") {
-      return;
-    }
-
-    setSelectedPath((currentPath) => {
-      const tileKey = toPositionKey(tile.position);
-      const existingIndex = currentPath.findIndex(
-        (position) => toPositionKey(position) === tileKey,
-      );
-
-      if (existingIndex >= 0) {
-        return currentPath.slice(0, existingIndex + 1);
-      }
-
-      if (currentPath.length === 0) {
-        return [{ ...tile.position }];
-      }
-
-      const lastPosition = currentPath[currentPath.length - 1];
-      if (!lastPosition || !isAdjacent(lastPosition, tile.position)) {
-        return [{ ...tile.position }];
-      }
-
-      return [...currentPath, { ...tile.position }];
-    });
-  };
-
-  const submitSelectedPath = (): void => {
-    if (!activeRun || selectedPath.length === 0 || !selectedWord) {
-      return;
-    }
-
-    const result = applySubmissionToEncounterRun({
-      run: activeRun,
-      submission: {
-        selected_positions: selectedPath.map((position) => ({ ...position })),
-        traced_word_display: selectedWord.toUpperCase(),
-      },
-    });
-
-    const nextState = result.run.runtime_state;
-    setActiveRun(result.run);
-    setLastTranscriptEntry(result.transcript_entry);
-    setSelectedPath([]);
-
-    if (nextState.session_state === "won") {
-      if (result.run.encounter_id === starterEncounterId) {
-        setHasCompletedStarterEncounter(true);
-      }
-      setCompletedEncounterIds((current) =>
-        current.includes(result.run.encounter_id)
-          ? current
-          : [...current, result.run.encounter_id],
-      );
-      setSurface("result");
-      return;
-    }
-
-    if (
-      nextState.session_state === "lost" ||
-      nextState.session_state === "recoverable_error"
-    ) {
-      setSurface("result");
-    }
-  };
-
-  const resultPrimaryLabel = resolveResultPrimaryLabel({
-    active_run: activeRun,
+  const resultTitle = resolveResultTitle(activeState);
+  const resultBody = resolveResultBody({
+    active_state: activeState,
     starter_encounter_id: starterEncounterId,
   });
+  const boardBounds = boardLayout
+    ? {
+        board_left_px: 0,
+        board_top_px: 0,
+        board_width_px: boardLayout.width,
+        board_height_px: boardLayout.height,
+        rows: activeState?.board.height ?? 0,
+        cols: activeState?.board.width ?? 0,
+      }
+    : null;
 
-  const resultTitle = resolveResultTitle(activeState);
-  const resultBody = resolveResultBody(activeRun, activeState);
+  const renderLoading = () => (
+    <SectionCard eyebrow="Launch" title="Preparing the session" accent="cool">
+      <Text style={styles.cardText}>
+        Hydrating bundled content, local profile state, and any saved encounter
+        snapshot.
+      </Text>
+      <Text style={styles.cardTextMuted}>
+        This store-backed slice now restores from SQLite when a saved encounter
+        exists.
+      </Text>
+    </SectionCard>
+  );
+
+  const renderError = () => (
+    <SectionCard
+      eyebrow="Launch"
+      title="Session restore hit a snag"
+      accent="warm"
+    >
+      <Text style={styles.cardText}>
+        {hydrationError ??
+          "The app could not finish bootstrapping local state for this session."}
+      </Text>
+      <ActionButton
+        label="Retry Bootstrap"
+        onPress={() => {
+          void store.getState().actions.initialize();
+        }}
+      />
+    </SectionCard>
+  );
 
   const renderStarterFlow = () => (
     <View style={styles.stack}>
       <SectionCard eyebrow="First Spell" title="Words ’n Wands" accent="warm">
         <Text style={styles.cardText}>
-          Slip straight into the starter encounter. The goal of this first slice
-          is to put the real battle rules, validation lookup, and authored
-          content on a live mobile screen.
+          Slip straight into the starter encounter. The live mobile slice now
+          routes through a store-backed session model, persists snapshots
+          locally, and restores active runs on launch.
         </Text>
         <Text style={styles.cardTextMuted}>
           {starterEncounter.encounter.introFlavorText}
@@ -184,25 +189,34 @@ export default function App(): JSX.Element {
         title="Bloom first, then watch the countdown"
       >
         <Text style={styles.cardText}>
-          The opening board now uses an authored layout so the guided LEAF cast
-          is genuinely present. After that, the encounter keeps running on the
+          The opening board uses an authored layout so the guided LEAF cast is
+          genuinely present. After that, the encounter keeps running on the
           shared engine.
         </Text>
         <Text style={styles.cardTextMuted}>
-          Input note: this first mobile slice uses tap-chaining instead of the
-          final swipe gesture contract.
+          Current input surface supports tap-built paths and release-to-cast
+          tracing on the same shared selection pipeline.
         </Text>
       </SectionCard>
 
-      <ActionButton
-        label="Enter Starter Encounter"
-        onPress={() => launchEncounter(starterEncounterId)}
-      />
+      {canResumeEncounter ? (
+        <ActionButton
+          label="Resume Starter Encounter"
+          onPress={() => store.getState().actions.resumeEncounter()}
+        />
+      ) : (
+        <ActionButton
+          label="Enter Starter Encounter"
+          onPress={() => {
+            void store.getState().actions.launchEncounter(starterEncounterId);
+          }}
+        />
+      )}
 
       {hasCompletedStarterEncounter ? (
         <ActionButton
           label="Skip To Home"
-          onPress={() => setSurface("home")}
+          onPress={() => store.getState().actions.setSurface("home")}
           tone="secondary"
         />
       ) : null}
@@ -211,19 +225,15 @@ export default function App(): JSX.Element {
 
   const renderHome = () => (
     <View style={styles.stack}>
-      <SectionCard
-        eyebrow="Home"
-        title={primaryChapter.display_name}
-        accent="cool"
-      >
+      <SectionCard eyebrow="Home" title="Sunspell Meadow" accent="cool">
         <Text style={styles.cardText}>
           Starter cleared: {hasCompletedStarterEncounter ? "yes" : "not yet"}.
         </Text>
         <Text style={styles.cardText}>
-          Next mainline encounter: {meadowEncounter.creature.displayName}.
+          Next mainline encounter: {primaryEncounter.creature.displayName}.
         </Text>
         <Text style={styles.cardTextMuted}>
-          {meadowEncounter.encounter.introFlavorText}
+          {primaryEncounter.encounter.introFlavorText}
         </Text>
       </SectionCard>
 
@@ -235,25 +245,38 @@ export default function App(): JSX.Element {
             : completedEncounterIds.join(", ")}
         </Text>
         <Text style={styles.cardTextMuted}>
-          Routing, persistence, and swipe-native input are still follow-up work.
-          The live encounter transitions already come from shared package code.
+          Encounter state now persists locally and can restore back into battle
+          or result view. Full progression persistence and richer app routing
+          are still follow-up work.
         </Text>
       </SectionCard>
 
-      <ActionButton
-        label="Continue Chapter 1"
-        onPress={() => launchEncounter(meadowEncounterId)}
-      />
+      {canResumeEncounter ? (
+        <ActionButton
+          label="Resume Encounter"
+          onPress={() => store.getState().actions.resumeEncounter()}
+        />
+      ) : (
+        <ActionButton
+          label="Continue Chapter 1"
+          onPress={() => {
+            void store.getState().actions.launchEncounter(primaryEncounterId);
+          }}
+        />
+      )}
+
       <ActionButton
         label="Replay Starter"
-        onPress={() => launchEncounter(starterEncounterId)}
+        onPress={() => {
+          void store.getState().actions.launchEncounter(starterEncounterId);
+        }}
         tone="secondary"
       />
     </View>
   );
 
   const renderEncounter = () => {
-    if (!activeRun || !activeState) {
+    if (!activeState) {
       return (
         <SectionCard eyebrow="Encounter" title="No active encounter">
           <Text style={styles.cardText}>
@@ -267,7 +290,7 @@ export default function App(): JSX.Element {
       <View style={styles.stack}>
         <SectionCard
           eyebrow={
-            activeRun.encounter_payload.encounter.isStarterEncounter
+            activeState.encounter_id === starterEncounterId
               ? "Starter Encounter"
               : "Active Encounter"
           }
@@ -300,25 +323,125 @@ export default function App(): JSX.Element {
           </SectionCard>
         ) : null}
 
-        <SectionCard eyebrow="Board" title="Tap adjacent tiles to trace">
+        <SectionCard eyebrow="Board" title="Build a word path">
           <Text style={styles.cardTextMuted}>
-            Current trace: {selectedWord ? selectedWord.toUpperCase() : "none"}
+            Current preview: {previewWord || "none"}
           </Text>
-          <View style={styles.board}>
-            {renderBoardRows(activeState, selectedPath, handleTilePress)}
+          <View
+            style={styles.board}
+            onLayout={(event: unknown) => {
+              const layout = (
+                event as {
+                  nativeEvent?: {
+                    layout?: {
+                      width: number;
+                      height: number;
+                    };
+                  };
+                }
+              ).nativeEvent?.layout;
+              if (!layout) {
+                return;
+              }
+
+              setBoardLayout({
+                width: layout.width,
+                height: layout.height,
+              });
+            }}
+            onTouchStart={(event: unknown) => {
+              const sample = createTraceSample(event);
+              pendingTraceStartRef.current = sample;
+            }}
+            onMoveShouldSetResponder={() => Boolean(boardBounds)}
+            onResponderGrant={(event: unknown) => {
+              if (!boardBounds) {
+                return;
+              }
+
+              const startSample =
+                pendingTraceStartRef.current ?? createTraceSample(event);
+              const traceId = createTraceId();
+              traceIdRef.current = traceId;
+              void store.getState().actions.applyTraceSelection(
+                {
+                  trace_id: traceId,
+                  phase: "start",
+                  samples: [startSample],
+                },
+                boardBounds,
+              );
+            }}
+            onResponderMove={(event: unknown) => {
+              if (!boardBounds || !traceIdRef.current) {
+                return;
+              }
+
+              void store.getState().actions.applyTraceSelection(
+                {
+                  trace_id: traceIdRef.current,
+                  phase: "move",
+                  samples: [createTraceSample(event)],
+                },
+                boardBounds,
+              );
+            }}
+            onResponderRelease={(event: unknown) => {
+              if (!boardBounds || !traceIdRef.current) {
+                pendingTraceStartRef.current = null;
+                return;
+              }
+
+              void store.getState().actions.applyTraceSelection(
+                {
+                  trace_id: traceIdRef.current,
+                  phase: "end",
+                  samples: [createTraceSample(event)],
+                },
+                boardBounds,
+              );
+              traceIdRef.current = null;
+              pendingTraceStartRef.current = null;
+            }}
+            onResponderTerminate={() => {
+              if (!boardBounds || !traceIdRef.current) {
+                pendingTraceStartRef.current = null;
+                return;
+              }
+
+              void store.getState().actions.applyTraceSelection(
+                {
+                  trace_id: traceIdRef.current,
+                  phase: "cancel",
+                  samples: [],
+                },
+                boardBounds,
+              );
+              traceIdRef.current = null;
+              pendingTraceStartRef.current = null;
+            }}
+          >
+            {renderBoardRows({
+              state: activeState,
+              selected_path: previewPath,
+              on_tile_press: (tile) =>
+                store.getState().actions.selectBoardPosition(tile.position),
+            })}
           </View>
           <View style={styles.actionsRow}>
             <ActionButton
-              label="Clear Trace"
-              onPress={() => setSelectedPath([])}
+              label="Clear Path"
+              onPress={() => store.getState().actions.clearSelection()}
               tone="secondary"
               compact
             />
             <ActionButton
               label="Cast Word"
-              onPress={submitSelectedPath}
+              onPress={() => {
+                void store.getState().actions.submitSelection();
+              }}
               compact
-              disabled={selectedPath.length === 0}
+              disabled={previewPath.length === 0}
             />
           </View>
         </SectionCard>
@@ -326,7 +449,7 @@ export default function App(): JSX.Element {
         <SectionCard eyebrow="Feedback" title="Last Resolution">
           <Text style={styles.cardText}>
             {currentFeedback ??
-              "Trace a word to watch the shared battle engine resolve damage, countdowns, board collapse, refill, and creature spells."}
+              "Build a word to watch the shared battle engine resolve damage, countdowns, board collapse, refill, and creature spells."}
           </Text>
           <Text style={styles.cardTextMuted}>
             Repeated spells used this run:{" "}
@@ -338,9 +461,7 @@ export default function App(): JSX.Element {
 
         <ActionButton
           label="Leave Encounter"
-          onPress={() =>
-            setSurface(hasCompletedStarterEncounter ? "home" : "starter_flow")
-          }
+          onPress={() => store.getState().actions.leaveEncounter()}
           tone="ghost"
         />
       </View>
@@ -376,15 +497,13 @@ export default function App(): JSX.Element {
       ) : null}
 
       <ActionButton
-        label={resultPrimaryLabel}
-        onPress={() =>
-          handleResultPrimaryAction({
-            active_run: activeRun,
-            starter_encounter_id: starterEncounterId,
-            launch_encounter: launchEncounter,
-            set_surface: setSurface,
-          })
-        }
+        label={resolveResultPrimaryLabel({
+          active_state: activeState,
+          starter_encounter_id: starterEncounterId,
+        })}
+        onPress={() => {
+          void store.getState().actions.advanceFromResult();
+        }}
       />
 
       <ActionButton
@@ -393,9 +512,9 @@ export default function App(): JSX.Element {
             ? "Return To Home"
             : "Return To Starter Intro"
         }
-        onPress={() =>
-          setSurface(hasCompletedStarterEncounter ? "home" : "starter_flow")
-        }
+        onPress={() => {
+          void store.getState().actions.returnFromResult();
+        }}
         tone="secondary"
       />
     </View>
@@ -410,30 +529,79 @@ export default function App(): JSX.Element {
           <Text style={styles.overline}>ANDROID-FIRST VERTICAL SLICE</Text>
           <Text style={styles.title}>Words ’n Wands</Text>
           <Text style={styles.subtitle}>
-            Shared encounter rules running inside the mobile shell.
+            Shared encounter rules running inside a restored mobile session.
           </Text>
         </View>
 
-        {surface === "starter_flow" ? renderStarterFlow() : null}
-        {surface === "home" ? renderHome() : null}
-        {surface === "encounter" ? renderEncounter() : null}
-        {surface === "result" ? renderResult() : null}
+        {hydrationStatus === "loading" || hydrationStatus === "idle"
+          ? renderLoading()
+          : null}
+        {hydrationStatus === "error" ? renderError() : null}
+
+        {hydrationStatus === "ready" && surface === "starter_flow"
+          ? renderStarterFlow()
+          : null}
+        {hydrationStatus === "ready" && surface === "home"
+          ? renderHome()
+          : null}
+        {hydrationStatus === "ready" && surface === "encounter"
+          ? renderEncounter()
+          : null}
+        {hydrationStatus === "ready" && surface === "result"
+          ? renderResult()
+          : null}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function renderBoardRows(
-  state: EncounterRuntimeState,
-  selectedPath: readonly BoardPosition[],
-  onTilePress: (tile: BoardTile) => void,
-): JSX.Element[] {
-  const selectedKeys = new Set(selectedPath.map(toPositionKey));
+interface BoardLayout {
+  width: number;
+  height: number;
+}
 
-  return Array.from({ length: state.board.height }, (_, rowIndex) => (
+interface TraceSample {
+  pointer_id: number;
+  x_px: number;
+  y_px: number;
+  t_ms: number;
+}
+
+function createTraceSample(event: unknown): TraceSample {
+  const nativeEvent = (
+    event as {
+      nativeEvent?: {
+        identifier?: number;
+        locationX?: number;
+        locationY?: number;
+        timestamp?: number;
+      };
+    }
+  ).nativeEvent;
+
+  return {
+    pointer_id: nativeEvent?.identifier ?? 0,
+    x_px: nativeEvent?.locationX ?? 0,
+    y_px: nativeEvent?.locationY ?? 0,
+    t_ms: nativeEvent?.timestamp ?? Date.now(),
+  };
+}
+
+function createTraceId(): string {
+  return `trace-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function renderBoardRows(input: {
+  state: EncounterRuntimeState;
+  selected_path: readonly BoardPosition[];
+  on_tile_press: (tile: BoardTile) => void;
+}): JSX.Element[] {
+  const selectedKeys = new Set(input.selected_path.map(toPositionKey));
+
+  return Array.from({ length: input.state.board.height }, (_, rowIndex) => (
     <View key={`row-${rowIndex}`} style={styles.boardRow}>
-      {Array.from({ length: state.board.width }, (_, colIndex) => {
-        const tile = state.board.tiles.find(
+      {Array.from({ length: input.state.board.width }, (_, colIndex) => {
+        const tile = input.state.board.tiles.find(
           (candidate) =>
             candidate.position.row === rowIndex &&
             candidate.position.col === colIndex,
@@ -450,7 +618,7 @@ function renderBoardRows(
         return (
           <Pressable
             key={tile.id}
-            onPress={() => onTilePress(tile)}
+            onPress={() => input.on_tile_press(tile)}
             style={[
               styles.tile,
               isSelected ? styles.tileSelected : null,
@@ -470,44 +638,16 @@ function renderBoardRows(
   ));
 }
 
-function buildTileMap(
-  state: EncounterRuntimeState | null,
-): ReadonlyMap<string, BoardTile> {
-  if (!state) {
-    return new Map();
-  }
-
-  return new Map(
-    state.board.tiles.map((tile) => [toPositionKey(tile.position), tile]),
-  );
-}
-
-function resolveSelectedWord(
-  selectedPath: readonly BoardPosition[],
-  tileMap: ReadonlyMap<string, BoardTile>,
-): string {
-  if (selectedPath.length === 0) {
-    return "";
-  }
-
-  return normalizeTracedBoardLetters(
-    selectedPath
-      .map((position) => tileMap.get(toPositionKey(position))?.letter ?? "")
-      .filter((letter) => letter.length > 0),
-  );
-}
-
 function resolveResultPrimaryLabel(input: {
-  active_run: MobileEncounterRun | null;
+  active_state: EncounterRuntimeState | null;
   starter_encounter_id: string;
 }): string {
-  const activeState = input.active_run?.runtime_state;
-  if (!activeState) {
+  if (!input.active_state) {
     return "Return To Home";
   }
 
-  if (activeState.session_state === "won") {
-    return input.active_run?.encounter_id === input.starter_encounter_id
+  if (input.active_state.session_state === "won") {
+    return input.active_state.encounter_id === input.starter_encounter_id
       ? "Begin Chapter 1"
       : "Return To Home";
   }
@@ -531,58 +671,29 @@ function resolveResultTitle(activeState: EncounterRuntimeState | null): string {
   return "Try Another Spell";
 }
 
-function resolveResultBody(
-  activeRun: MobileEncounterRun | null,
-  activeState: EncounterRuntimeState | null,
-): string {
-  if (!activeRun || !activeState) {
+function resolveResultBody(input: {
+  active_state: EncounterRuntimeState | null;
+  starter_encounter_id: string;
+}): string {
+  if (!input.active_state) {
     return "The encounter has no active runtime snapshot yet.";
   }
 
-  if (activeState.session_state === "won") {
-    return activeRun.encounter_id === "enc_starter_001"
+  if (input.active_state.session_state === "won") {
+    return input.active_state.encounter_id === input.starter_encounter_id
       ? "Starter complete. The next step is the first chapter encounter in Sunspell Meadow."
-      : `${activeState.creature.display_name} settled down. The shared content and battle packages carried the full run to a clean win.`;
+      : `${input.active_state.creature.display_name} settled down. The shared content and battle packages carried the full run to a clean win.`;
   }
 
-  if (activeState.session_state === "recoverable_error") {
-    return "The board could not recover from a deterministic dead-board path. Retrying starts a fresh session.";
+  if (input.active_state.session_state === "recoverable_error") {
+    return "The board could not recover from a deterministic dead-board path. Retrying starts a fresh encounter run.";
   }
 
-  return `${activeState.creature.display_name} still has ${activeState.creature.hp_current} HP left. Retrying creates a fresh encounter run.`;
-}
-
-function handleResultPrimaryAction(input: {
-  active_run: MobileEncounterRun | null;
-  starter_encounter_id: string;
-  launch_encounter: (encounterId: string) => void;
-  set_surface: (surface: AppPrimarySurface) => void;
-}): void {
-  const activeRun = input.active_run;
-  const activeState = activeRun?.runtime_state;
-
-  if (!activeRun || !activeState) {
-    input.set_surface("home");
-    return;
-  }
-
-  if (activeState.session_state === "won") {
-    input.set_surface("home");
-    return;
-  }
-
-  input.launch_encounter(activeRun.encounter_id);
+  return `${input.active_state.creature.display_name} still has ${input.active_state.creature.hp_current} HP left. Retrying creates a fresh encounter run.`;
 }
 
 function toPositionKey(position: BoardPosition): string {
   return `${position.row}:${position.col}`;
-}
-
-function isAdjacent(left: BoardPosition, right: BoardPosition): boolean {
-  const rowDelta = Math.abs(left.row - right.row);
-  const colDelta = Math.abs(left.col - right.col);
-
-  return rowDelta <= 1 && colDelta <= 1 && rowDelta + colDelta > 0;
 }
 
 function SectionCard(props: {

@@ -19,11 +19,11 @@ Rules for keeping it trustworthy:
 
 - when a section defines a currently exported type from `packages/game-rules` or `packages/validation`, that section must match the shipped code exactly
 - future richer shapes are allowed only when they are explicitly called out as target-state rather than written as already-live runtime truth
-- `apps/mobile` now has a first playable local encounter slice, but app-store, restore, and SQLite sections must still distinguish active contracts from fuller target-state architecture that is not yet fully implemented, and board-input contracts must preserve the intended dual-input product direction (continuous trace/swipe plus tap-selected path building)
+- `apps/mobile` now has a first playable local encounter slice with a real app store, shared board-selection pipeline, and SQLite-backed restore, but app-store, restore, and SQLite sections must still distinguish active shipped contracts from fuller target-state module/layout architecture that is not yet fully implemented
 
 ---
 
-## 1. Contract Stability Rules *(Active in M1)*
+## 1. Contract Stability Rules _(Active in M1)_
 
 - Contract names and field names in this file are **stable** once used in production code.
 - Additive change is preferred over breaking change.
@@ -34,6 +34,7 @@ Rules for keeping it trustworthy:
 - UI-facing convenience state may evolve, but must map cleanly to the canonical contracts below.
 
 ### Practical rule
+
 If a type or persisted shape is likely to be read or written by:
 
 - app screens
@@ -59,7 +60,7 @@ Reserved sections remain normative references but are not implementation scope f
 
 ---
 
-## 2. Core Shared Type Contracts *(Active in M1)*
+## 2. Core Shared Type Contracts _(Active in M1)_
 
 These contracts define the stable shared vocabulary used across app, gameplay, validation, and persistence layers.
 
@@ -67,90 +68,95 @@ These contracts define the stable shared vocabulary used across app, gameplay, v
 
 ```ts
 export type ElementType =
-  | 'flame'
-  | 'tide'
-  | 'bloom'
-  | 'storm'
-  | 'stone'
-  | 'light'
-  | 'arcane';
+  | "flame"
+  | "tide"
+  | "bloom"
+  | "storm"
+  | "stone"
+  | "light"
+  | "arcane";
 
-export type NonNeutralElementType = Exclude<ElementType, 'arcane'>;
+export type NonNeutralElementType = Exclude<ElementType, "arcane">;
 
-export type EncounterType = 'standard' | 'boss' | 'event';
+export type EncounterType = "standard" | "boss" | "event";
 
-export type DifficultyTier = 'gentle' | 'standard' | 'challenging' | 'boss' | 'event';
+export type DifficultyTier =
+  | "gentle"
+  | "standard"
+  | "challenging"
+  | "boss"
+  | "event";
 
-export type TileStateKind = 'frozen' | 'sooted' | 'dull' | 'bubble';
+export type TileStateKind = "frozen" | "sooted" | "dull" | "bubble";
 
-export type TileSpecialMarkerKind = 'wand';
+export type TileSpecialMarkerKind = "wand";
 
-export type MatchupResult = 'weakness' | 'neutral' | 'resistance';
+export type MatchupResult = "weakness" | "neutral" | "resistance";
 
-export type EncounterOutcome = 'won' | 'lost';
+export type EncounterOutcome = "won" | "lost";
 
 export type EncounterTerminalReasonCode =
-  | 'none'
-  | 'normal_win'
-  | 'moves_exhausted'
-  | 'manual_abandon'
-  | 'spark_shuffle_retry_cap_unrecoverable';
+  | "none"
+  | "normal_win"
+  | "moves_exhausted"
+  | "manual_abandon"
+  | "spark_shuffle_retry_cap_unrecoverable";
 
-export type CastSubmissionKind = 'valid' | 'invalid' | 'repeated';
+export type CastSubmissionKind = "valid" | "invalid" | "repeated";
 
 export type CastRejectionReason =
-  | 'illegal_path'
-  | 'too_short'
-  | 'not_in_lexicon'
-  | 'blocked_by_tile_state'
-  | 'repeated_word';
+  | "illegal_path"
+  | "too_short"
+  | "not_in_lexicon"
+  | "blocked_by_tile_state"
+  | "repeated_word";
 ```
 
 ### 2.2 Session and routing enums
 
 ```ts
 export type EncounterSessionState =
-  | 'unopened'
-  | 'intro_presented'
-  | 'in_progress'
-  | 'won'
-  | 'lost'
-  | 'recoverable_error'
-  | 'abandoned';
+  | "unopened"
+  | "intro_presented"
+  | "in_progress"
+  | "won"
+  | "lost"
+  | "recoverable_error"
+  | "abandoned";
 
 export type EncounterSessionTransition =
-  | 'open_encounter'
-  | 'dismiss_intro'
-  | 'submit_valid_cast'
-  | 'submit_invalid_cast'
-  | 'submit_repeated_cast'
-  | 'resolve_creature_spell'
-  | 'trigger_spark_shuffle'
-  | 'spark_shuffle_unrecoverable_failure'
-  | 'win'
-  | 'lose'
-  | 'restart'
-  | 'abandon';
+  | "open_encounter"
+  | "dismiss_intro"
+  | "submit_valid_cast"
+  | "submit_invalid_cast"
+  | "submit_repeated_cast"
+  | "resolve_creature_spell"
+  | "trigger_spark_shuffle"
+  | "spark_shuffle_unrecoverable_failure"
+  | "win"
+  | "lose"
+  | "restart"
+  | "abandon";
 
 export type AppPrimarySurface =
-  | 'starter_flow'
-  | 'home'
-  | 'encounter'
-  | 'result'
-  | 'settings'
-  | 'profile';
+  | "starter_flow"
+  | "home"
+  | "encounter"
+  | "result"
+  | "settings"
+  | "profile";
 
 export type StarterTutorialCueStage =
-  | 'none'
-  | 'cue_01_trace_word'
-  | 'cue_02_release_to_cast'
-  | 'cue_03_read_countdown'
-  | 'cue_04_watch_creature_spell'
-  | 'cue_05_loss_retry_prompt'
-  | 'cue_06_win_next_step'
-  | 'completed';
+  | "none"
+  | "cue_01_trace_word"
+  | "cue_02_release_to_cast"
+  | "cue_03_read_countdown"
+  | "cue_04_watch_creature_spell"
+  | "cue_05_loss_retry_prompt"
+  | "cue_06_win_next_step"
+  | "completed";
 
-export type StarterTutorialBlockState = 'none' | 'blocked' | 'non_blocking';
+export type StarterTutorialBlockState = "none" | "blocked" | "non_blocking";
 ```
 
 Rules:
@@ -163,7 +169,7 @@ Rules:
 
 ---
 
-## 3. Canonical Encounter State Contracts *(Active in M1)*
+## 3. Canonical Encounter State Contracts _(Active in M1)_
 
 These contracts describe canonical encounter state and transition legality.
 
@@ -171,9 +177,14 @@ These contracts describe canonical encounter state and transition legality.
 
 ```ts
 export type EncounterStateTransitionMap = {
-  unopened: 'intro_presented' | 'in_progress' | 'abandoned';
-  intro_presented: 'in_progress' | 'abandoned';
-  in_progress: 'in_progress' | 'won' | 'lost' | 'recoverable_error' | 'abandoned';
+  unopened: "intro_presented" | "in_progress" | "abandoned";
+  intro_presented: "in_progress" | "abandoned";
+  in_progress:
+    | "in_progress"
+    | "won"
+    | "lost"
+    | "recoverable_error"
+    | "abandoned";
   won: never;
   lost: never;
   recoverable_error: never;
@@ -223,13 +234,13 @@ Anchor references:
 
 ```ts
 export type LaunchResumePhase =
-  | 'app_init'
-  | 'profile_load'
-  | 'manifest_validate'
-  | 'validation_hydrate'
-  | 'active_snapshot_load'
-  | 'restore_target_derive'
-  | 'route_commit';
+  | "app_init"
+  | "profile_load"
+  | "manifest_validate"
+  | "validation_hydrate"
+  | "active_snapshot_load"
+  | "restore_target_derive"
+  | "route_commit";
 
 export interface LaunchResumeTransitionState {
   phase: LaunchResumePhase;
@@ -334,7 +345,7 @@ Global invariants for all phases:
 
 ---
 
-## 4. Board and Battle Runtime Contracts *(Active in M1)*
+## 4. Board and Battle Runtime Contracts _(Active in M1)_
 
 These interfaces define the canonical battle-state shape consumed by app and shared logic.
 
@@ -451,13 +462,16 @@ export interface EncounterRuntimeState {
   casts_resolved_count: number;
   spark_shuffle_retry_cap: number;
   spark_shuffle_retries_attempted: number;
-  spark_shuffle_fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end';
+  spark_shuffle_fallback_outcome:
+    | "none"
+    | "deterministic_emergency_regen"
+    | "recoverable_error_end";
   content_version_pin: string;
   validation_snapshot_version_pin: string;
   battle_rules_version_pin: string;
   board_generator_version_pin: string;
   reward_constants_version_pin: string;
-  damage_model_version: 'damage_model_v1';
+  damage_model_version: "damage_model_v1";
   updated_at_utc: string;
 }
 ```
@@ -480,7 +494,7 @@ Rules:
 
 ---
 
-## 5. Cast and Resolution Contracts *(Active in M1)*
+## 5. Cast and Resolution Contracts _(Active in M1)_
 
 These contracts describe how a cast submission and its result are represented between gameplay, persistence, and UI.
 
@@ -523,7 +537,7 @@ export interface TracePointerSample {
 
 export interface CastTracePayload {
   trace_id: string;
-  phase: 'start' | 'move' | 'end' | 'cancel';
+  phase: "start" | "move" | "end" | "cancel";
   samples: TracePointerSample[]; // ordered by t_ms ascending
 }
 ```
@@ -608,7 +622,7 @@ Normalization coupling rules:
 
 ```ts
 export interface ValidCastResolution {
-  submission_kind: 'valid';
+  submission_kind: "valid";
   normalized_word: string;
   element: ElementType;
   matchup_result: MatchupResult;
@@ -747,7 +761,7 @@ Worked example (Bubble moved by Spark Shuffle, no immediate rise):
 
 ```ts
 export interface RejectedCastResolution {
-  submission_kind: 'invalid' | 'repeated';
+  submission_kind: "invalid" | "repeated";
   normalized_word: string;
   rejection_reason: CastRejectionReason;
   moves_consumed: 0;
@@ -798,11 +812,14 @@ export interface CreatureSpellResolution {
 
 ```ts
 export interface SparkShuffleResolution {
-  trigger_reason: 'dead_board';
+  trigger_reason: "dead_board";
   max_shuffle_retries_per_recovery_cycle: 3;
   retries_attempted: number;
   did_hit_retry_cap: boolean;
-  fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end';
+  fallback_outcome:
+    | "none"
+    | "deterministic_emergency_regen"
+    | "recoverable_error_end";
   did_recover_playable_state: boolean;
 }
 ```
@@ -841,8 +858,8 @@ Canonical predicate shape:
 ```ts
 export function hasPlayableWord(
   boardSnapshot: BoardSnapshot,
-  encounterState: Pick<EncounterRuntimeState, 'repeated_words'>,
-  validationLookup: ValidationSnapshotLookup
+  encounterState: Pick<EncounterRuntimeState, "repeated_words">,
+  validationLookup: ValidationSnapshotLookup,
 ): boolean;
 ```
 
@@ -877,7 +894,9 @@ export interface BoardQualityPredicateInput {
   minVowelClassCount: number;
 }
 
-export function passesBoardQualityPredicate(input: BoardQualityPredicateInput): boolean;
+export function passesBoardQualityPredicate(
+  input: BoardQualityPredicateInput,
+): boolean;
 ```
 
 Quality-predicate rules:
@@ -909,23 +928,23 @@ UI, audio, haptics, animation, and analytics consume this stream but do not rede
 
 ```ts
 export type EngineEventType =
-  | 'cast_submitted'
-  | 'cast_resolved'
-  | 'damage_applied'
-  | 'countdown_ticked'
-  | 'spell_started'
-  | 'spell_resolved'
-  | 'phase_transitioned'
-  | 'encounter_ended';
+  | "cast_submitted"
+  | "cast_resolved"
+  | "damage_applied"
+  | "countdown_ticked"
+  | "spell_started"
+  | "spell_resolved"
+  | "phase_transitioned"
+  | "encounter_ended";
 
 export type EngineFramePhase =
-  | 'input_acceptance'
-  | 'board_resolution'
-  | 'damage_commit'
-  | 'countdown_commit'
-  | 'spell_resolution'
-  | 'phase_commit'
-  | 'terminal_commit';
+  | "input_acceptance"
+  | "board_resolution"
+  | "damage_commit"
+  | "countdown_commit"
+  | "spell_resolution"
+  | "phase_commit"
+  | "terminal_commit";
 
 export interface EngineEventEnvelope {
   event_id: string; // UUID/ULID; globally unique within the session
@@ -950,16 +969,16 @@ Deduplication/idempotency rule:
 
 ```ts
 export interface CastSubmittedEvent extends EngineEventEnvelope {
-  event_type: 'cast_submitted';
-  frame_phase: 'input_acceptance';
+  event_type: "cast_submitted";
+  frame_phase: "input_acceptance";
   submission_kind: CastSubmissionKind;
   normalized_word: string;
   selected_positions_count: number;
 }
 
 export interface CastResolvedEvent extends EngineEventEnvelope {
-  event_type: 'cast_resolved';
-  frame_phase: 'board_resolution';
+  event_type: "cast_resolved";
+  frame_phase: "board_resolution";
   submission_kind: CastSubmissionKind;
   moves_consumed: 0 | 1;
   did_trigger_creature_spell: boolean;
@@ -967,8 +986,8 @@ export interface CastResolvedEvent extends EngineEventEnvelope {
 }
 
 export interface DamageAppliedEvent extends EngineEventEnvelope {
-  event_type: 'damage_applied';
-  frame_phase: 'damage_commit';
+  event_type: "damage_applied";
+  frame_phase: "damage_commit";
   hp_before: number;
   hp_after: number;
   base_damage: number;
@@ -977,23 +996,23 @@ export interface DamageAppliedEvent extends EngineEventEnvelope {
 }
 
 export interface CountdownTickedEvent extends EngineEventEnvelope {
-  event_type: 'countdown_ticked';
-  frame_phase: 'countdown_commit';
+  event_type: "countdown_ticked";
+  frame_phase: "countdown_commit";
   countdown_before: number;
   countdown_after: number;
-  tick_reason: 'post_cast_non_weakness' | 'spell_reset';
+  tick_reason: "post_cast_non_weakness" | "spell_reset";
 }
 
 export interface SpellStartedEvent extends EngineEventEnvelope {
-  event_type: 'spell_started';
-  frame_phase: 'spell_resolution';
+  event_type: "spell_started";
+  frame_phase: "spell_resolution";
   spell_id: string;
   countdown_before_reset: number;
 }
 
 export interface SpellResolvedEvent extends EngineEventEnvelope {
-  event_type: 'spell_resolved';
-  frame_phase: 'spell_resolution';
+  event_type: "spell_resolved";
+  frame_phase: "spell_resolution";
   spell_id: string;
   applied_primitives_count: number;
   countdown_reset_to: number;
@@ -1007,16 +1026,16 @@ export interface CommittedMatchupStateChanges {
 }
 
 export interface PhaseTransitionedEvent extends EngineEventEnvelope {
-  event_type: 'phase_transitioned';
-  frame_phase: 'phase_commit';
+  event_type: "phase_transitioned";
+  frame_phase: "phase_commit";
   prior_phase: string;
   new_phase: string;
   committed_matchup_state_changes: CommittedMatchupStateChanges;
 }
 
 export interface EncounterEndedEvent extends EngineEventEnvelope {
-  event_type: 'encounter_ended';
-  frame_phase: 'terminal_commit';
+  event_type: "encounter_ended";
+  frame_phase: "terminal_commit";
   outcome: EncounterOutcome;
   terminal_reason_code: EncounterTerminalReasonCode;
 }
@@ -1079,17 +1098,17 @@ export type EngineEvent =
 
 ```ts
 export type UIActionType =
-  | 'show_cast_trace_feedback'
-  | 'show_cast_resolution_banner'
-  | 'show_restore_recap_banner'
-  | 'show_phase_transition_banner'
-  | 'animate_damage_number'
-  | 'animate_hp_bar'
-  | 'animate_countdown_tick'
-  | 'play_spell_windup'
-  | 'play_spell_resolution'
-  | 'show_encounter_result'
-  | 'persist_event_checkpoint';
+  | "show_cast_trace_feedback"
+  | "show_cast_resolution_banner"
+  | "show_restore_recap_banner"
+  | "show_phase_transition_banner"
+  | "animate_damage_number"
+  | "animate_hp_bar"
+  | "animate_countdown_tick"
+  | "play_spell_windup"
+  | "play_spell_resolution"
+  | "show_encounter_result"
+  | "persist_event_checkpoint";
 
 export interface ActionQueueItem {
   action_id: string; // unique queue item id
@@ -1097,22 +1116,22 @@ export interface ActionQueueItem {
   source_event_id: string;
   source_sequence: number;
   action_type: UIActionType;
-  execution_mode: 'blocking' | 'non_blocking';
+  execution_mode: "blocking" | "non_blocking";
   completion_signal:
     | { required: 0 }
     | { required: 1; token: string; callback_id?: string };
   enqueue_ts_utc: string;
   not_before_phase: EngineFramePhase;
   payload: Record<string, unknown>;
-  effect_channel: 'visual' | 'audio' | 'haptic' | 'system';
+  effect_channel: "visual" | "audio" | "haptic" | "system";
   gating_key:
-    | 'hp'
-    | 'countdown'
-    | 'phase_banner'
-    | 'cast_feedback'
-    | 'spell_fx'
-    | 'result_modal'
-    | 'checkpoint_io';
+    | "hp"
+    | "countdown"
+    | "phase_banner"
+    | "cast_feedback"
+    | "spell_fx"
+    | "result_modal"
+    | "checkpoint_io";
   dedupe_key: string; // recommended: `${session_id}:${source_event_id}:${action_type}`
 }
 ```
@@ -1155,16 +1174,16 @@ Queue-consumption completion/advancement contract (normative):
 
 Engine events -> required baseline UI action mapping:
 
-| Engine event | Required `ActionQueueItem` entries |
-| --- | --- |
-| `cast_submitted` | `show_cast_trace_feedback`, `persist_event_checkpoint` |
-| `cast_resolved` | `show_cast_resolution_banner`, `persist_event_checkpoint` |
-| `damage_applied` | `animate_damage_number`, `animate_hp_bar`, `persist_event_checkpoint` |
-| `countdown_ticked` | `animate_countdown_tick`, `persist_event_checkpoint` |
-| `spell_started` | `play_spell_windup`, `persist_event_checkpoint` |
-| `spell_resolved` | `play_spell_resolution`, `persist_event_checkpoint` |
-| `phase_transitioned` | `show_phase_transition_banner`, `persist_event_checkpoint` |
-| `encounter_ended` | `show_encounter_result`, `persist_event_checkpoint` |
+| Engine event         | Required `ActionQueueItem` entries                                    |
+| -------------------- | --------------------------------------------------------------------- |
+| `cast_submitted`     | `show_cast_trace_feedback`, `persist_event_checkpoint`                |
+| `cast_resolved`      | `show_cast_resolution_banner`, `persist_event_checkpoint`             |
+| `damage_applied`     | `animate_damage_number`, `animate_hp_bar`, `persist_event_checkpoint` |
+| `countdown_ticked`   | `animate_countdown_tick`, `persist_event_checkpoint`                  |
+| `spell_started`      | `play_spell_windup`, `persist_event_checkpoint`                       |
+| `spell_resolved`     | `play_spell_resolution`, `persist_event_checkpoint`                   |
+| `phase_transitioned` | `show_phase_transition_banner`, `persist_event_checkpoint`            |
+| `encounter_ended`    | `show_encounter_result`, `persist_event_checkpoint`                   |
 
 Mapping-extension rule:
 
@@ -1172,7 +1191,7 @@ Mapping-extension rule:
 
 ---
 
-## 6. Spell Primitive Contracts *(Active in M1)*
+## 6. Spell Primitive Contracts _(Active in M1)_
 
 Creature spells should be built from a small reusable primitive library.
 
@@ -1186,32 +1205,34 @@ export type CreatureSpellPrimitive =
   | ChainedSpellPrimitive;
 
 export interface ApplyTileStatePrimitive {
-  kind: 'apply_tile_state';
+  kind: "apply_tile_state";
   tile_state: TileStateKind;
   target_count: number; // upper bound; actual applied count may be lower per eligible-pool rules in section 6.2
-  targeting: 'random_eligible' | 'authored_pattern';
+  targeting: "random_eligible" | "authored_pattern";
 }
 
 export interface ShiftRowPrimitive {
-  kind: 'shift_row';
+  kind: "shift_row";
   row_index: number;
-  mode: 'rotate';
+  mode: "rotate";
   distance: 1;
   direction: 1 | -1; // canonical: 1 = right, -1 = left
 }
 
 export interface ShiftColumnPrimitive {
-  kind: 'shift_column';
+  kind: "shift_column";
   col_index: number;
-  mode: 'rotate';
+  mode: "rotate";
   distance: 1;
   direction: 1 | -1; // canonical: 1 = down, -1 = up
 }
 
 export interface ChainedSpellPrimitive {
-  kind: 'chained';
+  kind: "chained";
   // resolve strictly in authored order; each step recomputes eligibility from prior step output (section 6.2)
-  steps: Array<ApplyTileStatePrimitive | ShiftRowPrimitive | ShiftColumnPrimitive>;
+  steps: Array<
+    ApplyTileStatePrimitive | ShiftRowPrimitive | ShiftColumnPrimitive
+  >;
 }
 ```
 
@@ -1229,11 +1250,11 @@ This section is normative for all `ApplyTileStatePrimitive` resolution and mirro
 Eligibility matrix:
 
 | Requested `tile_state` | same state already present | different negative state present | Wand marker present |
-| --- | --- | --- | --- |
-| `frozen` | ineligible | ineligible | eligible |
-| `sooted` | ineligible | ineligible | eligible |
-| `dull` | ineligible | ineligible | eligible |
-| `bubble` | ineligible | ineligible | eligible |
+| ---------------------- | -------------------------- | -------------------------------- | ------------------- |
+| `frozen`               | ineligible                 | ineligible                       | eligible            |
+| `sooted`               | ineligible                 | ineligible                       | eligible            |
+| `dull`                 | ineligible                 | ineligible                       | eligible            |
+| `bubble`               | ineligible                 | ineligible                       | eligible            |
 
 Deterministic resolution requirements:
 
@@ -1272,13 +1293,16 @@ All examples assume `targeting: 'random_eligible'` with seeded deterministic pse
 Frozen (`target_count = 2`):
 
 Pre:
+
 ```
 R0: A   B   C   D
 R1: E*  F   G   H
 R2: I   J   K   L
 R3: M   N   O   P
 ```
+
 Post:
+
 ```
 R0: A[F] B    C    D
 R1: E*[F] F    G    H
@@ -1289,13 +1313,16 @@ R3: M    N    O    P
 Sooted (`target_count = 3`; one same-state tile already present):
 
 Pre:
+
 ```
 R0: A     B[S]  C    D
 R1: E     F     G*   H
 R2: I     J     K    L
 R3: M     N     O    P
 ```
+
 Post:
+
 ```
 R0: A[S]  B[S]  C    D
 R1: E[S]  F     G*[S] H
@@ -1306,13 +1333,16 @@ R3: M     N     O    P
 Dull (`target_count = 2`):
 
 Pre:
+
 ```
 R0: A     B[D]  C    D
 R1: E*    F     G    H
 R2: I     J     K    L
 R3: M     N     O    P
 ```
+
 Post:
+
 ```
 R0: A[D]  B[D]  C    D
 R1: E*[D] F     G    H
@@ -1323,13 +1353,16 @@ R3: M     N     O    P
 Bubble (`target_count = 2`; one same-state tile already present):
 
 Pre:
+
 ```
 R0: A     B     C    D
 R1: E*    F[B]  G    H
 R2: I     J     K    L
 R3: M     N     O    P
 ```
+
 Post:
+
 ```
 R0: A[B]  B     C    D
 R1: E*[B] F[B]  G    H
@@ -1352,22 +1385,22 @@ Canonical primitive IDs:
 
 Primitive parameter contract:
 
-| Primitive ID | Required params | Optional params | Allowed range / values |
-| --- | --- | --- | --- |
-| `apply_tile_state` | `kind`, `tile_state`, `target_count`, `targeting` | none | `tile_state ∈ {'frozen','sooted','dull','bubble'}`; `targeting ∈ {'random_eligible','authored_pattern'}`; `target_count` integer `>= 1` |
-| `shift_row` | `kind`, `row_index`, `mode`, `distance`, `direction` | none | `row_index` integer `0-5`; `mode = 'rotate'`; `distance = 1`; `direction ∈ {1, -1}` where `1 = right`, `-1 = left` |
-| `shift_column` | `kind`, `col_index`, `mode`, `distance`, `direction` | none | `col_index` integer `0-5`; `mode = 'rotate'`; `distance = 1`; `direction ∈ {1, -1}` where `1 = down`, `-1 = up` |
-| `chained` | `kind`, `steps` | none | `steps.length >= 2`; each step must be one of `apply_tile_state`, `shift_row`, `shift_column`; nested `chained` is illegal |
+| Primitive ID       | Required params                                      | Optional params | Allowed range / values                                                                                                                  |
+| ------------------ | ---------------------------------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `apply_tile_state` | `kind`, `tile_state`, `target_count`, `targeting`    | none            | `tile_state ∈ {'frozen','sooted','dull','bubble'}`; `targeting ∈ {'random_eligible','authored_pattern'}`; `target_count` integer `>= 1` |
+| `shift_row`        | `kind`, `row_index`, `mode`, `distance`, `direction` | none            | `row_index` integer `0-5`; `mode = 'rotate'`; `distance = 1`; `direction ∈ {1, -1}` where `1 = right`, `-1 = left`                      |
+| `shift_column`     | `kind`, `col_index`, `mode`, `distance`, `direction` | none            | `col_index` integer `0-5`; `mode = 'rotate'`; `distance = 1`; `direction ∈ {1, -1}` where `1 = down`, `-1 = up`                         |
+| `chained`          | `kind`, `steps`                                      | none            | `steps.length >= 2`; each step must be one of `apply_tile_state`, `shift_row`, `shift_column`; nested `chained` is illegal              |
 
 #### 6.5.2 Intensity tiers mapped to numeric constraints
 
 Authoring and validation must enforce these numeric boundaries per encounter type:
 
-| Encounter type | Max affected tiles per cast (`sum(apply_tile_state.target_count)` across resolved steps) | Duration bounds | Chain allowance (`extra_steps = total_steps - 1`) |
-| --- | --- | --- | --- |
-| `standard` | `<= 5` (`warn` at `5`, `error` at `>= 6`) | state durations are fixed by tile-state runtime contract: Frozen/Bubble `1`, Sooted/Dull `2` successful casts | `extra_steps <= 2` (`warn` at `2`, `error` at `>= 3`) |
-| `boss` | `<= 7` (`warn` at `7`, `error` at `>= 8`) | state durations are fixed by tile-state runtime contract: Frozen/Bubble `1`, Sooted/Dull `2` successful casts | `extra_steps <= 4` (`warn` at `4`, `error` at `>= 5`) |
-| `event` | `<= 7` (`warn` at `7`, `error` at `>= 8`) | state durations are fixed by tile-state runtime contract: Frozen/Bubble `1`, Sooted/Dull `2` successful casts | `extra_steps <= 4` (`warn` at `4`, `error` at `>= 5`) |
+| Encounter type | Max affected tiles per cast (`sum(apply_tile_state.target_count)` across resolved steps) | Duration bounds                                                                                               | Chain allowance (`extra_steps = total_steps - 1`)     |
+| -------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `standard`     | `<= 5` (`warn` at `5`, `error` at `>= 6`)                                                | state durations are fixed by tile-state runtime contract: Frozen/Bubble `1`, Sooted/Dull `2` successful casts | `extra_steps <= 2` (`warn` at `2`, `error` at `>= 3`) |
+| `boss`         | `<= 7` (`warn` at `7`, `error` at `>= 8`)                                                | state durations are fixed by tile-state runtime contract: Frozen/Bubble `1`, Sooted/Dull `2` successful casts | `extra_steps <= 4` (`warn` at `4`, `error` at `>= 5`) |
+| `event`        | `<= 7` (`warn` at `7`, `error` at `>= 8`)                                                | state durations are fixed by tile-state runtime contract: Frozen/Bubble `1`, Sooted/Dull `2` successful casts | `extra_steps <= 4` (`warn` at `4`, `error` at `>= 5`) |
 
 Notes:
 
@@ -1378,17 +1411,17 @@ Notes:
 
 Canonical content-validator error codes:
 
-| Error code | Trigger | Guardrail mapping |
-| --- | --- | --- |
-| `spell_schema_unknown_primitive` | Primitive `kind` not in canonical primitive IDs | Prevents unsupported runtime behavior |
-| `spell_schema_missing_required_param` | Required parameter absent or null | Prevents ambiguous spell execution |
-| `spell_schema_param_out_of_range` | Numeric or enum parameter violates section 6.5.1 bounds | Prevents illegal board mutation semantics |
-| `spell_schema_shift_direction_missing_or_invalid` | `shift_row`/`shift_column` missing `direction` or `direction ∉ {1,-1}` | Prevents ambiguous horizontal/vertical movement semantics |
-| `spell_schema_nested_chain_forbidden` | A `chained` step contains another `chained` primitive | Enforces readability and deterministic evaluation |
-| `spell_balance_tiles_exceed_error_band` | Affected-tile total exceeds encounter error band | Maps to `CER-STATE-002`/`CER-STATE-004`/`CER-STATE-005` limits |
-| `spell_balance_chain_exceed_error_band` | Chain extra-step count exceeds encounter error band | Maps to `CER-CHAIN-002`/`CER-CHAIN-004`/`CER-CHAIN-005` limits |
-| `spell_balance_duration_override_forbidden` | Payload attempts to author tile-state duration | Preserves canonical tile-state trust contract |
-| `spell_balance_illegal_encounter_combo` | Spell marked `standard` but includes boss/event-only pressure (error-band chain or tile counts) | Prevents ordinary content from silently inheriting boss/event intensity |
+| Error code                                        | Trigger                                                                                         | Guardrail mapping                                                       |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `spell_schema_unknown_primitive`                  | Primitive `kind` not in canonical primitive IDs                                                 | Prevents unsupported runtime behavior                                   |
+| `spell_schema_missing_required_param`             | Required parameter absent or null                                                               | Prevents ambiguous spell execution                                      |
+| `spell_schema_param_out_of_range`                 | Numeric or enum parameter violates section 6.5.1 bounds                                         | Prevents illegal board mutation semantics                               |
+| `spell_schema_shift_direction_missing_or_invalid` | `shift_row`/`shift_column` missing `direction` or `direction ∉ {1,-1}`                          | Prevents ambiguous horizontal/vertical movement semantics               |
+| `spell_schema_nested_chain_forbidden`             | A `chained` step contains another `chained` primitive                                           | Enforces readability and deterministic evaluation                       |
+| `spell_balance_tiles_exceed_error_band`           | Affected-tile total exceeds encounter error band                                                | Maps to `CER-STATE-002`/`CER-STATE-004`/`CER-STATE-005` limits          |
+| `spell_balance_chain_exceed_error_band`           | Chain extra-step count exceeds encounter error band                                             | Maps to `CER-CHAIN-002`/`CER-CHAIN-004`/`CER-CHAIN-005` limits          |
+| `spell_balance_duration_override_forbidden`       | Payload attempts to author tile-state duration                                                  | Preserves canonical tile-state trust contract                           |
+| `spell_balance_illegal_encounter_combo`           | Spell marked `standard` but includes boss/event-only pressure (error-band chain or tile counts) | Prevents ordinary content from silently inheriting boss/event intensity |
 
 #### 6.5.4 Serialization and versioning policy for content bundles
 
@@ -1443,7 +1476,13 @@ Boss encounter spell (chained, within boss bounds):
     {
       "kind": "chained",
       "steps": [
-        { "kind": "shift_row", "row_index": 2, "mode": "rotate", "distance": 1, "direction": 1 },
+        {
+          "kind": "shift_row",
+          "row_index": 2,
+          "mode": "rotate",
+          "distance": 1,
+          "direction": 1
+        },
         {
           "kind": "apply_tile_state",
           "tile_state": "frozen",
@@ -1471,7 +1510,13 @@ Event encounter spell (curated unusual mix, still schema-valid):
   "encounter_type": "event",
   "intensity_tier": "event_curated_pressure",
   "primitives": [
-    { "kind": "shift_column", "col_index": 4, "mode": "rotate", "distance": 1, "direction": -1 },
+    {
+      "kind": "shift_column",
+      "col_index": 4,
+      "mode": "rotate",
+      "distance": 1,
+      "direction": -1
+    },
     {
       "kind": "apply_tile_state",
       "tile_state": "bubble",
@@ -1484,7 +1529,7 @@ Event encounter spell (curated unusual mix, still schema-valid):
 
 ---
 
-## 7. Persisted SQLite Entity Contracts *(Active in M1)*
+## 7. Persisted SQLite Entity Contracts _(Active in M1)_
 
 These are the canonical entity names and required fields for local persistence once the app-layer SQLite implementation is wired in.
 Current repo note: shared packages already define and test the record shapes and restore semantics that depend on these contracts, but the mobile slice does not yet ship the full SQLite adapter/repository layer described here.
@@ -1499,7 +1544,7 @@ One row per local player profile.
 export interface PlayerProfileRecord {
   local_player_id: string;
   has_completed_starter_encounter: 0 | 1;
-  starter_result_outcome: 'unplayed' | 'won' | 'lost';
+  starter_result_outcome: "unplayed" | "won" | "lost";
   starter_tutorial_current_stage: StarterTutorialCueStage;
   starter_tutorial_block_state: StarterTutorialBlockState;
   starter_tutorial_completed_stages_json: string; // JSON array of StarterTutorialCueStage values for show-once cues
@@ -1535,7 +1580,7 @@ Rules:
 
 ```ts
 export interface PlayerSettingsRecord {
-  settings_id: 'default';
+  settings_id: "default";
   sound_enabled: 0 | 1;
   music_enabled: 0 | 1;
   haptics_enabled: 0 | 1;
@@ -1594,13 +1639,17 @@ export interface EncounterResultRecord {
   encounter_type: EncounterType;
   difficulty_tier: DifficultyTier;
   outcome: EncounterOutcome;
-  terminal_session_state: 'won' | 'lost' | 'recoverable_error' | 'abandoned';
+  terminal_session_state: "won" | "lost" | "recoverable_error" | "abandoned";
   terminal_reason_code: EncounterTerminalReasonCode;
   moves_remaining: number;
   star_rating: 0 | 1 | 2 | 3;
   spark_shuffle_retry_cap: number | null;
   spark_shuffle_retries_attempted: number | null;
-  spark_shuffle_fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end' | null;
+  spark_shuffle_fallback_outcome:
+    | "none"
+    | "deterministic_emergency_regen"
+    | "recoverable_error_end"
+    | null;
   content_version_pin: string;
   validation_snapshot_version_pin: string;
   battle_rules_version_pin: string;
@@ -1652,11 +1701,11 @@ Rules:
 
 ---
 
-## 8. Runtime Content Definition Contracts *(Active in M1)*
+## 8. Runtime Content Definition Contracts _(Active in M1)_
 
 These interfaces define the stable runtime shapes for bundled encounter content.
 
-### 8.0 Content package manifest load contract (required fields) *(Active in M1)*
+### 8.0 Content package manifest load contract (required fields) _(Active in M1)_
 
 Runtime content loaders must require and validate these manifest fields before any creature/encounter/progression/validation payload is activated:
 
@@ -1680,14 +1729,14 @@ export interface RuntimeContentPackageManifest {
   created_at_utc: string; // ISO-8601 UTC
   created_by: string;
   status:
-    | 'draft'
-    | 'review_ready'
-    | 'fairness_reviewed'
-    | 'approved'
-    | 'bundled'
-    | 'published'
-    | 'archived'
-    | 'corrected_exception';
+    | "draft"
+    | "review_ready"
+    | "fairness_reviewed"
+    | "approved"
+    | "bundled"
+    | "published"
+    | "archived"
+    | "corrected_exception";
   payload_files: {
     encounters: Record<string, string>;
     progression: Record<string, string>;
@@ -1705,24 +1754,24 @@ Load-time requirements:
 - `payload_files` registry keys must match the authored version pins in the same manifest for `progression` and `validation`.
 - loaders must validate manifest first, then creature/encounter/progression/snapshot payloads; do not partially activate package content on manifest failure
 
-### 8.0.a AssetManifest contract (required for bundled runtime assets) *(Active in M1)*
+### 8.0.a AssetManifest contract (required for bundled runtime assets) _(Active in M1)_
 
 Runtime bundles that ship creature/spell/UI/audio references must provide a deterministic `AssetManifest`.
 This contract defines stable asset IDs, variant dimensions, static module binding ownership, and fallback behavior.
 
 ```ts
 export type AssetNamespace =
-  | 'creature'
-  | 'spell'
-  | 'ui_icon'
-  | 'ui_illustration'
-  | 'audio_sfx'
-  | 'audio_music'
-  | 'vfx';
+  | "creature"
+  | "spell"
+  | "ui_icon"
+  | "ui_illustration"
+  | "audio_sfx"
+  | "audio_music"
+  | "vfx";
 
 export interface AssetVariantSelector {
-  theme: 'default' | 'starter' | 'event' | 'boss';
-  density: 'mdpi' | 'hdpi' | 'xhdpi' | 'xxhdpi' | 'xxxhdpi';
+  theme: "default" | "starter" | "event" | "boss";
+  density: "mdpi" | "hdpi" | "xhdpi" | "xxhdpi" | "xxxhdpi";
   locale: string | null; // BCP-47 (for locale-authored variants only)
 }
 
@@ -1837,8 +1886,9 @@ App-side static binding example (logical key -> static module key):
 
 ```ts
 const ASSET_STATIC_BINDINGS = {
-  'creature:ember_drake': {
-    'theme=starter|density=xhdpi|locale=en-US': 'creature_ember_drake_starter_xhdpi_en_us',
+  "creature:ember_drake": {
+    "theme=starter|density=xhdpi|locale=en-US":
+      "creature_ember_drake_starter_xhdpi_en_us",
   },
 } as const;
 ```
@@ -1895,7 +1945,7 @@ Canonical fallback-chain example for requested selector `theme=starter|density=x
 3. Density fallback hit: `theme=starter|density=default|locale=default`
 4. (Steps 4-5 not reached once step 3 resolves)
 
-### 8.1 Creature definition contract *(Active in M1)*
+### 8.1 Creature definition contract _(Active in M1)_
 
 ```ts
 export interface RuntimeCreatureDefinition {
@@ -1914,7 +1964,7 @@ export interface RuntimeCreatureDefinition {
 }
 ```
 
-### 8.2 Encounter definition contract *(Active in M1)*
+### 8.2 Encounter definition contract _(Active in M1)_
 
 ```ts
 export interface RuntimeStarterTutorialScript {
@@ -1925,7 +1975,7 @@ export interface RuntimeStarterTutorialScript {
   };
   starterBoardOpening: {
     openingBoardSource: {
-      mode: 'authored_board' | 'authored_seed';
+      mode: "authored_board" | "authored_seed";
       authoredBoard?: string[][];
       authoredSeed?: string;
     };
@@ -1933,10 +1983,10 @@ export interface RuntimeStarterTutorialScript {
     postFirstSpellWeaknessTeachingTarget: {
       normalizedWord: string;
       expectedElement: NonNeutralElementType;
-      availabilityRule: 'required_immediately_after_first_creature_spell';
+      availabilityRule: "required_immediately_after_first_creature_spell";
     };
     transitionToOrdinaryFlow: {
-      trigger: 'after_guided_first_cast_and_first_creature_spell';
+      trigger: "after_guided_first_cast_and_first_creature_spell";
       continueWithStandardEncounterRules: true;
     };
   };
@@ -1945,8 +1995,8 @@ export interface RuntimeStarterTutorialScript {
 }
 
 export interface HiddenBonusWordPolicy {
-  selectionSource: 'themed_lexicon_subset';
-  deterministicSelection: 'encounter_seed_bound';
+  selectionSource: "themed_lexicon_subset";
+  deterministicSelection: "encounter_seed_bound";
   maxClaimsPerEncounter: 1;
   grantsMetaRewardOnly: 1;
 }
@@ -1959,7 +2009,7 @@ export interface RuntimeEncounterDefinition {
   isStarterEncounter: boolean;
   starterTutorialScript: RuntimeStarterTutorialScript | null;
   introFlavorText: string | null;
-  damageModelVersion: 'damage_model_v1';
+  damageModelVersion: "damage_model_v1";
   rewardDefinition: RuntimeRewardDefinition | null;
   hiddenBonusWordPolicy: HiddenBonusWordPolicy | null;
   boardConfig: RuntimeBoardConfig;
@@ -1996,7 +2046,7 @@ Rules:
 - any authored out-of-band balance value with `warn` severity requires an active waiver entry
 - `error` severity out-of-band values are never auto-waived by content-only metadata; they require explicit governance exception handling outside ordinary authoring flow
 
-#### 8.2.a Player assist action gating contract (M1-M2 and later) *(Active in M2)*
+#### 8.2.a Player assist action gating contract (M1-M2 and later) _(Active in M2)_
 
 Milestone gating:
 
@@ -2008,7 +2058,10 @@ Milestone gating:
 Milestone-gated repeated-loss fail-soft runtime config (required):
 
 ```ts
-export type EncounterAssistLevel = 'tip_only' | 'gentle_board_bias' | 'easier_variant';
+export type EncounterAssistLevel =
+  | "tip_only"
+  | "gentle_board_bias"
+  | "easier_variant";
 
 export interface AssistStarCapBehavior {
   tip_only: 3; // no star cap reduction
@@ -2017,7 +2070,7 @@ export interface AssistStarCapBehavior {
 }
 
 export interface EncounterAssistRuntimePolicyConfig {
-  assist_policy_version: 'assist_policy_v1';
+  assist_policy_version: "assist_policy_v1";
   enabled_assist_levels: EncounterAssistLevel[];
   assist_star_cap_behavior: AssistStarCapBehavior;
 }
@@ -2040,35 +2093,40 @@ export interface MilestoneAssistRuntimeConfigMap {
   M3_PLUS: EncounterAssistRuntimePolicyConfig;
 }
 
-export const MILESTONE_ASSIST_RUNTIME_CONFIG: MilestoneAssistRuntimeConfigMap = {
-  M1: {
-    assist_policy_version: 'assist_policy_v1',
-    enabled_assist_levels: ['tip_only'],
-    assist_star_cap_behavior: {
-      tip_only: 3,
-      gentle_board_bias: 2,
-      easier_variant: 1,
+export const MILESTONE_ASSIST_RUNTIME_CONFIG: MilestoneAssistRuntimeConfigMap =
+  {
+    M1: {
+      assist_policy_version: "assist_policy_v1",
+      enabled_assist_levels: ["tip_only"],
+      assist_star_cap_behavior: {
+        tip_only: 3,
+        gentle_board_bias: 2,
+        easier_variant: 1,
+      },
     },
-  },
-  M2: {
-    assist_policy_version: 'assist_policy_v1',
-    enabled_assist_levels: ['tip_only', 'gentle_board_bias'],
-    assist_star_cap_behavior: {
-      tip_only: 3,
-      gentle_board_bias: 2,
-      easier_variant: 1,
+    M2: {
+      assist_policy_version: "assist_policy_v1",
+      enabled_assist_levels: ["tip_only", "gentle_board_bias"],
+      assist_star_cap_behavior: {
+        tip_only: 3,
+        gentle_board_bias: 2,
+        easier_variant: 1,
+      },
     },
-  },
-  M3_PLUS: {
-    assist_policy_version: 'assist_policy_v1',
-    enabled_assist_levels: ['tip_only', 'gentle_board_bias', 'easier_variant'],
-    assist_star_cap_behavior: {
-      tip_only: 3,
-      gentle_board_bias: 2,
-      easier_variant: 1,
+    M3_PLUS: {
+      assist_policy_version: "assist_policy_v1",
+      enabled_assist_levels: [
+        "tip_only",
+        "gentle_board_bias",
+        "easier_variant",
+      ],
+      assist_star_cap_behavior: {
+        tip_only: 3,
+        gentle_board_bias: 2,
+        easier_variant: 1,
+      },
     },
-  },
-};
+  };
 ```
 
 Rules:
@@ -2102,19 +2160,19 @@ Canonical clue enums:
 
 ```ts
 export type ClueActionType =
-  | 'reveal_starter_letter'
-  | 'highlight_legal_path'
-  | 'reroll_local_tiles';
+  | "reveal_starter_letter"
+  | "highlight_legal_path"
+  | "reroll_local_tiles";
 
 export type ClueUseDenyReason =
-  | 'clues_disabled_for_milestone'
-  | 'starter_flow_locked'
-  | 'no_charges_available'
-  | 'encounter_limit_reached'
-  | 'cooldown_active'
-  | 'encounter_not_in_progress'
-  | 'creature_spell_lock_active'
-  | 'post_terminal_state';
+  | "clues_disabled_for_milestone"
+  | "starter_flow_locked"
+  | "no_charges_available"
+  | "encounter_limit_reached"
+  | "cooldown_active"
+  | "encounter_not_in_progress"
+  | "creature_spell_lock_active"
+  | "post_terminal_state";
 ```
 
 Canonical persisted clue counters in active encounter runtime:
@@ -2139,6 +2197,7 @@ Rules:
 - `clue_star_cap_from_usage` is null before clue use; then records strict cap values that mirror `docs/milestone-locked-constants.md` section 3.3.e exactly (`reveal_starter_letter`/`highlight_legal_path` -> cap `2`, `reroll_local_tiles` -> cap `1`) and always resolves to the minimum cap seen so far.
 
 Canonical deterministic candidate-selection contract for:
+
 - `reveal_starter_letter`
 - `highlight_legal_path`
 
@@ -2155,7 +2214,7 @@ Selection pipeline rules:
 1. Candidate enumeration order:
    - enumerate start positions in row-major order (`row` asc, `col` asc)
    - enumerate neighbor expansion using this fixed order:
-     1) `(-1, -1)` 2) `(-1, 0)` 3) `(-1, +1)` 4) `(0, -1)` 5) `(0, +1)` 6) `(+1, -1)` 7) `(+1, 0)` 8) `(+1, +1)`
+     1. `(-1, -1)` 2) `(-1, 0)` 3) `(-1, +1)` 4) `(0, -1)` 5) `(0, +1)` 6) `(+1, -1)` 7) `(+1, 0)` 8) `(+1, +1)`
    - paths must be non-reusing and length `>= 3`
 2. Candidate filtering precedence (required order):
    - tile-state eligibility filter (reject path containing unselectable tile states; v1 includes Frozen)
@@ -2188,10 +2247,12 @@ Worked example fixture (QA lock):
 - no blocking tile state on any candidate tile
 
 Candidate set after filtering:
+
 - `stone` path `[(0,0),(0,1),(0,2),(0,3),(0,4)]` length `5`
 - `glow` path `[(1,0),(1,1),(1,2),(1,3)]` length `4`
 
 Canonical chosen result:
+
 - selected candidate: `stone`
 - `reveal_starter_letter` output tile: `(0,0)` (`S`)
 - `highlight_legal_path` output path: `[(0,0),(0,1),(0,2),(0,3),(0,4)]`
@@ -2215,16 +2276,16 @@ Rules:
 - paid and non-paid clue charges draw from the same encounter runtime budget constraints.
 - If clue-economy lock values change, update `docs/milestone-locked-constants.md` section 3.3.e first, then mirror the updated values here in the same change.
 
-#### 8.2.b Encounter balance metadata and waiver contract *(Active in M2)*
+#### 8.2.b Encounter balance metadata and waiver contract _(Active in M2)_
 
 ```ts
 export interface RuntimeEncounterBalanceMetadata {
-  authoredFailRateBand: 'low' | 'medium' | 'high';
+  authoredFailRateBand: "low" | "medium" | "high";
   shippabilityStatus:
-    | 'prototype'
-    | 'tune-required'
-    | 'candidate-shippable'
-    | 'shippable';
+    | "prototype"
+    | "tune-required"
+    | "candidate-shippable"
+    | "shippable";
   waivers: RuntimeEncounterBalanceWaiver[];
 }
 
@@ -2237,13 +2298,13 @@ export interface RuntimeEncounterBalanceWaiver {
 }
 ```
 
-### 8.3 Board config contract *(Active in M1)*
+### 8.3 Board config contract _(Active in M1)_
 
 ```ts
 export interface RuntimeBoardConfig {
   rows: 6;
   cols: 6;
-  seedMode: 'generated' | 'fixed_seed';
+  seedMode: "generated" | "fixed_seed";
   fixedSeed: string | null;
   allowWandTiles: boolean;
   wandSpawnRate: number; // finite rate in [0, 1], canonical runtime wand incidence source
@@ -2308,7 +2369,7 @@ Migration note for authored encounters:
 - Existing content keeps current behavior by default: authored/runtime records that omit `maxConcurrentWands` should be treated as `null` (legacy uncapped) during migration and compatibility loading.
 - Encounter authors must set a non-null `maxConcurrentWands` explicitly to opt into capped Wand concurrency behavior.
 
-### 8.4 Reward contract *(Active in M1)*
+### 8.4 Reward contract _(Active in M1)_
 
 ```ts
 export interface RuntimeRewardDefinition {
@@ -2319,7 +2380,11 @@ export interface RuntimeRewardDefinition {
 
 export interface CosmeticUnlockRecord {
   unlock_id: string;
-  unlock_type: 'avatar_frame' | 'profile_badge' | 'board_vfx' | 'other_profile_cosmetic';
+  unlock_type:
+    | "avatar_frame"
+    | "profile_badge"
+    | "board_vfx"
+    | "other_profile_cosmetic";
   cost_currency: number;
   unlocked_at_utc: string; // ISO-8601 UTC
 }
@@ -2343,15 +2408,15 @@ Rules:
 - failure semantics: if any step in the spend+unlock transaction fails, the full transaction must roll back and leave persisted balance/ownership unchanged.
 - idempotency semantics: retrying an already-owned `unlock_id` must no-op without additional currency deduction and without writing duplicate ownership records.
 
-### 8.5 Progression definition contract *(Active in M2)*
+### 8.5 Progression definition contract _(Active in M2)_
 
 ```ts
-export type ProgressionTopology = 'chapter_linear_v1';
-export type MainlineUnlockCondition = 'win_any_stars';
+export type ProgressionTopology = "chapter_linear_v1";
+export type MainlineUnlockCondition = "win_any_stars";
 
 export interface RuntimeProgressionDefinition {
   progression_version: string;
-  topology: 'chapter_linear_v1';
+  topology: "chapter_linear_v1";
   starter_encounter_id: string;
   chapters: RuntimeProgressionChapterDefinition[];
 }
@@ -2375,16 +2440,16 @@ Rules:
 - event encounters do not gate mainline progression by default in Milestone 2
 - for the active M1-M2 lock, `progression_version` must be `progression_m2_chapter_linear_v1`
 
-### 8.6 Phase rule contract *(Active in M2)*
+### 8.6 Phase rule contract _(Active in M2)_
 
 ```ts
 export interface RuntimePhaseRule {
   trigger:
-    | { kind: 'hp_threshold'; thresholdPercent: number }
-    | { kind: 'countdown_cycle'; cycleCount: number };
+    | { kind: "hp_threshold"; thresholdPercent: number }
+    | { kind: "countdown_cycle"; cycleCount: number };
   changesWeaknessTo: NonNeutralElementType | null;
   changesResistanceTo: NonNeutralElementType | null;
-  nextPhaseState: 'phase_two' | 'special';
+  nextPhaseState: "phase_two" | "special";
 }
 ```
 
@@ -2395,12 +2460,12 @@ Rules:
 - the current product direction expects very little or no use of matchup shifts in v1 ordinary content
 - `changesWeaknessTo` and `changesResistanceTo` must not be random
 
-### 8.7 Post-M2 challenge and competition runtime contracts *(Reserved post-M2)*
+### 8.7 Post-M2 challenge and competition runtime contracts _(Reserved post-M2)_
 
 ```ts
 export interface RuntimeChallengeDefinition {
   challengeId: string;
-  challengeType: 'daily' | 'weekly' | 'event' | 'limited_time';
+  challengeType: "daily" | "weekly" | "event" | "limited_time";
   sourceEncounterId: string;
   modifierList: string[];
   rewardDefinition: RuntimeRewardDefinition | null;
@@ -2412,18 +2477,18 @@ export interface RuntimeChallengeDefinition {
   availabilityWindow: {
     startsAtUtc: string;
     endsAtUtc: string;
-    timezoneMode: 'utc';
+    timezoneMode: "utc";
     windowLabel: string | null;
   };
 }
 
 export interface RuntimeChallengeBundleManifest {
   bundleId: string;
-  bundleType: 'daily_rotation' | 'weekly_rotation' | 'event_bundle';
+  bundleType: "daily_rotation" | "weekly_rotation" | "event_bundle";
   activeWindow: {
     startsAtUtc: string;
     endsAtUtc: string;
-    timezoneMode: 'utc';
+    timezoneMode: "utc";
   };
   includedChallengeIds: string[];
   spotlightMapping: Record<string, string | null>;
@@ -2435,7 +2500,7 @@ export interface RuntimeChallengeBundleManifest {
 
 export interface RuntimeMirrorCompetitionDefinition {
   competitionId: string;
-  format: 'mirror_competition_v1';
+  format: "mirror_competition_v1";
   encounterId: string;
   sharedSeed: string;
   contentVersionPin: string;
@@ -2443,7 +2508,7 @@ export interface RuntimeMirrorCompetitionDefinition {
   battleRulesVersionPin: string;
   boardGeneratorVersionPin: string;
   rewardConstantsVersionPin: string;
-  cluePolicy: 'disabled' | 'shared_budget' | 'own_budget';
+  cluePolicy: "disabled" | "shared_budget" | "own_budget";
   rankingRulesRef: string;
 }
 
@@ -2452,7 +2517,7 @@ export interface CompetitionResultSummary {
   stars: 0 | 1 | 2 | 3;
   movesRemaining: number;
   successfulCastsUsed: number;
-  tieState: 'none' | 'exact_tie' | 'shared_rank';
+  tieState: "none" | "exact_tie" | "shared_rank";
   rankDisplay: {
     rankLabel: string;
     rankOrdinal: number | null;
@@ -2472,7 +2537,7 @@ Rules:
 
 ---
 
-## 9. Canonical progression transition rules *(Active in M2)*
+## 9. Canonical progression transition rules _(Active in M2)_
 
 Progression changes are applied only when a terminal encounter result is committed.
 
@@ -2493,7 +2558,6 @@ When the starter encounter resolves:
   - keep `player_profile_records.has_completed_starter_encounter = 0`
   - update the starter encounter progress/result records using the encounter-loss fail-soft streak rules in section 9.3
   - unlock nothing
-
 
 ### 9.1.a Canonical first-time starter timeline contract
 
@@ -2530,7 +2594,9 @@ TypeScript-facing pure contract:
 
 ```ts
 export type StarRating = 0 | 1 | 2 | 3;
-export type StarPolicyVersion = 'star_policy_v1_absolute' | 'star_policy_v2_percentage';
+export type StarPolicyVersion =
+  | "star_policy_v1_absolute"
+  | "star_policy_v2_percentage";
 
 export function deriveStarRating(
   outcome: EncounterOutcome,
@@ -2634,19 +2700,21 @@ When an encounter resolves with outcome `lost`:
 ### 9.4 Replay rules
 
 Replays may change:
+
 - `best_star_rating`
 - `last_completed_at_utc`
 - `win_count`
 - `loss_count`
 
 Replays must not:
+
 - relock any encounter
 - unlock more than the single canonical next encounter
 - change chapter order or next-action truth
 
 ---
 
-## 10. Validation Snapshot Runtime Contracts *(Active in M1)*
+## 10. Validation Snapshot Runtime Contracts _(Active in M1)_
 
 These interfaces define app/runtime validation boundaries for word lookup and element lookup.
 
@@ -2670,7 +2738,7 @@ Rules:
 ```ts
 export interface ValidationSnapshotMetadata {
   snapshot_version: string;
-  language: 'en';
+  language: "en";
   word_count: number;
   tagged_word_count: number;
   generated_at_utc: string;
@@ -2743,7 +2811,7 @@ Preferred v1 implementation:
 
 ---
 
-## 11. Content Runtime Validation Contracts *(Active in M1)*
+## 11. Content Runtime Validation Contracts _(Active in M1)_
 
 These interfaces define runtime content/schema validation boundaries for encounter and creature activation.
 
@@ -2755,15 +2823,15 @@ export interface RuntimeValidationResult {
   findings: RuntimeValidationFinding[];
   errors: Array<{
     code:
-      | 'schema_invalid'
-      | 'enum_invalid'
-      | 'countdown_invalid'
-      | 'matchup_invalid'
-      | 'damage_model_version_invalid'
-      | 'board_config_invalid'
-      | 'phase_rule_invalid'
-      | 'version_pin_mismatch'
-      | 'id_collision';
+      | "schema_invalid"
+      | "enum_invalid"
+      | "countdown_invalid"
+      | "matchup_invalid"
+      | "damage_model_version_invalid"
+      | "board_config_invalid"
+      | "phase_rule_invalid"
+      | "version_pin_mismatch"
+      | "id_collision";
     message: string;
     field_path?: string;
   }>;
@@ -2773,7 +2841,7 @@ export interface RuntimeValidationResult {
 ```ts
 export interface RuntimeValidationFinding {
   rule_id: string;
-  severity: 'error' | 'warn' | 'info';
+  severity: "error" | "warn" | "info";
   measured_value: string | number | boolean | null;
   threshold: string;
   remediation_hint: string;
@@ -2800,7 +2868,7 @@ Required runtime behavior:
 
 ---
 
-## 12. Analytics Event Contracts *(Active in M2)*
+## 12. Analytics Event Contracts _(Active in M2)_
 
 This section pins canonical event names, required properties, and privacy/redaction rules.
 
@@ -2810,36 +2878,36 @@ It mirrors the later analytics-doc direction while giving TypeScript-facing shap
 
 ```ts
 export type CanonicalAnalyticsEventName =
-  | 'session.start'
-  | 'session.resume'
-  | 'session.pause'
-  | 'session.end'
-  | 'session.route_viewed'
-  | 'session.recovered_from_persisted_state'
-  | 'encounter.started'
-  | 'encounter.resumed'
-  | 'encounter.cast_submitted'
-  | 'encounter.cast_rejected'
-  | 'encounter.cast_resolved'
-  | 'encounter.creature_spell_triggered'
-  | 'encounter.dead_board_recovered'
-  | 'encounter.spark_shuffle_retry_cap_hit'
-  | 'encounter.clue_used'
-  | 'encounter.clue_denied'
-  | 'encounter.hidden_bonus_word_discovered'
-  | 'encounter.won'
-  | 'encounter.lost'
-  | 'encounter.result_viewed'
-  | 'challenge.viewed'
-  | 'challenge.started'
-  | 'challenge.completed'
-  | 'challenge.expired'
-  | 'competition.joined'
-  | 'competition.seed_locked'
-  | 'competition.result_submitted'
-  | 'competition.rank_viewed'
-  | 'progression.encounter_unlocked'
-  | 'settings.updated';
+  | "session.start"
+  | "session.resume"
+  | "session.pause"
+  | "session.end"
+  | "session.route_viewed"
+  | "session.recovered_from_persisted_state"
+  | "encounter.started"
+  | "encounter.resumed"
+  | "encounter.cast_submitted"
+  | "encounter.cast_rejected"
+  | "encounter.cast_resolved"
+  | "encounter.creature_spell_triggered"
+  | "encounter.dead_board_recovered"
+  | "encounter.spark_shuffle_retry_cap_hit"
+  | "encounter.clue_used"
+  | "encounter.clue_denied"
+  | "encounter.hidden_bonus_word_discovered"
+  | "encounter.won"
+  | "encounter.lost"
+  | "encounter.result_viewed"
+  | "challenge.viewed"
+  | "challenge.started"
+  | "challenge.completed"
+  | "challenge.expired"
+  | "competition.joined"
+  | "competition.seed_locked"
+  | "competition.result_submitted"
+  | "competition.rank_viewed"
+  | "progression.encounter_unlocked"
+  | "settings.updated";
 ```
 
 ### 12.2 Base required analytics properties
@@ -2851,8 +2919,8 @@ export interface AnalyticsEventBase {
   event_id: string;
   event_ts_utc: string;
   client_build_id: string;
-  platform: 'android';
-  environment: 'dev' | 'staging' | 'prod';
+  platform: "android";
+  environment: "dev" | "staging" | "prod";
   app_session_id: string;
 }
 ```
@@ -2884,7 +2952,11 @@ export interface CanonicalGameplayAnalyticsFields {
   rejection_reason: CastRejectionReason | null;
   spark_shuffle_retries_attempted: number | null;
   spark_shuffle_retry_cap: number | null;
-  spark_shuffle_fallback_outcome: 'none' | 'deterministic_emergency_regen' | 'recoverable_error_end' | null;
+  spark_shuffle_fallback_outcome:
+    | "none"
+    | "deterministic_emergency_regen"
+    | "recoverable_error_end"
+    | null;
   board_init_quality_retry_count: number | null;
   board_refill_quality_retry_count: number | null;
   clue_action_type: ClueActionType | null;
@@ -2892,11 +2964,21 @@ export interface CanonicalGameplayAnalyticsFields {
   clue_charges_available: number | null;
   clue_uses_total: number | null;
   clue_star_cap_from_usage: 0 | 1 | 2 | 3 | null;
-  ranking_dimension_primary: 'stars' | 'moves_remaining' | 'successful_casts_used' | 'completion_time_ms' | null;
+  ranking_dimension_primary:
+    | "stars"
+    | "moves_remaining"
+    | "successful_casts_used"
+    | "completion_time_ms"
+    | null;
   // `completion_time_ms` is telemetry-only for `mirror_competition_v1` and must never imply competitive ordering.
-  ranking_dimension_secondary: 'moves_remaining' | 'successful_casts_used' | 'completion_time_ms' | 'none' | null;
+  ranking_dimension_secondary:
+    | "moves_remaining"
+    | "successful_casts_used"
+    | "completion_time_ms"
+    | "none"
+    | null;
   rank_ordinal: number | null;
-  tie_state: 'none' | 'exact_tie' | 'shared_rank' | null;
+  tie_state: "none" | "exact_tie" | "shared_rank" | null;
 }
 ```
 
@@ -2931,10 +3013,10 @@ Required behavior:
 
 ---
 
-## 13. App Store State Orchestration Contracts *(Active in M1)*
+## 13. App Store State Orchestration Contracts _(Active in M1)_
 
 This section defines the canonical Zustand-facing app orchestration state described in `docs/technical-architecture.md` section 13.1–13.4.
-Current repo note: the shared `AppStoreState` contract exists, but the current mobile slice still uses narrower local wiring and does not yet ship the fuller Zustand store module layout described below.
+Current repo note: the shared `AppStoreState` contract is now represented by a real `apps/mobile` Zustand store plus SQLite persistence gateway in the current mobile slice, but the fuller target module/folder layout described below remains target-state architecture rather than a claim that every suggested path already exists.
 It intentionally separates:
 
 - engine-owned battle truth
@@ -3082,7 +3164,12 @@ Selector stability rules:
 export interface UiSliceState {
   swipe_preview_path: BoardPosition[];
   highlighted_word_preview: string;
-  transient_banner: 'none' | 'invalid_word' | 'repeated_word' | 'countdown_warning' | 'recoverable_error';
+  transient_banner:
+    | "none"
+    | "invalid_word"
+    | "repeated_word"
+    | "countdown_warning"
+    | "recoverable_error";
   pause_overlay_open: 0 | 1;
   result_ack_pending: 0 | 1;
 }
@@ -3134,7 +3221,7 @@ These contracts operationalize `docs/technical-architecture.md` section 13.1–1
 - UI transient state stays local and non-canonical
 - ownership split remains: rules packages compute truth, app store orchestrates invocation and rendering
 
-## 14. Contract Usage Guidance *(Active in M1)*
+## 14. Contract Usage Guidance _(Active in M1)_
 
 - `packages/game-rules` and `packages/validation` should own these exported contracts where practical
 - `apps/mobile` should consume contracts and avoid redefining parallel shape types, even when the current slice only wires a subset of the fuller app-store/persistence architecture
@@ -3146,4 +3233,5 @@ These contracts operationalize `docs/technical-architecture.md` section 13.1–1
 - if a contract shape becomes annoying to use, fix it here first rather than working around it separately in each package
 
 ### Final rule
+
 If the same gameplay concept is represented differently in three places, the contract layer is not doing its job.

@@ -33,6 +33,7 @@ export * from "./recovery/runSparkShuffle.js";
 
 export * from "./results/deriveEncounterOutcome.js";
 export * from "./persistence/activeEncounterSnapshotAdapter.js";
+export * from "./input/boardSelection.js";
 
 export * from "./simulation/runEncounterHeadless.js";
 export * from "./simulation/fixtures/headlessEncounterFixtures.js";

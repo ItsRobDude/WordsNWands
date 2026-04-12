@@ -38,7 +38,7 @@ Current repo status as of 2026-04-11:
 - root workspace/setup tooling is in the Milestone 0 foundation shape
 - shared packages (`packages/game-rules`, `packages/validation`, `packages/content`) contain the main implemented Milestone 1 gameplay, validation, and content-loading logic
 - `apps/mobile` now contains a first playable local encounter slice wired into those shared packages
-- the current mobile slice still does not satisfy the full Milestone 1 app/runtime definition of done because final player-facing support for both trace/swipe input and tap-selected casting, SQLite-backed save/restore, and the fuller mobile app architecture are still in progress
+- the current mobile slice now satisfies the key Milestone 1 runtime plumbing for dual-input casting, shared bundled content activation, store-backed session orchestration, and SQLite-backed save/restore, but overall Milestone 1 completion still depends on the broader product/readability/manual-validation criteria in this plan
 
 When contributors compare code to this plan, they should treat missing app-layer work as not-yet-built milestone scope unless code or docs explicitly claim the feature is already shipped.
 
@@ -69,6 +69,7 @@ Words 'n Wands! should aim to become:
 That order matters.
 
 ### Solo-builder realism rule
+
 This project is being built with heavy AI help and limited human implementation bandwidth.
 
 That means the correct build strategy is:
@@ -88,6 +89,7 @@ not bigger ambition in code before the fundamentals are proven.
 Before serious feature work begins, Words 'n Wands! should have a usable source-of-truth doc set.
 
 ### Already required for the core product shape
+
 - `README.md`
 - `AGENTS.md`
 - `docs/game-rules.md`
@@ -98,6 +100,7 @@ Before serious feature work begins, Words 'n Wands! should have a usable source-
 - `docs/milestone-implementation-plan.md`
 
 ### Required before deeper implementation layers begin
+
 These docs may be created just before the milestone that needs them, but they must exist before serious work starts in that area:
 
 - `docs/technical-architecture.md`
@@ -114,6 +117,7 @@ These docs may be created just before the milestone that needs them, but they mu
 If a milestone depends on a missing doc, create or finalize that doc before serious coding starts for that milestone.
 
 ### Validation command contract
+
 Use `docs/engineering-standards.md` section **"5.1 Operational Validation Commands (Contributor Contract)"** as the authoritative command list for:
 
 - exact format/lint/typecheck/test/build command names
@@ -156,17 +160,18 @@ To prevent UI and routing drift, player-facing surfaces must follow this matrix 
 - no “coming soon” card clutter
 - no reward hooks pretending the feature exists
 
-| Milestone | Main Progression | Starter Encounter | Standard Encounters | Boss Encounters | Daily/Weekly Flavor | Creature Journal | Async Competition | Store / Monetization |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Milestone 0** Foundation | Unavailable | Unavailable | Unavailable | Unavailable | Unavailable | Unavailable | Unavailable | Unavailable |
-| **Milestone 1** Core Slice | Minimal | Available | One or two only | Unavailable | Unavailable | Unavailable | Unavailable | Unavailable |
-| **Milestone 2** Roster + Progression | Available | Available if still useful | Available | Optional single simple boss only if truly real | Unavailable | Optional minimal if it has real content | Unavailable | Unavailable |
-| **Milestone 3** Challenge Layer | Available | Available if retained | Available | Available if real | Available as optional side flavor | Available if truly populated | Unavailable | Unavailable |
-| **Milestone 4** Content + Balance Ops | Available | Available if retained | Available | Available | Available | Available | Unavailable | Unavailable |
-| **Milestone 5** Async Competition | Available | Available if retained | Available | Available | Available | Available | Available if truly playable | Unavailable |
-| **Milestone 6+** Monetization / Expansion | Available | Available if retained | Available | Available | Available | Available | Available if justified | Available if justified |
+| Milestone                                 | Main Progression | Starter Encounter         | Standard Encounters | Boss Encounters                                | Daily/Weekly Flavor               | Creature Journal                        | Async Competition           | Store / Monetization   |
+| :---------------------------------------- | :--------------- | :------------------------ | :------------------ | :--------------------------------------------- | :-------------------------------- | :-------------------------------------- | :-------------------------- | :--------------------- |
+| **Milestone 0** Foundation                | Unavailable      | Unavailable               | Unavailable         | Unavailable                                    | Unavailable                       | Unavailable                             | Unavailable                 | Unavailable            |
+| **Milestone 1** Core Slice                | Minimal          | Available                 | One or two only     | Unavailable                                    | Unavailable                       | Unavailable                             | Unavailable                 | Unavailable            |
+| **Milestone 2** Roster + Progression      | Available        | Available if still useful | Available           | Optional single simple boss only if truly real | Unavailable                       | Optional minimal if it has real content | Unavailable                 | Unavailable            |
+| **Milestone 3** Challenge Layer           | Available        | Available if retained     | Available           | Available if real                              | Available as optional side flavor | Available if truly populated            | Unavailable                 | Unavailable            |
+| **Milestone 4** Content + Balance Ops     | Available        | Available if retained     | Available           | Available                                      | Available                         | Available                               | Unavailable                 | Unavailable            |
+| **Milestone 5** Async Competition         | Available        | Available if retained     | Available           | Available                                      | Available                         | Available                               | Available if truly playable | Unavailable            |
+| **Milestone 6+** Monetization / Expansion | Available        | Available if retained     | Available           | Available                                      | Available                         | Available                               | Available if justified      | Available if justified |
 
 ### Early-surface discipline
+
 For Milestones 0–2, the app should feel focused, not broad.
 
 The player-facing flow should emphasize:
@@ -179,6 +184,7 @@ The player-facing flow should emphasize:
 Anything else should stay hidden unless it is truly functional and useful.
 
 ### Scope lock — hidden bonus word discovery feature
+
 Hidden bonus word discovery (encounter-bound themed lexicon selection + tiny meta reward) must remain **inactive and hidden** until the milestone that explicitly adopts it in scope docs.
 
 Rules:
@@ -222,9 +228,11 @@ Words 'n Wands! should first become excellent at:
 ## 6. Milestone 0 — Project Foundation
 
 ### Goal
+
 Prepare the repo and app foundation so future work stays clean, boring, and maintainable.
 
 ### Scope
+
 - establish docs structure
 - establish monorepo/workspace direction
 - establish pnpm-only command expectations
@@ -237,6 +245,7 @@ Prepare the repo and app foundation so future work stays clean, boring, and main
 - establish initial asset folder shape
 
 ### This milestone is not about
+
 - a real playable battle
 - progression systems
 - boss encounters
@@ -247,6 +256,7 @@ Prepare the repo and app foundation so future work stays clean, boring, and main
 - elaborate art pipelines
 
 ### Docs required before Milestone 0 begins
+
 - `README.md`
 - `AGENTS.md`
 - `docs/game-rules.md`
@@ -258,6 +268,7 @@ Prepare the repo and app foundation so future work stays clean, boring, and main
 - `docs/engineering-standards.md`
 
 ### M0 bootstrap contract (required artifacts)
+
 > **Normative (M0 required):** Milestone 0 is not complete unless these bootstrap artifacts exist and are the enforced defaults for all contributors.
 
 - `package.json` at repo root **must exist** and own the root scripts contract (`format`, `lint`, `typecheck`, `test`, `build`, and `check` when present). It must exist in M0 so all contributors execute one canonical validation surface; deferred: deeper package-specific script fan-out where not yet needed.
@@ -284,6 +295,7 @@ tsconfig.base.json
 ```
 
 ### Definition of done
+
 Milestone 0 is done when:
 
 - the repo has an approved boring structure
@@ -298,9 +310,11 @@ Milestone 0 is done when:
 ## 7. Milestone 1 — Core Vertical Slice
 
 ### Goal
+
 Prove that Words 'n Wands! is fun and trustworthy on one Android device before building breadth.
 
 ### Exact scope
+
 Milestone 1 should include:
 
 - startup / first-launch routing
@@ -323,6 +337,7 @@ Milestone 1 should include:
 - restrained first-pass feedback and animation where practical
 
 ### What Milestone 1 should not include
+
 - broad creature roster
 - real daily/weekly challenge structure
 - full creature journal
@@ -334,6 +349,7 @@ Milestone 1 should include:
 - fake placeholder screens
 
 ### What exactly is in Milestone 1?
+
 Milestone 1 is a **single-device, local-first, content-bundled vertical slice** that proves:
 
 - the battle loop is understandable quickly
@@ -344,6 +360,7 @@ Milestone 1 is a **single-device, local-first, content-bundled vertical slice** 
 - the result flow feels satisfying
 
 ### Assist policy lock (M1)
+
 Milestone 1 ships with **tip-only fail-soft** for repeated losses on the same encounter:
 
 - enabled: optional encouragement + one-time strategy tip (non-mechanical)
@@ -351,6 +368,7 @@ Milestone 1 ships with **tip-only fail-soft** for repeated losses on the same en
 - disabled: easier variant
 
 ### Docs required before Milestone 1 begins
+
 - all Milestone 0 docs
 - `docs/implementation-contracts.md`
 - `docs/milestone-locked-constants.md`
@@ -358,6 +376,7 @@ Milestone 1 ships with **tip-only fail-soft** for repeated losses on the same en
 - `docs/accessibility-localization-and-device-support.md`
 
 ### Definition of done
+
 Milestone 1 is done when:
 
 - a fresh install launches cleanly
@@ -373,6 +392,7 @@ Milestone 1 is done when:
 - no fake challenge, social, or store surfaces are exposed
 
 ### Required automated tests before Milestone 1 is complete
+
 At minimum:
 
 - unit tests for word normalization and validation lookup integration
@@ -388,6 +408,7 @@ At minimum:
 - startup routing integration tests must explicitly assert starter-gate truth using `has_completed_starter_encounter`
 
 ### Required manual checks before Milestone 1 is complete
+
 At minimum:
 
 - first launch is understandable within the first minute
@@ -405,9 +426,11 @@ At minimum:
 ## 8. Milestone 2 — Small Roster and Basic Progression
 
 ### Goal
+
 Expand the game from one proof-of-concept encounter into a small but real repeatable loop.
 
 ### Scope
+
 Active content-lock priority for M2:
 
 - treat the first shippable slice as the active authored lock until additional chapters are explicitly authored and locked
@@ -425,6 +448,7 @@ Active content-lock priority for M2:
 - optional first simple boss only if it is truly real and justified
 
 ### What Milestone 2 should not include
+
 - daily/weekly flavor systems unless they are real enough to matter
 - async competition
 - live content operations
@@ -434,6 +458,7 @@ Active content-lock priority for M2:
 - fake world maps
 
 ### Progression surface direction
+
 Milestone 2 may use:
 
 - a simple encounter list
@@ -443,6 +468,7 @@ Milestone 2 may use:
 Milestone 2 should not spend major effort on a decorative world map unless it clearly improves play.
 
 ### Assist policy lock (M2)
+
 Milestone 2 enables the middle assist tier but keeps strongest assists off:
 
 - enabled: optional encouragement + one-time strategy tip (non-mechanical)
@@ -450,6 +476,7 @@ Milestone 2 enables the middle assist tier but keeps strongest assists off:
 - disabled: easier variant
 
 ### Docs required before Milestone 2 begins
+
 - all Milestone 1 docs
 - `docs/technical-architecture.md` finalized enough for shared package boundaries
 - `docs/implementation-contracts.md` expanded for progression and encounter records if needed
@@ -458,6 +485,7 @@ Milestone 2 enables the middle assist tier but keeps strongest assists off:
 - `docs/early-content-lock.md` required before implementation begins as the active authored lock constraints source
 
 ### Definition of done
+
 Milestone 2 is done when:
 
 - the player can progress through the active authored first shippable slice without placeholder breadth assumptions
@@ -469,6 +497,7 @@ Milestone 2 is done when:
 - any Chapter 2/3 expansion claims are deferred until those chapters are explicitly authored and lock-approved in scope/lock docs
 
 ### Required automated tests before Milestone 2 is complete
+
 At minimum:
 
 - encounter-definition validation tests
@@ -478,6 +507,7 @@ At minimum:
 - save/restore tests for progression-adjacent state where relevant
 
 ### Required manual checks before Milestone 2 is complete
+
 At minimum:
 
 - the difficulty ramp feels real but not punishing
@@ -492,9 +522,11 @@ At minimum:
 ## 9. Milestone 3 — Challenge Flavor and Boss/Event Layer
 
 ### Goal
+
 Add optional side flavor and more standout content without redefining the core game.
 
 ### Scope
+
 - daily and/or weekly side challenge entry
 - curated optional challenge content
 - clearer boss/event content support
@@ -502,11 +534,13 @@ Add optional side flavor and more standout content without redefining the core g
 - challenge surfaces that remain secondary to main progression
 
 ### Important rule
+
 Daily/weekly content must remain **side flavor**, not mandatory identity.
 
 The player should still be able to treat the main encounter progression as the center of the game.
 
 ### Assist policy lock (M3+)
+
 Milestone 3 and later use the full fail-soft contract:
 
 - enabled: optional encouragement + one-time strategy tip (non-mechanical)
@@ -514,6 +548,7 @@ Milestone 3 and later use the full fail-soft contract:
 - enabled: optional easier variant (next attempt only)
 
 ### What Milestone 3 should not include
+
 - live-service complexity that requires a backend before it is justified
 - manipulative streak pressure
 - store-first UI
@@ -521,6 +556,7 @@ Milestone 3 and later use the full fail-soft contract:
 - async competition unless separately approved into a later milestone
 
 ### Docs required before Milestone 3 begins
+
 - all Milestone 2 docs
 - `docs/content-pipeline-and-liveops.md`
 - `docs/challenge-and-boss-layer.md` required before implementation begins for challenge/boss behavior constraints
@@ -528,6 +564,7 @@ Milestone 3 and later use the full fail-soft contract:
 - `docs/analytics-and-experimentation.md` if challenge behavior is instrumented in a serious way
 
 ### Definition of done
+
 Milestone 3 is done when:
 
 - optional challenge content is real and understandable
@@ -541,9 +578,11 @@ Milestone 3 is done when:
 ## 10. Milestone 4 — Content Operations and Balance Hardening
 
 ### Goal
+
 Make content expansion and tuning safer before the game broadens further.
 
 ### Scope
+
 - creature/encounter content schema hardening
 - stronger content validation
 - better balancing workflows
@@ -552,17 +591,20 @@ Make content expansion and tuning safer before the game broadens further.
 - refinement of progression and challenge data flow
 
 ### What Milestone 4 should not include
+
 - broad backend dependence unless clearly justified
 - giant custom CMS work
 - large operational systems that exceed the game’s real content cadence
 
 ### Docs required before Milestone 4 begins
+
 - all Milestone 3 docs
 - `docs/content-pipeline-and-liveops.md` expanded enough to support repeatable content authoring/review
 - `docs/implementation-contracts.md` updated for content definitions and versioning where needed
 - `docs/encounter-balance-framework.md` finalized so authoring and validation tools can auto-check encounter balance and shippability
 
 ### Definition of done
+
 Milestone 4 is done when:
 
 - content addition is safer and less error-prone
@@ -577,9 +619,11 @@ Milestone 4 is done when:
 ## 11. Milestone 5 — Async Competition Later
 
 ### Goal
+
 Add asynchronous competition only if the solo battle loop has already proven strong.
 
 ### Scope
+
 - async mirror-style competition direction
 - equivalent seeded board / encounter comparisons
 - fair result comparison model
@@ -587,21 +631,25 @@ Add asynchronous competition only if the solo battle loop has already proven str
 - optional leaderboard or friend-comparison behavior later if justified
 
 ### Important rule
+
 Async competition must not redefine the solo battle loop or make solo play feel second-class.
 
 ### What Milestone 5 should not include
+
 - real-time multiplayer
 - coordination-heavy social systems
 - chat systems
 - broad PvP economy layers
 
 ### Docs required before Milestone 5 begins
+
 - all Milestone 4 docs
 - `docs/async-competition-rules.md` is required
 - implementation details must remain consistent with `docs/implementation-contracts.md` section 8.7 post-M2 challenge/competition runtime contracts
 - `docs/technical-architecture.md` updated for any online/service additions
 
 ### Definition of done
+
 Milestone 5 is done when:
 
 - async competition is truly playable
@@ -614,15 +662,18 @@ Milestone 5 is done when:
 ## 12. Milestone 6 — Monetization and Content Expansion
 
 ### Goal
+
 Add only the monetization and expansion layers that fit Words 'n Wands!’ emotional contract.
 
 ### Scope
+
 - ad-free purchase if appropriate
 - carefully constrained cosmetics
 - carefully constrained content packs if justified
 - optional reward systems that do not break fairness
 
 ### Forbidden directions
+
 Milestone 6 must not introduce:
 
 - pay-to-win combat power
@@ -631,11 +682,13 @@ Milestone 6 must not introduce:
 - manipulative pressure loops that deform the puzzle flow
 
 ### Docs required before Milestone 6 begins
+
 - all Milestone 5 docs
 - `docs/progression-economy-and-monetization.md`
 - `docs/audio-visual-style-guide.md` if cosmetic expansion becomes real
 
 ### Definition of done
+
 Milestone 6 is done when:
 
 - monetization supports the product rather than deforms it
@@ -648,9 +701,11 @@ Milestone 6 is done when:
 ## 13. Milestone 7 — Beta Hardening and Release Readiness
 
 ### Goal
+
 Reduce risk before broader player release.
 
 ### Scope
+
 - bug fixing
 - balance tuning
 - fairness audits
@@ -662,6 +717,7 @@ Reduce risk before broader player release.
 - polish on the most-used surfaces
 
 ### Docs required before Milestone 7 begins
+
 All launch-critical behavior docs should now exist and be internally consistent.
 
 At minimum:
@@ -685,6 +741,7 @@ At minimum:
 - `docs/milestone-implementation-plan.md`
 
 ### Definition of done
+
 Milestone 7 is done when:
 
 - the most-used flows are stable on real Android devices
@@ -716,6 +773,7 @@ A milestone is complete only when:
 Every milestone should include tests appropriate to the area it changes.
 
 ### Minimum automated test expectations
+
 - core battle-truth changes require unit tests
 - state transition changes require unit tests and targeted integration tests
 - persistence/resume changes require serialization/restore tests
@@ -723,6 +781,7 @@ Every milestone should include tests appropriate to the area it changes.
 - competition or sync additions later require deterministic comparison or merge tests
 
 ### Minimum manual test expectations
+
 - test the main happy path
 - test a plausible failure path
 - test background/resume behavior where relevant
