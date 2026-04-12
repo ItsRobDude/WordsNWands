@@ -3,9 +3,9 @@ import {
   createEncounterRuntimeState,
   createInitialBoard,
   createSeededEncounterRngStreamStates,
-  isBoardAccepted,
   restoreEncounterRuntimeState,
   runEncounterHeadless,
+  selectBestBoardCandidate,
   type BoardPosition,
   type EncounterRuntimeState,
   type EncounterVersionPins,
@@ -231,12 +231,21 @@ export const applySelectionToEncounterRuntime = (input: {
       },
       minimum_playable_word_count_after_refill:
         resolveRefillMinimumPlayableWordCount(input.context.encounter_payload),
+      target_playable_word_count_after_refill:
+        resolveRefillTargetPlayableWordCount(input.context.encounter_payload),
+      playable_word_count_search_limit_after_refill:
+        resolveRefillPlayableWordCountSearchLimit(
+          input.context.encounter_payload,
+        ),
       minimum_vowel_class_count:
         input.context.encounter_payload.encounter.boardConfig.boardQualityPolicy
           ?.minVowelClassCount ?? null,
       vowel_class_includes_y:
         input.context.encounter_payload.encounter.boardConfig
           .vowelClassIncludesY,
+      refill_candidate_search_attempts: resolveRefillCandidateSearchAttempts(
+        input.context.encounter_payload,
+      ),
       creature_spell_primitives:
         input.context.encounter_payload.creature.spellPrimitives,
     },
@@ -286,41 +295,46 @@ const resolveOpeningBoard = (input: {
   }
 
   let current_board_base = input.board_base;
-  let accepted_board = createInitialBoard({
+  const initial_candidate = createInitialBoard({
     board: current_board_base,
     letter_pool: input.letter_pool,
-  }).board;
+  });
   const acceptance_policy = createOpeningBoardAcceptancePolicy({
     encounter_payload: input.encounter_payload,
     validation_lookup: input.validation_lookup,
   });
 
   if (!acceptance_policy) {
-    return accepted_board;
+    return initial_candidate.board;
   }
 
-  for (let attempt_index = 0; attempt_index < 64; attempt_index += 1) {
-    if (
-      isBoardAccepted({
-        board: accepted_board,
-        policy: acceptance_policy,
-      })
-    ) {
-      return accepted_board;
-    }
+  return selectBestBoardCandidate({
+    initial_candidate: {
+      board: initial_candidate.board,
+      rng_stream_states: initial_candidate.board.rng_stream_states,
+    },
+    candidate_search_attempts: resolveOpeningCandidateSearchAttempts(
+      input.encounter_payload,
+    ),
+    policy: acceptance_policy,
+    next_candidate: (current_candidate) => {
+      current_board_base = {
+        width: current_candidate.board.width,
+        height: current_candidate.board.height,
+        rng_stream_states: current_candidate.rng_stream_states,
+      };
 
-    current_board_base = {
-      width: accepted_board.width,
-      height: accepted_board.height,
-      rng_stream_states: accepted_board.rng_stream_states,
-    };
-    accepted_board = createInitialBoard({
-      board: current_board_base,
-      letter_pool: input.letter_pool,
-    }).board;
-  }
+      const next_candidate = createInitialBoard({
+        board: current_board_base,
+        letter_pool: input.letter_pool,
+      });
 
-  return accepted_board;
+      return {
+        board: next_candidate.board,
+        rng_stream_states: next_candidate.board.rng_stream_states,
+      };
+    },
+  }).board;
 };
 
 const resolveEncounterSeed = (input: {
@@ -382,6 +396,12 @@ const createOpeningBoardAcceptancePolicy = (input: {
   minimum_playable_word_count: resolveOpeningMinimumPlayableWordCount(
     input.encounter_payload,
   ),
+  target_playable_word_count: resolveOpeningTargetPlayableWordCount(
+    input.encounter_payload,
+  ),
+  playable_word_count_search_limit: resolveOpeningPlayableWordCountSearchLimit(
+    input.encounter_payload,
+  ),
   repeated_words: [],
   validation_lookup: input.validation_lookup,
   minimum_vowel_class_count:
@@ -403,14 +423,70 @@ const resolveOpeningMinimumPlayableWordCount = (
         ? 3
         : 2;
 
+const resolveOpeningTargetPlayableWordCount = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  encounter_payload.encounter.isStarterEncounter
+    ? 8
+    : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+      ? 7
+      : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
+          "medium"
+        ? 5
+        : 3;
+
+const resolveOpeningPlayableWordCountSearchLimit = (
+  encounter_payload: RuntimeEncounterPayload,
+): number => resolveOpeningTargetPlayableWordCount(encounter_payload) + 2;
+
+const resolveOpeningCandidateSearchAttempts = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  encounter_payload.encounter.isStarterEncounter
+    ? 12
+    : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+      ? 10
+      : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
+          "medium"
+        ? 8
+        : 6;
+
 const resolveRefillMinimumPlayableWordCount = (
   encounter_payload: RuntimeEncounterPayload,
 ): number =>
   encounter_payload.encounter.isStarterEncounter
-    ? 4
+    ? 5
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 3
+      ? 4
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
-        ? 2
-        : 1;
+        ? 3
+        : 2;
+
+const resolveRefillTargetPlayableWordCount = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  encounter_payload.encounter.isStarterEncounter
+    ? 7
+    : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+      ? 6
+      : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
+          "medium"
+        ? 4
+        : 3;
+
+const resolveRefillPlayableWordCountSearchLimit = (
+  encounter_payload: RuntimeEncounterPayload,
+): number => resolveRefillTargetPlayableWordCount(encounter_payload) + 2;
+
+const resolveRefillCandidateSearchAttempts = (
+  encounter_payload: RuntimeEncounterPayload,
+): number =>
+  encounter_payload.encounter.isStarterEncounter
+    ? 10
+    : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
+      ? 8
+      : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
+          "medium"
+        ? 6
+        : 4;

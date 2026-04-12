@@ -17,6 +17,7 @@ export * from "./board/consumeTiles.js";
 export * from "./board/refillBoard.js";
 export * from "./board/applyBubbleRise.js";
 export * from "./board/boardAcceptance.js";
+export * from "./board/selectBestBoardCandidate.js";
 export * from "./board/hasPlayableWord.js";
 export * from "./board/tickSurvivingTileStates.js";
 

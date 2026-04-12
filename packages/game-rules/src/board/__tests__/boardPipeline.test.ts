@@ -7,6 +7,7 @@ import { collapseColumns } from "../collapseColumns.ts";
 import { consumeTiles } from "../consumeTiles.ts";
 import { createInitialBoard } from "../createInitialBoard.ts";
 import { refillBoard } from "../refillBoard.ts";
+import { selectBestBoardCandidate } from "../selectBestBoardCandidate.ts";
 
 const createEmptyBoard = (): Omit<BoardSnapshot, "tiles"> => ({
   width: 3,
@@ -157,3 +158,115 @@ test("refillBoard fills gaps and advances board stream by spawned tile count", (
     true,
   );
 });
+
+test("selectBestBoardCandidate keeps the strongest accepted board while preserving final rng lineage", () => {
+  const validation_lookup = createSingleLetterLookup(["A", "B", "C", "D"]);
+  const weakCandidate = createCandidateBoard({
+    rng_stream_state: "seed::board_fill::v1::4",
+    rows: ["AA", "BB"],
+  });
+  const strongCandidate = createCandidateBoard({
+    rng_stream_state: "seed::board_fill::v1::8",
+    rows: ["AB", "CD"],
+  });
+  const deadCandidate = createCandidateBoard({
+    rng_stream_state: "seed::board_fill::v1::12",
+    rows: ["ZZ", "ZZ"],
+  });
+  const queued_candidates = [strongCandidate, deadCandidate];
+
+  const selected = selectBestBoardCandidate({
+    initial_candidate: weakCandidate,
+    candidate_search_attempts: 3,
+    policy: {
+      minimum_playable_word_count: 3,
+      target_playable_word_count: 4,
+      playable_word_count_search_limit: 4,
+      minimum_length: 1,
+      repeated_words: [],
+      validation_lookup,
+    },
+    next_candidate: () => {
+      const next = queued_candidates.shift();
+      assert.notEqual(next, undefined);
+      if (!next) {
+        throw new Error("Expected queued board candidate.");
+      }
+      return next;
+    },
+  });
+
+  assert.deepEqual(
+    selected.board.tiles.map((tile) => tile.letter).join(""),
+    "ABCD",
+  );
+  assert.equal(
+    selected.rng_stream_states.board_fill_stream_state,
+    "seed::board_fill::v1::12",
+  );
+  assert.equal(
+    selected.board.rng_stream_states.board_fill_stream_state,
+    "seed::board_fill::v1::12",
+  );
+});
+
+const createCandidateBoard = (input: {
+  rng_stream_state: string;
+  rows: readonly string[];
+}) => {
+  const height = input.rows.length;
+  const width = input.rows[0]?.length ?? 0;
+
+  return {
+    board: {
+      width,
+      height,
+      tiles: input.rows.flatMap((row, rowIndex) =>
+        [...row].map((letter, colIndex) => ({
+          id: `${input.rng_stream_state}-${rowIndex}-${colIndex}`,
+          letter,
+          position: { row: rowIndex, col: colIndex },
+          state: null,
+          state_turns_remaining: null,
+          special_marker: null,
+        })),
+      ),
+      rng_stream_states: {
+        board_fill_stream_state: input.rng_stream_state,
+        creature_spell_stream_state: "seed::creature_spell::v1::0",
+        spark_shuffle_stream_state: "seed::spark_shuffle::v1::0",
+      },
+    },
+    rng_stream_states: {
+      board_fill_stream_state: input.rng_stream_state,
+      creature_spell_stream_state: "seed::creature_spell::v1::0",
+      spark_shuffle_stream_state: "seed::spark_shuffle::v1::0",
+    },
+  };
+};
+
+const createSingleLetterLookup = (letters: readonly string[]) => {
+  const normalized_letters = new Set(
+    letters.map((letter) => letter.toLowerCase()),
+  );
+
+  return {
+    snapshot_version: "single-letter-test",
+    metadata: {
+      snapshot_version: "single-letter-test",
+      language: "en" as const,
+      word_count: normalized_letters.size,
+      tagged_word_count: normalized_letters.size,
+      generated_at_utc: "2026-04-11T00:00:00.000Z",
+    },
+    hasWord: (normalized_word: string) =>
+      normalized_letters.has(normalized_word),
+    hasPrefix: (normalized_prefix: string) =>
+      normalized_letters.has(normalized_prefix),
+    getEntry: (normalized_word: string) =>
+      normalized_letters.has(normalized_word)
+        ? { normalized_word, element: "arcane" as const }
+        : null,
+    getMaxWordLength: () => 1,
+  };
+};

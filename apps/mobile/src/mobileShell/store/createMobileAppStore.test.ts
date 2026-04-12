@@ -162,9 +162,9 @@ test("starter win advance launches a fresh chapter one encounter with a differen
       validation_lookup: new InMemoryValidationSnapshotLookup(
         content.validation_snapshot,
       ),
-      limit: 5,
-    }),
-    5,
+      limit: 8,
+    }) >= 6,
+    true,
   );
 });
 

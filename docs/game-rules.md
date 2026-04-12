@@ -57,66 +57,87 @@ over novelty, spectacle, or monetization pressure.
 The following terms should be used consistently across Words 'n Wands!.
 
 ### Encounter
+
 One complete battle against one creature.
 
 ### Battle Board
+
 The grid of letters the player uses to form words during an encounter.
 
 ### Cast
+
 A successful word submission that resolves as a spell.
 
 ### Move
+
 One consumed successful player turn.
 
 ### Move Budget
+
 The total number of successful casts allowed in an encounter before the player loses.
 
 ### Valid Word
+
 A word that meets the current word-validation rules and can be cast successfully.
 
 ### Invalid Word
+
 A word attempt that is rejected before cast resolution because it does not meet the current rules.
 
 ### Repeated Word
+
 A word that was already cast earlier in the same encounter and is therefore rejected under repeat rules.
 
 ### Element
+
 The magic type assigned to a valid word based on the game’s element-tag rules.
 
 ### Arcane
+
 The neutral fallback type used when a valid word has no assigned non-neutral element.
 
 ### Creature
+
 The magical opponent in an encounter.
 
 ### Weakness
+
 The element that deals bonus damage to the current creature.
 
 ### Resistance
+
 The element that deals reduced damage to the current creature.
 
 ### Cast Countdown
+
 The visible number of successful player casts remaining before the creature performs its board spell.
 
 ### Creature Spell
+
 The creature’s board-affecting action that occurs when its cast countdown reaches zero.
 
 ### Board State
+
 The current playable state of the battle board, including letters, special markers, tile states, and any creature effects.
 
 ### Tile State
+
 A temporary modifier placed on a tile, such as Frozen, Sooted, or Dull.
 
 ### Wand Tile
+
 A letter tile with a small magical bonus marker that boosts the word using it.
 
 ### Boss Encounter
+
 A special encounter with higher pressure, more durable creatures, or stronger board disruption than normal encounters.
 
 ### Event Encounter
+
 A special encounter type used for limited, curated, or optional challenge content outside the ordinary encounter flow.
 
 ### Star Rating
+
 The post-encounter performance rating based on how efficiently the player won.
 
 ---
@@ -126,6 +147,7 @@ The post-encounter performance rating based on how efficiently the player won.
 Words 'n Wands! is currently built around the following core gameplay shape.
 
 ### Core encounter shape
+
 An ordinary encounter consists of:
 
 - one creature
@@ -137,6 +159,7 @@ An ordinary encounter consists of:
 - one readable battle goal: defeat the creature before moves run out
 
 ### Primary fantasy
+
 The player uses real words as spells.
 
 Those words do not only produce raw damage.  
@@ -148,6 +171,7 @@ The intended core question is:
 - Or do I cast the smartest word for this creature and this board?
 
 ### Pressure style
+
 Words 'n Wands! currently prefers:
 
 - move pressure
@@ -173,6 +197,7 @@ The **Standard Encounter** is the core ruleset for Words 'n Wands!.
 Future encounter types may add variations later, but they should not silently redefine the Standard Encounter.
 
 ### Standard Encounter format
+
 A Standard Encounter should have:
 
 - one creature
@@ -186,12 +211,14 @@ A Standard Encounter should have:
 - deterministic board and damage behavior
 
 ### Current standard board size
+
 For the Standard Encounter:
 
 - the board is **6 columns x 6 rows**
 - total tiles: **36**
 
 ### Current standard move-budget direction
+
 For the Standard Encounter:
 
 - the player has a fixed number of successful moves
@@ -200,6 +227,7 @@ For the Standard Encounter:
 - repeated words do not consume moves
 
 ### Standard encounter objective
+
 The player wins by reducing the creature’s HP to zero before the move budget is exhausted.
 
 The player loses when:
@@ -208,6 +236,7 @@ The player loses when:
 - and the creature still has HP remaining
 
 ### No direct creature damage to player in core campaign
+
 In the current core campaign direction:
 
 - creature spells affect the board
@@ -225,6 +254,7 @@ The battle board is one of the most important trust systems in Words 'n Wands!.
 It must be readable, fair, and lively.
 
 ### Board composition
+
 Each tile on the board contains:
 
 - one letter
@@ -232,6 +262,7 @@ Each tile on the board contains:
 - zero or one negative tile state
 
 ### Adjacency rules
+
 A valid word path is formed by selecting adjacent letters, either by tracing across the board or by tap-selecting tiles in order.
 
 Adjacency includes:
@@ -241,17 +272,21 @@ Adjacency includes:
 - diagonal
 
 ### Tile reuse rule
+
 A tile may not be used more than once in the same word.
 
 ### Minimum word length
+
 A valid cast must contain at least **3 letters**.
 
 ### Submission rule
+
 A word is cast only when the player completes the active input flow and the game validates the word.
 For trace/swipe input, this means ending the trace.
 For tap-selected input, this means confirming the built selection through the app's submission affordance.
 
 ### Board resolution rule
+
 When a word is successfully cast:
 
 1. the selected letters are consumed
@@ -262,8 +297,10 @@ When a word is successfully cast:
 6. the board returns to a full 6x6 state
 
 This resolution order must remain consistent.
+For early and low-pressure encounters, refill generation should favor deterministic outcomes that leave multiple ordinary-player follow-up words available, rather than settling for the first barely legal board.
 
 ### Column movement constraint (normal gravity)
+
 Outside explicitly documented creature spell primitives, board movement from cast resolution is column-local only:
 
 - collapse is vertical only
@@ -273,6 +310,7 @@ Outside explicitly documented creature spell primitives, board movement from cas
 Movement exceptions are creature-driven and must use the row/column spell primitives in **Section 12, “Row/column movement effects.”**
 
 ### Worked example: fully emptied single column after cast
+
 Single-column view with row `0` at top and row `5` at bottom.
 
 - after letter consumption, column `C2` is fully empty at rows `0..5`
@@ -291,6 +329,7 @@ Example refill outcome for `C2`:
 Any sideways movement in this situation is invalid unless a creature spell explicitly applies a row/column shift primitive.
 
 ### Board readability rule
+
 The player should always be able to understand:
 
 - which letters were consumed
@@ -306,6 +345,7 @@ The board must not mutate in confusing ways that feel hidden or dishonest.
 ## 6. Word Submission Rules
 
 ### Standard word requirements
+
 A word is valid only if it:
 
 - uses a legal adjacent path
@@ -315,6 +355,7 @@ A word is valid only if it:
 - is not blocked by an explicitly documented tile-state rule
 
 ### Invalid word behavior
+
 If a word is invalid:
 
 - the game rejects it immediately
@@ -325,6 +366,7 @@ If a word is invalid:
 - the player receives a readable rejection signal
 
 ### Repeated word behavior
+
 If a word was already cast earlier in the same encounter:
 
 - it is rejected
@@ -334,6 +376,7 @@ If a word was already cast earlier in the same encounter:
 - the player receives a clear repeated-word signal
 
 ### Editing and experimentation rule
+
 The player should be free to explore the board visually without being punished for every failed attempt.
 
 Words 'n Wands! should not discourage experimentation through harsh invalid-word penalties.
@@ -345,6 +388,7 @@ Words 'n Wands! should not discourage experimentation through harsh invalid-word
 Every successful player turn follows this exact order.
 
 ### Standard cast resolution order
+
 1. The player swipes a candidate word.
 2. The game validates the word.
 3. The game determines the word’s element.
@@ -368,6 +412,7 @@ This order must remain consistent.
 Normal turn-flow gravity/refill in steps 6-7 is column-local only. Any row/column displacement beyond this flow must come from creature spell primitives described in Section 12, “Row/column movement effects.”
 
 ### Victory-interrupt rule
+
 If the creature is defeated by the player’s word:
 
 - the encounter ends immediately
@@ -381,18 +426,23 @@ This supports fairness and a strong payoff.
 ## 8. Move Budget Rules
 
 ### Core move rule
+
 Each successful valid cast consumes exactly **1 move**.
 
 ### Invalid word rule
+
 Invalid words consume **0 moves**.
 
 ### Repeated word rule
+
 Repeated words consume **0 moves**.
 
 ### Failed-board-state recovery rule
+
 Automatic board recovery actions must follow the explicit Spark Shuffle pressure rule in this document.
 
 ### Current tuning direction
+
 Normal encounters should feel:
 
 - generous
@@ -406,6 +456,7 @@ Words 'n Wands! should not tune ordinary encounters so tightly that most players
 At the same time, the game should not be so loose that elemental choice, board planning, and creature countdowns stop mattering.
 
 ### Encounter difficulty bands
+
 Ordinary encounter pressure should come from combinations of:
 
 - creature HP
@@ -424,6 +475,7 @@ The game should prefer tuning across those combined levers rather than relying o
 Damage must be understandable and consistent.
 
 ### Canonical source requirement
+
 Damage rules in this document are normative but not independently authored.
 
 For formula constants, rounding mode, minimum-damage floor, and version pin behavior, use the canonical section:
@@ -439,6 +491,7 @@ Damage Model v1 fingerprint string (must match canonical and encounter-balance d
 - `DMV1|base=8+3*(L-3)+max(0,L-5)|matchup=1.5,1.0,0.7,1.0|wand=1.25|soot=0.75|round=half_up|min=1`
 
 ### Strategic balance rule
+
 The damage system should support real tension between:
 
 - a long neutral word
@@ -450,6 +503,7 @@ If weakness words always dominate regardless of size, word-building depth shrink
 The right balance is that both lines of play should matter often.
 
 ### Element/Wand/Soot/final-damage rules
+
 Element matchup, Wand bonus, Soot penalty, rounding mode, and final-damage floor are defined by the canonical `damage_model_v1` contract.
 
 This section must not redefine those constants; it must only reference and comply with:
@@ -464,6 +518,7 @@ Implementation consistency note:
 Wand bonuses should support exciting tactical moments without turning the board into a power-up circus.
 
 ### Readability rule
+
 The player should be able to understand:
 
 - the word they cast
@@ -489,17 +544,20 @@ The current standard element set is:
 - Arcane
 
 ### Element assignment rule
+
 A valid word may be assigned one non-neutral element based on the documented tag rules.
 
 If the word does not have a non-neutral element assignment, it is treated as **Arcane**.
 
 ### Single-element rule
+
 For v1:
 
 - a word may have at most one assigned non-neutral element
 - multi-element behavior is out of scope unless explicitly documented later
 
 ### Arcane rule
+
 Arcane is the neutral fallback.
 
 Arcane words:
@@ -510,6 +568,7 @@ Arcane words:
 - provide a stable fallback when the player cannot find a desirable weakness word
 
 ### Element readability rule
+
 The element system must feel like a clever layer, not a guessing game.
 
 The player should be able to learn and trust it over time.
@@ -523,6 +582,7 @@ Creatures are not passive targets.
 They are puzzle-shaping opponents.
 
 ### Standard creature information
+
 A Standard Encounter creature should expose:
 
 - its visual identity
@@ -533,6 +593,7 @@ A Standard Encounter creature should expose:
 - some readable sense of its spell identity
 
 ### Creature spell purpose
+
 Creature spells exist to:
 
 - create board variation
@@ -543,12 +604,15 @@ Creature spells exist to:
 Creature spells should **not** exist to create cheap losses.
 
 ### Countdown rule
+
 The creature has a visible countdown showing how many successful player casts remain before it acts.
 
 ### Countdown tick rule
+
 The countdown is evaluated after each successful player cast unless a more specific documented rule modifies it.
 
 ### Weakness-interaction direction
+
 In the current direction, successful weakness play uses this exact stall rule:
 
 - if a successful valid cast hits creature weakness, countdown does **not** decrement on that cast
@@ -557,14 +621,17 @@ In the current direction, successful weakness play uses this exact stall rule:
 - on the next non-stalled successful cast, normal decrement behavior resumes
 
 ### Spell reset rule
+
 After the creature casts its spell:
 
 - the countdown resets to that creature’s base value
 
 ### Creature intensity rule
+
 Creature spell intensity should vary by encounter type.
 
 #### Standard encounters
+
 Most creature spells should be:
 
 - nuisances
@@ -572,6 +639,7 @@ Most creature spells should be:
 - manageable with good play
 
 #### Boss encounters
+
 Bosses may use:
 
 - stronger disruption
@@ -582,6 +650,7 @@ Bosses may use:
 Boss encounters should feel special, not like the new baseline for the whole game.
 
 #### Event encounters
+
 Event encounters may use curated, unusual, or more intense spell behavior, provided those encounters are clearly positioned as special content and do not redefine the ordinary game experience.
 
 ---
@@ -591,18 +660,22 @@ Event encounters may use curated, unusual, or more intense spell behavior, provi
 Tile states should remain few, readable, and meaningful.
 
 ### Standard tile-state rule
+
 A tile may have at most one negative state at a time unless a future mode explicitly changes that rule.
 
 ### Current standard negative state family
+
 The current design direction supports negative board effects such as:
 
 #### Frozen
+
 - the tile cannot be selected in the player’s next successful cast
 - Frozen does not clear on invalid or repeated submissions
 - after the next successful cast resolves, surviving Frozen tiles thaw automatically
 - duration: 1 successful player turn
 
 #### Sooted
+
 - the tile is still usable
 - if one or more Sooted tiles are used in a cast, apply one total `0.75x` final-damage multiplier
 - multiple Sooted tiles in one cast do not stack penalties
@@ -611,6 +684,7 @@ The current design direction supports negative board effects such as:
 - duration: 2 successful player turns
 
 #### Dull
+
 - the tile is still usable
 - if a cast uses one or more Dull tiles and the word's element is non-Arcane, treat matchup as Arcane/neutral for that cast
 - base damage and Wand bonus do not change
@@ -619,6 +693,7 @@ The current design direction supports negative board effects such as:
 - duration: 2 successful player turns
 
 #### Bubble
+
 - the tile is still usable
 - after the next successful cast refill step, each surviving Bubble tile rises to the top of its column
 - for multiple surviving Bubble tiles in one column, preserve original relative vertical order among surviving Bubble tiles
@@ -633,6 +708,7 @@ Worked example (single column, row `0` = top):
 - after rise + Bubble clear: row `0` = `B1`, row `1` = `B2`, row `2` = `H`, row `3` = `M`, row `4` = `Q`, row `5` = `R`
 
 ### Row/column movement effects
+
 Creatures may also use effects like:
 
 - shifting a row
@@ -650,6 +726,7 @@ Current standard movement direction:
 - creature row/column movement resolves before player control returns
 
 ### Board-noise rule
+
 The game should avoid stacking so many simultaneous board effects that the player stops feeling in control.
 
 If the board becomes unreadable, the game has failed its clarity goal.
@@ -663,6 +740,7 @@ Board fairness is one of the most important systems in the game.
 Randomness should feel lively, not cruel.
 
 ### Fairness goal
+
 Words 'n Wands! should feel:
 
 - unpredictable enough to stay exciting
@@ -671,6 +749,7 @@ Words 'n Wands! should feel:
 - structured enough that dead boards are treated as failures of the system, not failures of the player
 
 ### Generation philosophy
+
 The board should not be generated as pure chaos.
 
 Board generation and refill should be guided by a structure that favors:
@@ -688,6 +767,7 @@ Technical contract cross-link:
 - `docs/randomness-and-seeding-contract.md` → **Section 5.2, “Refill generation after cast”** (canonical weighted draw mapping and retry semantics)
 
 ### Start-of-encounter fairness rule
+
 A new encounter should begin with a board that contains valid playable words.
 
 The player should not open a battle into an unusable board.
@@ -701,6 +781,7 @@ Implementation lock:
 - Start-board generosity intent is enforced through the same canonical weighted-letter and refill/generation contracts above; balancing may change profile content/version without changing RNG stream semantics.
 
 ### Refill fairness rule
+
 Standard refill behavior should strongly prefer producing continuing playability.
 
 The game should reduce the chance of no-move states as much as practical.
@@ -715,17 +796,20 @@ Implementation lock:
 - Refill fairness must follow the technical contract path in `docs/randomness-and-seeding-contract.md` §5.2 and `docs/implementation-contracts.md` §8.3 rather than prose-only tuning.
 
 ### Dead-board rule
+
 A **dead board** is a board state with no valid playable words under the current rules.
 
 If a dead board occurs, the game must recover it.
 
 ### Dead-board recovery rule
+
 If the game detects no valid playable words:
 
 - the board triggers an automatic recovery action
 - the player should not be blamed for the system’s failure to supply a playable board
 
 ### Standard recovery direction
+
 The default recovery action is a **Spark Shuffle**:
 
 - the board reshuffles into a new playable state
@@ -746,6 +830,7 @@ Tiny worked example (Bubble across Spark Shuffle retries):
 - `B` does **not** rise during this retry cycle; it rises only later when a subsequent successful cast reaches the normal post-refill Bubble step
 
 ### Spark Shuffle pressure rule (v1 global standard)
+
 For **v1**, Spark Shuffle pressure behavior is a **global rule**, not configurable per encounter type:
 
 - Spark Shuffle consumes **0 moves**
@@ -760,6 +845,7 @@ Concrete example:
 - after Spark Shuffle: `current_countdown = 2`, `moves_remaining = 9`
 
 ### Player Assist Actions (M1-M2)
+
 No player-invoked hints/clues in M1–M2; only automatic Spark Shuffle dead-board recovery.
 
 Rules:
@@ -769,9 +855,11 @@ Rules:
 - Any future player-invoked hint/clue feature must be introduced explicitly in focused docs and implementation contracts before release.
 
 ### Recovery pressure rule
+
 Board recovery may still preserve some encounter tension, but it should not feel like a hidden slap to the player for something outside their control.
 
 ### Rare-failure principle
+
 A dead board should be rare.
 
 If it becomes common, the generation/refill system is not balanced correctly.
@@ -783,6 +871,7 @@ If it becomes common, the generation/refill system is not balanced correctly.
 Words 'n Wands! currently supports one simple positive special tile type in the core game.
 
 ### Wand tile rule
+
 A Wand tile is still a normal letter tile.
 
 It differs only in that:
@@ -791,6 +880,7 @@ It differs only in that:
 - a word using it gets a modest final-damage bonus
 
 ### Wand design purpose
+
 The Wand tile exists to:
 
 - create occasional exciting tactical moments
@@ -798,11 +888,13 @@ The Wand tile exists to:
 - add a little extra board reading value without cluttering the system
 
 ### Simplicity rule
+
 The core game should not introduce many different power-up tile families early.
 
 The Wand tile is intended as a focused enhancement, not the start of a collectible tile zoo.
 
 ### Spawn/readability rule
+
 Wand tiles should appear predictably enough to feel fair and rare enough to remain interesting.
 
 The player should be able to spot them quickly.
@@ -812,15 +904,18 @@ The player should be able to spot them quickly.
 ## 15. Win, Loss, and Rating Rules
 
 ### Win rule
+
 The player wins an encounter when the creature’s HP reaches zero before the move budget is exhausted.
 
 ### Loss rule
+
 The player loses an encounter when:
 
 - the move budget reaches zero
 - and the creature still has HP remaining
 
 ### Clear-end-state rule
+
 The result screen should clearly communicate:
 
 - win or loss
@@ -832,6 +927,7 @@ The result screen should clearly communicate:
 The player should not be confused about how the battle ended.
 
 ### Current star-rating direction
+
 The encounter may award stars based on efficiency.
 
 Current **standard encounter** direction (`star_policy_v1_absolute`):
@@ -844,6 +940,7 @@ Current **standard encounter** direction (`star_policy_v1_absolute`):
 This gives players a gentle reason to replay without making failure feel cruel.
 
 ### Boss/event star-policy routing rule
+
 Boss and event encounters must not implicitly inherit standard absolute thresholds by assumption.
 
 Routing rules:
@@ -853,6 +950,7 @@ Routing rules:
 - if a boss/event content row omits `star_policy_version`, treat content as invalid at authoring/validation time (do not silently fall back at runtime)
 
 ### No humiliation rule
+
 Failure should feel like:
 
 - "I can do better next time"
@@ -861,6 +959,7 @@ Failure should feel like:
 The tone of result handling matters.
 
 ### Hidden bonus discovery result rule
+
 Some encounters may include one hidden bonus word as optional flavor discovery.
 
 When discovered, the player should receive:
@@ -882,9 +981,11 @@ Discovery behavior constraints:
 The first-time player experience should create confidence quickly.
 
 ### First battle rule
+
 The first battle should aim to produce a fast, understandable early win.
 
 ### Tutorial battle constraints
+
 The first battle should:
 
 - use a friendly creature
@@ -895,11 +996,13 @@ The first battle should:
 - avoid overwhelming the player with too many tile states or spell effects
 
 ### Teaching philosophy
+
 Words 'n Wands! should teach by letting the player act.
 
 Long tutorial text should be minimized.
 
 ### Confidence rule
+
 The player’s first encounter should make them feel:
 
 - smart
@@ -915,6 +1018,7 @@ not confused or punished.
 Progression should support the encounter loop rather than compete with it.
 
 ### Current progression direction
+
 Words 'n Wands! currently favors a simple progression structure such as:
 
 - encounter list
@@ -930,6 +1034,7 @@ over:
 - a fake epic campaign the game is not actually built to support
 
 ### Minimalist progression rule
+
 If a map exists, it should be:
 
 - readable
@@ -938,6 +1043,7 @@ If a map exists, it should be:
 - not more interesting than the actual battles
 
 ### Progression reward rule
+
 Progression should give the player reasons to continue, such as:
 
 - new creatures
@@ -956,11 +1062,13 @@ The board battle remains the core value.
 Daily and weekly systems are currently treated as **side flavors**, not the heart of the product.
 
 ### Optionality rule
+
 Daily and weekly content should feel welcome, not mandatory.
 
 The player should not feel that the whole game collapses into calendar homework.
 
 ### Reward rule
+
 If daily or weekly challenge content exists, it may offer small rewards such as:
 
 - profile flair
@@ -971,6 +1079,7 @@ If daily or weekly challenge content exists, it may offer small rewards such as:
 These systems should support return play without becoming the only meaningful progression.
 
 ### Identity rule
+
 Daily and weekly modes should not replace the core identity of Words 'n Wands!, which is still:
 
 - magical word casting
@@ -978,6 +1087,7 @@ Daily and weekly modes should not replace the core identity of Words 'n Wands!, 
 - creature encounters
 
 ### Pressure rule
+
 Missing a daily or weekly challenge should not make the ordinary player feel punished or left behind.
 
 ---
@@ -985,6 +1095,7 @@ Missing a daily or weekly challenge should not make the ordinary player feel pun
 ## 19. Boss and Event Rules
 
 ### Boss purpose
+
 Bosses exist to create standout moments.
 
 They should feel:
@@ -996,6 +1107,7 @@ They should feel:
 than ordinary encounters.
 
 ### Boss pressure rule
+
 Bosses may legitimately use:
 
 - tighter move budgets
@@ -1007,6 +1119,7 @@ Bosses may legitimately use:
 Bosses should still obey the game’s fairness and readability principles.
 
 ### Event purpose
+
 Events exist to offer:
 
 - novelty
@@ -1025,6 +1138,7 @@ They should not silently redefine the baseline expectations of the normal game.
 Words 'n Wands! depends on a bright, magical tone.
 
 ### Creature framing rule
+
 Creatures should be framed as:
 
 - wild
@@ -1037,6 +1151,7 @@ Creatures should be framed as:
 not as gore targets or horror monsters
 
 ### Battle framing rule
+
 The player is not "murdering" creatures.
 
 The magical framing should lean toward:
@@ -1048,6 +1163,7 @@ The magical framing should lean toward:
 - winning a magical duel
 
 ### Presentation rule
+
 The rules, effects, and tone should remain appropriate for a broad audience including:
 
 - kids
@@ -1063,6 +1179,7 @@ The rules, effects, and tone should remain appropriate for a broad audience incl
 Because Words 'n Wands! depends on trust, broken or unfair gameplay behavior must be handled deliberately.
 
 ### Board or validation correction rule
+
 If a creature, encounter, word-tag rule, or board-generation behavior is found to be broken or unfair:
 
 - a correction may be made only as an intentional exception
@@ -1070,6 +1187,7 @@ If a creature, encounter, word-tag rule, or board-generation behavior is found t
 - the product should favor player trust over rigid purity
 
 ### Player-protection rule
+
 Words 'n Wands! should not punish players for the product’s own mistake.
 
 If a system flaw created clearly unfair outcomes:

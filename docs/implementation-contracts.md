@@ -2340,6 +2340,10 @@ Rules:
   - `null` disables quality filtering (only hard safety gate applies).
   - non-null requires finite integer `minVowelClassCount` in inclusive range `[0, rows * cols]`.
   - `qualityPolicyVersion` is required so tuning can evolve additively without retroactively changing old fixtures.
+- current shared-engine note:
+  - authored `boardQualityPolicy` currently covers the pinned vowel-class acceptance gate only.
+  - the active shared engine may also apply deterministic runtime playable-word targets and bounded candidate-search windows based on encounter pressure band and whether the board is an opening board or a refill.
+  - those runtime playable-word targets are implementation-owned tuning values, not new authored content fields, and they must stay deterministic, version-reviewable, and consistent with `docs/randomness-and-seeding-contract.md`.
 - `wandSpawnRate` is required and is the canonical runtime-authored wand incidence representation used by encounter balance parity validators.
 - `wandSpawnRate` must be finite and clamped to inclusive range `[0, 1]`; runtime/content validators must fail values outside this range (no silent coercion).
 - if `allowWandTiles = false`, `wandSpawnRate` must be exactly `0`; any non-zero value is invalid.

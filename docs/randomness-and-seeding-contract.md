@@ -17,6 +17,7 @@ Current shared-engine implementation status as of 2026-04-11:
 - the current engine does consume `creature_spell_stream_state` for `random_eligible` creature-spell targeting
 - the current engine does not yet split `board_init` from `board_refill`
 - the current engine does not yet persist or consume `hidden_bonus_word_selection`
+- the current engine now evaluates a bounded deterministic candidate window for generated openings/refills and keeps the strongest accepted board under its active playable-word and vowel-class targets, rather than always accepting the first merely legal candidate
 
 Until the RNG migration lands in code and fixtures, contributors touching the current engine must keep `packages/game-rules/src/contracts/board.ts`, `packages/game-rules/src/encounter/createEncounterRuntimeState.ts`, and related tests aligned with the implemented three-stream contract. When the richer RNG contract below becomes active, the code, fixtures, and this document must be updated in the same change.
 
@@ -137,6 +138,10 @@ Rules:
   1. hard safety gate: `hasPlayableWord(...)` must be `true`,
   2. optional quality gate: if `RuntimeBoardConfig.boardQualityPolicy` is non-null, candidate must also satisfy `passesBoardQualityPredicate(...)` (for example `minVowelClassCount` under pinned vowel-class profile).
 - Quality-gate retry attempts must consume additional draws from `board_init` only (same substream lineage as the initial attempt); implementations must not reset/reseed or borrow another stream for retries.
+- Choosing among retried candidates is allowed and deterministic:
+  - implementations may evaluate a bounded candidate window and keep the strongest accepted candidate instead of stopping at the first accepted candidate,
+  - candidate strength must be computed from documented board-quality signals only (for example playable-word count and vowel-class count),
+  - the persisted stream state after generation must still reflect the full candidate window that was evaluated, not the earlier winning candidate's pre-selection stream position.
 
 ### 5.2 Refill generation after cast
 
@@ -168,6 +173,10 @@ Rules:
   1. hard safety gate: `hasPlayableWord(...)` must be `true`,
   2. optional quality gate: if `RuntimeBoardConfig.boardQualityPolicy` is non-null, candidate must also satisfy `passesBoardQualityPredicate(...)` (for example `minVowelClassCount` under pinned vowel-class profile).
 - Quality-gate retries must stay in the same `board_refill` lineage: each reject/regen attempt advances the same substream snapshot chain and must be replay-identical for the same seed/cast/profile/version inputs.
+- Refill candidate preference is allowed and deterministic:
+  - implementations may evaluate a bounded post-cast refill window and keep the strongest accepted candidate so short sessions are less likely to collapse into barren boards,
+  - the scoring signals used for that preference must be pinned runtime behavior, not external live word-frequency lookups or opaque device-local heuristics,
+  - the resulting selected board must still preserve the fully advanced `board_refill` stream state after the whole evaluated candidate window.
 
 ### 5.3 Creature spell random targeting
 
@@ -326,7 +335,6 @@ Required automated tests:
 
 ---
 
-
 ## 8. Deterministic fixture contract (required)
 
 Determinism tests in §7 must be backed by version-pinned JSON fixtures rather than ad-hoc inline setup.
@@ -381,7 +389,7 @@ At minimum, v1 must ship and keep green the following deterministic fixtures:
    - Includes a documented save step and verifies uninterrupted vs restored parity from that point onward.
 4. `spark_shuffle_retry_cap_determinism`
    - Crafted dead-board sequence that deterministically reaches retry cap behavior.
-5. `starter_loss_retry_win_gate` *(required only when starter gate is in active milestone scope, e.g., M1/M2 if applicable)*
+5. `starter_loss_retry_win_gate` _(required only when starter gate is in active milestone scope, e.g., M1/M2 if applicable)_
    - Verifies starter loss → retry → win gate behavior parity under fixed seed/version pins.
 6. `wand_cap_hit_consumption_determinism`
    - Uses non-null `maxConcurrentWands` and verifies cap-hit suppression still consumes mandatory Wand rolls.
@@ -415,7 +423,6 @@ Required CI behavior:
 ---
 
 ## 9. Versioning and change control
-
 
 Any change to:
 
