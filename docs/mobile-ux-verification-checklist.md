@@ -44,10 +44,11 @@ Capture:
 ## 1. Launch And Starter Flow
 
 - Cold launch with no active snapshot routes to starter flow, not Home.
+- Starter landing feels like a real title/menu screen, not a wall of setup cards.
 - Starter intro makes the next action obvious within a few seconds.
-- `Enter Starter Encounter` feels primary and easy to notice.
-- If a saved starter run exists, `Resume Starter Encounter` is visible and understandable.
-- If the starter has already been cleared, `Skip To Home` is present and does not overshadow the main action.
+- `Start Adventure` or the equivalent primary play action feels obvious and easy to notice.
+- If a saved starter run exists, `Resume Encounter` or the equivalent resume action is visible and understandable.
+- If the starter has already been cleared, `Continue Adventure`, `Return To Home`, or the equivalent homeward action is present and does not overshadow the main action.
 
 ## 2. Home
 
@@ -59,6 +60,9 @@ Capture:
 
 ## 3. Encounter Readability
 
+- The battle screen fits on one portrait phone screen without vertical scrolling.
+- Tapping a tile selects that exact tile, not a different tile elsewhere on the board.
+- Short drags build the intended traced path without snapping to the wrong corner or starting cell.
 - The board feels comfortably readable in one-handed portrait play.
 - The board is visually dominant over chrome and surrounding copy.
 - HP, moves, countdown, weakness, and resistance are quickly findable.

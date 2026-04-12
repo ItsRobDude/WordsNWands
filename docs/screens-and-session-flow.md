@@ -95,33 +95,43 @@ Those belong in other docs.
 The following terms should be used consistently.
 
 ### Cold Launch
+
 Opening the app when it is not currently running.
 
 ### Warm Resume
+
 Returning to the app after it was backgrounded.
 
 ### First-Time Flow
+
 The player’s first app experience before they have completed an encounter.
 
 ### Home
+
 The main player-facing landing screen outside of an active battle.
 
 ### Active Encounter
+
 A battle session that is currently in progress and not yet resolved.
 
 ### Encounter Result
+
 The win or loss state shown after an encounter concludes.
 
 ### Soft Pause
+
 A temporary interruption such as app backgrounding, notifications, or brief task switching.
 
 ### Hard Resume
+
 Reopening the app after a process kill or longer interruption and restoring the last active state.
 
 ### Starter Encounter
+
 The first battle used to teach the core loop.
 
 ### Session Recovery
+
 The act of restoring the player to the correct screen and state after interruption.
 
 ---
@@ -129,9 +139,11 @@ The act of restoring the player to the correct screen and state after interrupti
 ## 4. App Launch Rules
 
 ### Primary launch rule
+
 On launch, the app should route the player to the most appropriate state with minimal friction.
 
 ### Launch priority order
+
 On app launch, the routing priority should be:
 
 1. restore an unresolved active encounter if one exists
@@ -139,18 +151,22 @@ On app launch, the routing priority should be:
 3. otherwise route the player to Home
 
 ### Canonical starter-gate routing rule
+
 If no unresolved active encounter exists and the starter gate has not been cleared, the app routes into starter flow.
 
 Starter gate truth is:
+
 - `has_completed_starter_encounter = 1` -> starter gate cleared
 - `has_completed_starter_encounter = 0` -> starter gate not cleared
 
 A starter loss does not route the player into normal Home progression.
 
 ### No wasted startup rule
+
 The app should not make the player step through unnecessary intro layers before they can understand or re-enter the main loop.
 
 ### Splash/loading rule
+
 Any splash or loading treatment should be brief and functional.
 
 It should support:
@@ -168,11 +184,13 @@ It should not delay play more than needed.
 The first-time flow should create confidence quickly.
 
 ### First-time entry rule
+
 A brand-new player should not land on a cluttered home hub with unclear choices.
 
 The first-time flow should direct them quickly into a **Starter Encounter** or a very lightweight pre-battle setup that leads directly into it.
 
 ### First-time flow structure
+
 Recommended first-time sequence:
 
 1. brief title/splash
@@ -183,7 +201,12 @@ Recommended first-time sequence:
 6. route to Home
 
 ### Minimal welcome framing rule
+
 Before the first battle, any intro copy should be short and functional.
+
+This lightweight framing may be presented as a simple title/menu-style landing
+screen, as long as every visible action is real and leads directly into
+implemented flow.
 
 It may communicate:
 
@@ -194,40 +217,46 @@ It may communicate:
 It should not dump lore or deep explanation first.
 
 ### First-win rule
+
 The first-time flow should aim to give the player a fast, readable early win.
 
 The goal is confidence, not proving difficulty.
 
 ### Starter tutorial cue sequence (canonical)
+
 The starter encounter uses a fixed cue sequence so onboarding behavior is deterministic and testable.
 Its first guided cast should teach a non-neutral element outcome (not Arcane fallback) so the player immediately learns that element choice, not only word validity, affects battle results.
 
-| Cue stage | Trigger condition | Dismissal behavior | Gameplay state |
-| --- | --- | --- | --- |
-| `cue_01_trace_word` | First starter run enters `in_progress` with no successful cast yet. | Auto-dismiss immediately after first **valid** cast submission is accepted, or manually dismiss via `Got it` while keeping cue eligible to re-open on next submit attempt. | **Blocked** (board input locked except tutorial CTA). |
-| `cue_02_release_to_cast` | Player has built at least one legal path while `cue_01_trace_word` is complete and no valid cast has resolved yet. | Auto-dismiss when the player submits a legal path and cast submission resolves (valid or rejected). | **Non-blocking** (board remains interactive). |
-| `cue_03_read_countdown` | First valid cast from starter run finishes resolution and creature survives. | Tap-to-dismiss or auto-dismiss after `2.0s`, whichever comes first. | **Non-blocking**. |
-| `cue_04_watch_creature_spell` | Countdown reaches `0` in starter run and creature spell banner starts. | Auto-dismiss after the spell resolution completes. | **Blocked** only during normal creature-spell lock window (no extra tutorial lock). |
-| `cue_05_loss_retry_prompt` | Starter encounter ends in `lost`. | Dismiss by pressing primary CTA `Retry Starter`; no close/X bypass. | **Blocked** until player selects retry or leaves via secondary `Return to Title` when available. |
-| `cue_06_win_next_step` | Starter encounter ends in `won`. | Dismiss by pressing primary CTA `Begin Chapter 1`. | **Blocked** until CTA selection (result progression gate). |
+| Cue stage                     | Trigger condition                                                                                                  | Dismissal behavior                                                                                                                                                         | Gameplay state                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `cue_01_trace_word`           | First starter run enters `in_progress` with no successful cast yet.                                                | Auto-dismiss immediately after first **valid** cast submission is accepted, or manually dismiss via `Got it` while keeping cue eligible to re-open on next submit attempt. | **Blocked** (board input locked except tutorial CTA).                                            |
+| `cue_02_release_to_cast`      | Player has built at least one legal path while `cue_01_trace_word` is complete and no valid cast has resolved yet. | Auto-dismiss when the player submits a legal path and cast submission resolves (valid or rejected).                                                                        | **Non-blocking** (board remains interactive).                                                    |
+| `cue_03_read_countdown`       | First valid cast from starter run finishes resolution and creature survives.                                       | Tap-to-dismiss or auto-dismiss after `2.0s`, whichever comes first.                                                                                                        | **Non-blocking**.                                                                                |
+| `cue_04_watch_creature_spell` | Countdown reaches `0` in starter run and creature spell banner starts.                                             | Auto-dismiss after the spell resolution completes.                                                                                                                         | **Blocked** only during normal creature-spell lock window (no extra tutorial lock).              |
+| `cue_05_loss_retry_prompt`    | Starter encounter ends in `lost`.                                                                                  | Dismiss by pressing primary CTA `Retry Starter`; no close/X bypass.                                                                                                        | **Blocked** until player selects retry or leaves via secondary `Return to Title` when available. |
+| `cue_06_win_next_step`        | Starter encounter ends in `won`.                                                                                   | Dismiss by pressing primary CTA `Begin Chapter 1`.                                                                                                                         | **Blocked** until CTA selection (result progression gate).                                       |
 
 ### Starter cue repetition and interruption rules
+
 - `cue_01_trace_word`, `cue_02_release_to_cast`, and `cue_03_read_countdown` are **show-once per local player profile** after first successful display+dismiss cycle.
 - `cue_04_watch_creature_spell` is **event-bound**: show each time the starter creature actually casts in a run, but never outside starter encounter scope.
 - `cue_05_loss_retry_prompt` repeats on every starter loss until starter gate completion.
 - `cue_06_win_next_step` appears on each starter win result surface, but starter progression gating means it is typically seen once before routing to Home.
 
 Repeat-on-failure behavior:
+
 - If the player loses starter before completing `cue_01`–`cue_03`, unfinished stages remain eligible and must show on the next retry from the first unmet stage.
 - Completed cue stages must not replay on retry unless explicitly event-bound (`cue_04`) or result-bound (`cue_05` / `cue_06`).
 
 Interruption recovery behavior (background/kill/resume):
+
 - If interruption occurs during an active starter run, restore to the same encounter state first, then re-evaluate pending cue stage eligibility from persisted tutorial state.
 - If interruption occurs while a **blocked** cue is open (`cue_01`, `cue_05`, `cue_06`), that cue must re-open on resume before normal board/Home interaction.
 - If interruption occurs during a non-blocking cue (`cue_02`, `cue_03`, `cue_04`), resume gameplay immediately and re-show only if that stage remained unfinished at interruption time.
 - Process kill and warm resume use identical cue-restoration logic; no special-case skipping based on interruption type.
 
 ### Canonical starter timeline
+
 1. **First launch (new profile):** route to starter flow, show `cue_01` then `cue_02`/`cue_03` as triggers occur.
 2. **Starter loss:** show `cue_05_loss_retry_prompt`; starter gate remains uncleared (`has_completed_starter_encounter = 0`).
 3. **Retry starter:** resume starter flow with only unfinished show-once cues plus normal event/result cues.
@@ -235,6 +264,7 @@ Interruption recovery behavior (background/kill/resume):
 5. **Post-win route:** primary CTA routes player to Home with Chapter 1 as next mainline action.
 
 ### Account friction rule
+
 The player must not be forced through login, profile setup, cloud prompts, or social setup before understanding the game.
 
 ---
@@ -244,6 +274,7 @@ The player must not be forced through login, profile setup, cloud prompts, or so
 Home is the main landing surface when the player is not inside an active encounter.
 
 ### Home purpose
+
 Home should answer these questions clearly:
 
 - what should I do next
@@ -252,6 +283,7 @@ Home should answer these questions clearly:
 - where can I continue from here
 
 ### Home priorities
+
 Home should prioritize, in this order:
 
 1. the main current progression action
@@ -261,6 +293,7 @@ Home should prioritize, in this order:
 5. settings/profile access
 
 ### Home should not be
+
 Home should not feel like:
 
 - a store-first surface
@@ -270,17 +303,18 @@ Home should not feel like:
 
 ### Home implementation matrix
 
-| surface_item | milestone | requirement_level (must/should/may) | gating_condition |
-| --- | --- | --- | --- |
-| Continue Adventure primary action card (canonical progression target) | M2+ | must | Starter gate cleared and at least one mainline encounter where `is_unlocked = 1` and `best_star_rating = 0`; card points to the first such encounter in canonical order. |
-| Resume Encounter entry | M1+ | must | An unresolved active encounter exists and restore routing does not send the player directly into battle. |
-| Current progression / next encounter card treatment (visual context around Continue Adventure) | M1+ | should | Mainline progression surface is available on Home. |
-| Small progress summary | M1+ | may | Progress snapshot data is available and surface remains lightweight/readable. |
-| Daily/weekly flavor entry | M3+ | may | Daily/weekly systems are implemented and remain secondary to main progression. |
-| Settings/Profile entry | M1+ | may | Settings/Profile surfaces are implemented and remain secondary to play flow. |
-| Creature journal / collection entry | M3+ | may | Journal/collection has meaningful content and does not add clutter. |
+| surface_item                                                                                   | milestone | requirement_level (must/should/may) | gating_condition                                                                                                                                                         |
+| ---------------------------------------------------------------------------------------------- | --------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Continue Adventure primary action card (canonical progression target)                          | M2+       | must                                | Starter gate cleared and at least one mainline encounter where `is_unlocked = 1` and `best_star_rating = 0`; card points to the first such encounter in canonical order. |
+| Resume Encounter entry                                                                         | M1+       | must                                | An unresolved active encounter exists and restore routing does not send the player directly into battle.                                                                 |
+| Current progression / next encounter card treatment (visual context around Continue Adventure) | M1+       | should                              | Mainline progression surface is available on Home.                                                                                                                       |
+| Small progress summary                                                                         | M1+       | may                                 | Progress snapshot data is available and surface remains lightweight/readable.                                                                                            |
+| Daily/weekly flavor entry                                                                      | M3+       | may                                 | Daily/weekly systems are implemented and remain secondary to main progression.                                                                                           |
+| Settings/Profile entry                                                                         | M1+       | may                                 | Settings/Profile surfaces are implemented and remain secondary to play flow.                                                                                             |
+| Creature journal / collection entry                                                            | M3+       | may                                 | Journal/collection has meaningful content and does not add clutter.                                                                                                      |
 
 ### M1-M2 Home negative rules (must not appear)
+
 - dedicated daily/weekly hub surfaces as primary Home content
 - creature journal/codex entry points when journal content is empty or placeholder-only
 - store/monetization-first placements, tabs, or callouts
@@ -288,6 +322,7 @@ Home should not feel like:
 - decorative placeholder tabs or “coming soon” Home clutter
 
 ### Canonical Milestone 2 Home primary-action rule
+
 After the starter gate is cleared, Home’s primary progression card must point to:
 
 - the first mainline encounter in canonical order where:
@@ -301,6 +336,7 @@ Because of the one-next-unlock model, this should normally be exactly one encoun
 Home must derive this target from the packaged progression artifact (`progression.progression_m2_chapter_linear_v1.json`) plus persisted progression rows (`encounter_progress_records`), never from an ad hoc in-memory encounter list.
 
 ### Resume rule from Home
+
 If an encounter is currently in progress, Home should not pretend there is no active session.
 
 It should surface a clear **Resume Encounter** path or route directly into the battle if the restore rules call for it.
@@ -310,9 +346,11 @@ It should surface a clear **Resume Encounter** path or route directly into the b
 ## 7. Progression Navigation Rules
 
 ### Main progression surface rule
+
 Progression should be readable and lightweight.
 
 ### Canonical progression surface encounter states
+
 Each mainline encounter should appear in one of four states:
 
 - `locked`
@@ -321,6 +359,7 @@ Each mainline encounter should appear in one of four states:
 - `cleared`
 
 Recommended derivation:
+
 - `locked`: `is_unlocked = 0`
 - `unlocked_unplayed`: `is_unlocked = 1`, `win_count = 0`, `loss_count = 0`
 - `unlocked_attempted`: `is_unlocked = 1`, `win_count = 0`, `loss_count > 0`
@@ -330,9 +369,11 @@ Cleared encounters show best stars.
 Locked encounters show a simple unlock hint based on the immediately preceding encounter.
 
 ### Canonical Milestone 2 progression surface
+
 Milestone 2 uses a chapter-linear progression surface.
 
 Recommended presentation:
+
 - ordered chapter cards or chapter strips
 - current chapter expanded by default
 - past chapters collapsed but reviewable
@@ -343,6 +384,7 @@ Recommended presentation:
 The surface should show one obvious next encounter, not multiple equally primary choices.
 
 ### Locked-content rule
+
 Future encounters may be visually present before unlock, but only if that presentation stays clean and understandable.
 
 Avoid large walls of inaccessible clutter.
@@ -352,6 +394,7 @@ Avoid large walls of inaccessible clutter.
 ## 8. Encounter Entry Flow
 
 ### Standard encounter entry sequence
+
 When the player starts an encounter, the typical flow should be:
 
 1. player selects or continues an encounter
@@ -360,6 +403,7 @@ When the player starts an encounter, the typical flow should be:
 4. battle screen becomes active
 
 ### Encounter intro panel
+
 The encounter intro panel may show:
 
 - creature name
@@ -373,9 +417,11 @@ It should be brief.
 The player should not have to click through heavy scene text before normal battles.
 
 ### Starter encounter exception
+
 The starter encounter may include slightly more guided onboarding cues than ordinary encounters.
 
 ### Boss/event entry exception
+
 Boss and event encounters may justify a little more presentation weight, but they still should not become long story cutscene funnels unless explicitly documented later.
 
 ---
@@ -385,12 +431,17 @@ Boss and event encounters may justify a little more presentation weight, but the
 The battle screen is the heart of the game and must remain visually disciplined.
 
 ### Screen split rule
+
 The battle screen should use a portrait-oriented top/bottom split:
 
 - **top half:** creature, HP, matchup info, countdown, feedback
 - **bottom half:** board and player interaction surface
 
+The canonical battle screen should fit on one normal portrait phone screen
+without requiring vertical scrolling during active play.
+
 ### Battle-screen priority order
+
 The player should be able to identify these things quickly:
 
 1. creature HP state
@@ -402,6 +453,7 @@ The player should be able to identify these things quickly:
 7. recent combat feedback
 
 ### Top area contents
+
 The top area should contain:
 
 - creature art
@@ -413,6 +465,7 @@ The top area should contain:
 - short-form combat feedback such as damage numbers or multiplier text
 
 ### Bottom area contents
+
 The bottom area should contain:
 
 - the 6x6 board
@@ -422,9 +475,11 @@ The bottom area should contain:
 - a minimal battle utility row if needed, such as pause/settings
 
 ### Board dominance rule
+
 The board must remain large enough to read and interact with comfortably on a normal phone.
 
 ### No UI clutter rule
+
 The battle screen should avoid:
 
 - large permanent side panels
@@ -438,6 +493,7 @@ The battle screen should avoid:
 ## 10. Battle HUD Rules
 
 ### Always-visible battle information
+
 During active play, the player should always be able to see:
 
 - remaining moves
@@ -448,9 +504,11 @@ During active play, the player should always be able to see:
 - creature cast countdown
 
 ### Not-hidden-in-submenus rule
+
 Battle-critical information must not be hidden behind taps, info icons, or expandable drawers.
 
 ### Readability rule
+
 Important battle info should be visually distinguishable without relying only on color.
 
 Use:
@@ -461,6 +519,7 @@ Use:
 - stable placement
 
 ### Current word feedback
+
 While building a word by tracing or tap selection, the player should be able to see:
 
 - the currently selected letters
@@ -477,6 +536,7 @@ The game should not require the player to guess whether the selected path was re
 ## 11. Core Battle Interaction Flow
 
 ### Standard battle interaction flow
+
 The main interaction loop is:
 
 1. player studies the board
@@ -488,10 +548,12 @@ The main interaction loop is:
 7. player regains control
 
 ### Live selection rule
+
 As the player builds a word, the game should show the growing word clearly.
 Preview feedback during active word building is read-only and must not alter deterministic cast math order; keep UI semantics aligned with `docs/implementation-contracts.md` section 5.1 (cast submission contract) and section 5.3 (modifier evaluation order contract).
 
 ### Path feedback rule
+
 The player should receive immediate visual feedback showing:
 
 - selected tiles
@@ -499,12 +561,14 @@ The player should receive immediate visual feedback showing:
 - path continuity
 
 ### Submission clarity rule
+
 A completed cast input should feel deliberate and satisfying.
 
 The player should know when the game has accepted the cast attempt.
 Canonical damage and multiplier reveal timing remains in section 12 successful cast resolution flow; pre-release preview must not bypass that tension window.
 
 ### Invalid submission behavior
+
 Shared terminology contract (cross-doc):
 
 - **Rejected Cast Feedback**: the full player-facing feedback cycle that starts immediately after a submitted cast is resolved as `submission_kind: 'invalid' | 'repeated'` and ends when the battle HUD returns to idle.
@@ -546,6 +610,7 @@ This signal should correct, not scold.
 When the player casts a valid word, the resolution should happen in a stable, readable order.
 
 ### Standard resolution order
+
 1. valid cast confirmed
 2. word/element feedback shown
 3. letters burst and disappear
@@ -566,9 +631,11 @@ Sequencing clarification (loss edge case):
 - If a valid cast leaves the creature alive, drops countdown to `0`, and also spends the final remaining move, the creature spell in step 9 still resolves first; only after that resolution is complete should the encounter finalize to loss/result.
 
 ### Animation clarity rule
+
 Even if the animations are polished, the resolution order must remain easy to follow.
 
 ### Damage feedback rule
+
 On a successful cast, the player should be able to see:
 
 - damage dealt
@@ -577,6 +644,7 @@ On a successful cast, the player should be able to see:
 - Wand bonus or other visible modifier if relevant
 
 ### Control-return rule
+
 Once resolution is complete, the player should clearly feel that control is theirs again.
 
 Normative interaction lock rule (valid-cast window):
@@ -590,6 +658,7 @@ Normative interaction lock rule (valid-cast window):
 ## 13. Creature Spell Resolution Flow
 
 ### Standard creature-cast sequence
+
 If the countdown reaches zero and the creature survives the player’s cast:
 
 1. creature cast trigger is signaled
@@ -610,6 +679,7 @@ Normative interaction lock rule (creature-spell window):
 - gestures captured during this lock window are ignored/discarded; do not queue or auto-submit them after control returns
 
 ### Readability rule
+
 The player must be able to understand:
 
 - that the creature acted
@@ -618,6 +688,7 @@ The player must be able to understand:
 - what the new countdown state is
 
 ### No hidden mutation rule
+
 Creature spells should not silently mutate the board without clear feedback.
 
 ---
@@ -627,9 +698,11 @@ Creature spells should not silently mutate the board without clear feedback.
 The board system must protect trust if a dead board occurs.
 
 ### Dead-board detection rule
+
 If no valid playable words exist, the game should detect that state and recover it.
 
 ### Standard recovery flow
+
 Recommended default sequence:
 
 1. the game detects no valid moves
@@ -639,6 +712,7 @@ Recommended default sequence:
 5. play resumes
 
 ### Player Assist Actions (M1-M2)
+
 No player-invoked hints/clues in M1–M2; only automatic Spark Shuffle dead-board recovery.
 
 Screen and interaction implications:
@@ -648,6 +722,7 @@ Screen and interaction implications:
 - Any future hint/clue surface must be added as a deliberate milestone change with updated contracts and economy boundaries.
 
 ### Player Assist Actions (M3+)
+
 If clues are enabled in Milestone 3 or later, they must follow `docs/hint-and-clue-mechanics.md` exactly.
 
 Screen/flow requirements when enabled:
@@ -658,9 +733,11 @@ Screen/flow requirements when enabled:
 - Keep automatic Spark Shuffle behavior separate from clue UI and economy messaging.
 
 ### Recovery-tone rule
+
 The recovery should feel like the game helping the player, not punishing them for something outside their control.
 
 ### Clarity rule
+
 The player should understand that the board was refreshed because no playable moves existed.
 
 ---
@@ -668,6 +745,7 @@ The player should understand that the board was refreshed because no playable mo
 ## 15. Pause and Background Behavior
 
 ### Soft pause rule
+
 If the app is backgrounded mid-encounter:
 
 - the encounter should pause safely
@@ -675,6 +753,7 @@ If the app is backgrounded mid-encounter:
 - the player should not lose progress casually
 
 ### Backgrounding rule
+
 Backgrounding should not:
 
 - discard the current board
@@ -683,9 +762,11 @@ Backgrounding should not:
 - change countdown state on its own
 
 ### Pause access rule
+
 The battle should have a clear pause or options entry, but it should not dominate the screen.
 
 ### Pause menu scope
+
 A pause/options menu may include:
 
 - resume
@@ -700,9 +781,11 @@ It should not become a second complex interface inside the battle.
 ## 16. Restore and Resume Rules
 
 ### Resume-priority rule
+
 If an unresolved active encounter exists, the app should normally restore the player to that encounter rather than silently dropping them elsewhere.
 
 ### Restore fidelity rule
+
 On restore, the player should return to the same meaningful battle state, including:
 
 - current board
@@ -713,15 +796,19 @@ On restore, the player should return to the same meaningful battle state, includ
 - ongoing encounter identity
 
 ### Hard-resume rule
+
 If the process was killed, the app should still restore the most recent safe encounter state if one exists.
 
 ### Result-state rule
+
 If the encounter had already resolved before interruption, the player should return to the appropriate result screen rather than a fake in-progress battle.
 
 ### Recoverable-error restore rule
+
 If Spark Shuffle retry-cap unrecoverable failure has already been committed (`session_state = recoverable_error`), restore must route to the recoverable-error result overlay first, not back into the board.
 
 ### No accidental duplication rule
+
 Resume behavior must not:
 
 - replay an already consumed move
@@ -730,9 +817,11 @@ Resume behavior must not:
 - restore to an older board by accident
 
 ### Resume recap readability rule
+
 When interruption likely skipped player-visible mutation context (for example a spell/collapse sequence completed before interruption and restore lands after that commit), resume should show a short non-blocking recap cue.
 
 Requirements:
+
 - recap cue is restore-only (launch/warm resume), not part of normal uninterrupted turn flow
 - recap cue is derived from persisted restore truth (`last_consumed_sequence` + snapshot state), not from replaying historical engine events
 - recap cue must not block input, mutate gameplay state, or duplicate analytics event emission
@@ -743,18 +832,23 @@ Requirements:
 ## 17. Retry and Restart Rules
 
 ### Post-loss retry rule
+
 After losing an encounter, the player should have a clear retry path.
 
 ### Post-win replay rule
+
 After winning, the player may be allowed to replay for better performance or stars depending on progression rules.
 
 ### Restart-from-pause rule
+
 Restarting an encounter should be deliberate, not easy to mis-tap.
 
 ### Restart behavior
+
 A restart should create a fresh run of that encounter according to its authored rules.
 
 ### Seed behavior rule
+
 Restart must create a fresh encounter attempt with a newly generated `encounter_seed` unless a fixed-seed mode is explicitly active (for authored/testing scenarios).
 
 Deterministic randomness and resume behavior are contract-owned by:
@@ -769,6 +863,7 @@ Player-facing expectation remains: restart means **a fresh attempt**, not a corr
 ## 18. Result Screen Rules
 
 ### Result-screen purpose
+
 The result screen should provide:
 
 - closure
@@ -777,6 +872,7 @@ The result screen should provide:
 - light reward/progression confirmation
 
 ### Win result screen should show
+
 - win state
 - creature defeated/calm/cleared framing
 - star result if applicable
@@ -785,6 +881,7 @@ The result screen should provide:
 - next action options
 
 ### Loss result screen should show
+
 - loss state
 - encouraging, non-humiliating framing
 - optionally the creature’s remaining HP
@@ -792,28 +889,34 @@ The result screen should provide:
 - return or continue path
 
 ### Spark Shuffle recoverable-error result overlay
+
 When a run ends in Spark Shuffle retry-cap unrecoverable failure, show a dedicated recoverable-error result overlay (not the normal loss card) so the player is not blamed for a system recovery failure.
 
 Copy tone requirements:
+
 - calm, apologetic, and confidence-preserving
 - explicitly frame this as a magical-board recovery failure, not player skill failure
 - no punitive language and no implication of “you played badly”
 
 Required copy intent (exact wording can vary by localization):
+
 - title intent: “Magic board hiccup”
 - body intent: “We couldn’t recover a playable board this run. Your progress is safe.”
 
 CTA requirements:
+
 - primary CTA label: `Retry Encounter`
 - secondary CTA label: `Return to Home`
 - optional tertiary text action (non-primary): `Report Issue` (only if issue reporting exists; otherwise omit)
 
 Action behavior:
+
 - `Retry Encounter` starts a fresh encounter run (new session, fresh seed)
 - `Return to Home` exits to Home with no extra modal stack
 - overlay dismissal/back gesture must not resume into stale in-progress board state
 
 ### Tone rule
+
 Result screens should feel:
 
 - warm
@@ -823,6 +926,7 @@ Result screens should feel:
 They should not shame the player.
 
 ### Next-step buttons
+
 Typical next-step actions may include:
 
 - Continue
@@ -835,28 +939,35 @@ Do not overload the result screen with too many branches.
 ### Result-screen next-action rule
 
 After a starter win:
+
 - primary CTA: `Begin Chapter 1`
 
 After a first-clear mainline win that unlocks a new encounter:
+
 - primary CTA: `Next Encounter`
 
 After a replay win with no new unlock:
+
 - primary CTA: `Return to Home` or `Continue Adventure`
 
 After a loss:
+
 - primary CTA: `Retry`
 - secondary CTA: `Return to Home`
 
 Starter-gate exception:
+
 - if the starter gate is still uncleared, the secondary loss CTA should return to the starter intro/title flow instead of normal Home progression
 
 After Spark Shuffle recoverable-error end:
+
 - primary CTA: `Retry Encounter`
 - secondary CTA: `Return to Home`
 
 A loss must never imply that future already-unlocked encounters were relocked.
 
 ### Deterministic recoverable-error trace example
+
 The following trace is required to stay deterministic for a fixed `encounter_seed` and identical cast sequence:
 
 1. Valid cast resolves, dead-board detection runs, and Spark Shuffle recovery starts.
@@ -875,9 +986,11 @@ The following trace is required to stay deterministic for a fixed `encounter_see
 Daily and weekly content are currently side flavors, not the center of the product.
 
 ### Optionality rule
+
 Daily/weekly entries should not dominate Home or progression during early development.
 
 ### Surface placement rule
+
 If daily/weekly content is visible, it should appear as:
 
 - a small optional card
@@ -887,6 +1000,7 @@ If daily/weekly content is visible, it should appear as:
 It should not push the main progression off center.
 
 ### Missed-content tone rule
+
 If a player ignores or misses daily/weekly content, the app should not make them feel behind or punished.
 
 ---
@@ -896,6 +1010,7 @@ If a player ignores or misses daily/weekly content, the app should not make them
 To prevent drift, player-facing surfaces should appear only when they are real enough to justify their presence.
 
 ### Early foundation / vertical-slice rule
+
 During early milestones, the player-facing app should prioritize:
 
 - starter flow
@@ -905,6 +1020,7 @@ During early milestones, the player-facing app should prioritize:
 - minimal settings/profile
 
 ### Hidden-until-real rule
+
 The following should remain hidden until they are truly functional enough to matter:
 
 - elaborate world maps
@@ -922,6 +1038,7 @@ No fake “coming soon” clutter in normal player flow.
 ## 21. Settings and Profile Rules
 
 ### Settings scope
+
 Settings should remain lightweight and practical.
 
 Early useful settings may include:
@@ -932,6 +1049,7 @@ Early useful settings may include:
 - maybe accessibility-relevant options as they become real
 
 ### Profile scope
+
 Profile should remain secondary to actual play.
 
 In early phases, Profile should not become a stat wall or pseudo-live-service dashboard.
@@ -941,6 +1059,7 @@ In early phases, Profile should not become a stat wall or pseudo-live-service da
 ## 22. Accessibility and Readability Rules
 
 ### Battle readability rule
+
 The battle must remain understandable with:
 
 - sound off
@@ -948,17 +1067,21 @@ The battle must remain understandable with:
 - no reliance on color alone
 
 ### Text and icon rule
+
 Critical battle info should be reinforced through more than one channel where practical.
 
 ### Touch rule
+
 Board interaction targets should feel comfortable on a typical phone.
 
 ### Motion rule
+
 Battle animations should support understanding, not compete with it.
 
 If the player cannot track what changed, the motion is too much.
 
 ### Resume readability cue rule
+
 If restore returns the player to a post-mutation state where likely-causal visuals were missed during interruption, the UI should provide a brief non-blocking recap cue so state changes remain understandable without replaying simulation events.
 
 ---

@@ -16,56 +16,91 @@ export function StarterFlowScreen(props: {
   return (
     <View style={styles.stack}>
       <SectionCard
-        eyebrow="First Spell"
-        title="Welcome to the meadow"
+        eyebrow="Words 'n Wands!"
+        title="Main Menu"
         accent="warm"
+        style={styles.launchHeroCard}
+        eyebrow_style={styles.launchHeroEyebrow}
+        title_style={styles.launchHeroMenuTitle}
       >
-        <Text style={styles.cardText}>
-          Words become spells here. The starter duel teaches the board, the
-          countdown, and how creature weaknesses change the fight.
+        <Text style={styles.launchHeroTitle}>Words 'n Wands</Text>
+        <Text style={styles.launchHeroSubtitle}>
+          Build words from touching letters, strike creature weaknesses, and
+          keep the magical countdown from turning against you.
         </Text>
-        {props.starter_intro_flavor_text ? (
-          <Text style={styles.cardTextMuted}>
-            {props.starter_intro_flavor_text}
-          </Text>
-        ) : null}
       </SectionCard>
 
       <SectionCard
-        eyebrow="Starter Teaching"
-        title="Bloom first, then read the clock"
+        eyebrow="Main Menu"
+        title="Choose your next step"
+        style={styles.launchMenuCard}
+        title_style={styles.encounterCardTitle}
       >
         <Text style={styles.cardText}>
-          Start with the guided path, watch the countdown tick, and learn how a
-          creature answers back before you move on.
+          Start drops you straight into the first meadow duel. If you already
+          have a battle in progress, resume picks that exact run back up.
         </Text>
-        <Text style={styles.cardTextMuted}>
-          You can build a spell by tracing across touching tiles or by tapping
-          them in order and casting when ready.
-        </Text>
+        {props.starter_intro_flavor_text ? (
+          <Text style={styles.launchMenuNote}>
+            {props.starter_intro_flavor_text}
+          </Text>
+        ) : (
+          <Text style={styles.launchMenuNote}>
+            The opening is intentionally simple: start the duel, learn the
+            board, then unlock the wider meadow adventure.
+          </Text>
+        )}
+        <View style={styles.buttonStack}>
+          {props.can_resume_encounter ? (
+            <ActionButton label="Resume Encounter" onPress={props.on_resume} />
+          ) : props.has_completed_starter_encounter ? (
+            <ActionButton
+              label="Continue Adventure"
+              onPress={props.on_skip_to_home}
+            />
+          ) : (
+            <ActionButton
+              label="Start Adventure"
+              onPress={() => {
+                void props.on_enter_starter();
+              }}
+            />
+          )}
+
+          {props.has_completed_starter_encounter ? (
+            <ActionButton
+              label="Replay Starter Duel"
+              onPress={() => {
+                void props.on_enter_starter();
+              }}
+              tone="secondary"
+            />
+          ) : null}
+
+          {props.can_resume_encounter &&
+          props.has_completed_starter_encounter ? (
+            <ActionButton
+              label="Continue Adventure"
+              onPress={props.on_skip_to_home}
+              tone="ghost"
+            />
+          ) : null}
+        </View>
       </SectionCard>
 
-      {props.can_resume_encounter ? (
-        <ActionButton
-          label="Resume Starter Encounter"
-          onPress={props.on_resume}
-        />
-      ) : (
-        <ActionButton
-          label="Enter Starter Encounter"
-          onPress={() => {
-            void props.on_enter_starter();
-          }}
-        />
-      )}
-
-      {props.has_completed_starter_encounter ? (
-        <ActionButton
-          label="Skip To Home"
-          onPress={props.on_skip_to_home}
-          tone="secondary"
-        />
-      ) : null}
+      <SectionCard eyebrow="Current Build" title="What is live right now">
+        <Text style={styles.cardTextMuted}>
+          This slice focuses on the real battle loop first: starter flow, Home,
+          active encounters, pause, restore, and results.
+        </Text>
+        {props.has_completed_starter_encounter ? (
+          <ActionButton
+            label="Return To Home"
+            onPress={props.on_skip_to_home}
+            tone="ghost"
+          />
+        ) : null}
+      </SectionCard>
     </View>
   );
 }

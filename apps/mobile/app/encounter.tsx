@@ -42,7 +42,7 @@ export default function EncounterRoute(): JSX.Element {
 
   return (
     <RouteGate route_path="/encounter">
-      <MobileScreenFrame show_header={false}>
+      <MobileScreenFrame show_header={false} scroll_enabled={false}>
         <EncounterScreen
           active_state={activeState}
           starter_encounter_id={mobileRuntime.starterEncounterId}

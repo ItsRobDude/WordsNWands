@@ -8,15 +8,26 @@ import { AppHeader } from "./AppHeader.tsx";
 export function MobileScreenFrame(props: {
   children?: ReactNode;
   show_header?: boolean;
+  scroll_enabled?: boolean;
 }): JSX.Element {
+  const content = (
+    <>
+      {props.show_header === false ? null : <AppHeader />}
+      {props.children}
+    </>
+  );
+
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.backgroundOrbA} />
       <View style={styles.backgroundOrbB} />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {props.show_header === false ? null : <AppHeader />}
-        {props.children}
-      </ScrollView>
+      {props.scroll_enabled === false ? (
+        <View style={styles.frameContent}>{content}</View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {content}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

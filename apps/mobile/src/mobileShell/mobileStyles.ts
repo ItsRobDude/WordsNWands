@@ -9,6 +9,11 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 18,
   },
+  frameContent: {
+    flex: 1,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+  },
   backgroundOrbA: {
     position: "absolute",
     top: -80,
@@ -85,6 +90,10 @@ export const styles = StyleSheet.create({
     marginTop: 14,
     gap: 12,
   },
+  cardBodyCompact: {
+    marginTop: 10,
+    gap: 10,
+  },
   cardText: {
     color: "#e2e8f0",
     fontSize: 15,
@@ -100,6 +109,11 @@ export const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 10,
   },
+  statsRowCompact: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
   statPill: {
     minWidth: 92,
     paddingHorizontal: 12,
@@ -109,11 +123,20 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#24364f",
   },
+  statPillCompact: {
+    minWidth: 82,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 14,
+  },
   statLabel: {
     color: "#94a3b8",
     fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
+  },
+  statLabelCompact: {
+    fontSize: 10,
   },
   statValue: {
     marginTop: 4,
@@ -121,23 +144,33 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
   },
+  statValueCompact: {
+    marginTop: 2,
+    fontSize: 15,
+  },
   board: {
-    gap: 8,
+    flex: 1,
+    width: "92%",
+    aspectRatio: 1,
+    alignSelf: "center",
+    maxWidth: 340,
+    gap: 4,
   },
   boardRow: {
     flexDirection: "row",
-    gap: 8,
+    flex: 1,
+    gap: 4,
   },
   tile: {
     flex: 1,
-    minHeight: 58,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 16,
+    borderRadius: 12,
     backgroundColor: "#08111d",
     borderWidth: 1,
     borderColor: "#28415e",
-    paddingVertical: 8,
+    minHeight: 0,
+    paddingVertical: 4,
   },
   tileSelected: {
     backgroundColor: "#433316",
@@ -148,17 +181,20 @@ export const styles = StyleSheet.create({
   },
   tileLetter: {
     color: "#f8fafc",
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: "800",
   },
   tileMeta: {
-    marginTop: 4,
+    marginTop: 2,
     color: "#7dd3fc",
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "700",
   },
   actionsRow: {
     flexDirection: "row",
+    gap: 10,
+  },
+  buttonStack: {
     gap: 10,
   },
   button: {
@@ -198,6 +234,100 @@ export const styles = StyleSheet.create({
   },
   encounterScreen: {
     position: "relative",
+    flex: 1,
+    gap: 8,
+  },
+  encounterTopCluster: {
+    gap: 6,
+    flexShrink: 0,
+  },
+  encounterSummaryCard: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  encounterSummaryBody: {
+    marginTop: 8,
+    gap: 8,
+  },
+  encounterSummaryCopy: {
+    color: "#94a3b8",
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  encounterBoardCard: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+  encounterBoardBody: {
+    flex: 1,
+    marginTop: 6,
+    gap: 6,
+  },
+  encounterCardEyebrow: {
+    fontSize: 11,
+    letterSpacing: 1,
+  },
+  encounterCardTitle: {
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  encounterHintBanner: {
+    borderRadius: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#132033",
+    borderWidth: 1,
+    borderColor: "#345172",
+  },
+  encounterHintText: {
+    color: "#e2e8f0",
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  boardCaption: {
+    color: "#cbd5e1",
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  encounterFeedbackText: {
+    color: "#94a3b8",
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  launchHeroCard: {
+    paddingHorizontal: 18,
+    paddingVertical: 22,
+  },
+  launchHeroEyebrow: {
+    color: "#fcd34d",
+  },
+  launchHeroMenuTitle: {
+    fontSize: 22,
+  },
+  launchHeroTitle: {
+    marginTop: 4,
+    color: "#f8fafc",
+    fontSize: 36,
+    fontWeight: "800",
+    lineHeight: 40,
+  },
+  launchHeroSubtitle: {
+    marginTop: 10,
+    color: "#cbd5e1",
+    fontSize: 16,
+    lineHeight: 23,
+  },
+  launchMenuCard: {
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+  },
+  launchMenuNote: {
+    color: "#94a3b8",
+    fontSize: 14,
+    lineHeight: 20,
   },
   utilityRow: {
     flexDirection: "row",
