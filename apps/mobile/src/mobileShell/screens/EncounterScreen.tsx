@@ -14,7 +14,8 @@ import { SectionCard } from "../components/SectionCard.tsx";
 import { StatPill } from "../components/StatPill.tsx";
 import { styles } from "../mobileStyles.ts";
 import {
-  extractLocalTouchPointFromNativeEvent,
+  extractBoardTouchPointFromNativeEvent,
+  type BoardFrame,
   type BoardGridLayout,
   type EncounterTraceNativeEvent,
 } from "./encounterTrace.ts";
@@ -46,9 +47,10 @@ export function EncounterScreen(props: {
   on_clear_selection: MobileAppStoreState["actions"]["clearSelection"];
   on_submit_selection: MobileAppStoreState["actions"]["submitSelection"];
 }): JSX.Element {
+  const boardRef = useRef<View | null>(null);
   const pendingTraceStartRef = useRef<TraceSample | null>(null);
   const traceIdRef = useRef<string | null>(null);
-  const [boardLayout, setBoardLayout] = useState<BoardGridLayout | null>(null);
+  const [boardFrame, setBoardFrame] = useState<BoardFrame | null>(null);
 
   if (!props.active_state) {
     return (
@@ -61,8 +63,8 @@ export function EncounterScreen(props: {
   }
 
   const activeState = props.active_state;
-  const boardBounds = boardLayout
-    ? createTraceBoundsFromLayout(boardLayout)
+  const boardBounds = boardFrame
+    ? createTraceBoundsFromLayout(boardFrame)
     : null;
   const currentFeedback = describeCastResolution(props.last_transcript_entry);
 
@@ -135,33 +137,58 @@ export function EncounterScreen(props: {
           Current preview: {props.preview_word || "none"}
         </Text>
         <View
+          ref={boardRef}
           style={styles.board}
           onLayout={(event) => {
             const widthPx = event.nativeEvent.layout.width;
             const heightPx = event.nativeEvent.layout.height;
-            setBoardLayout((current) => {
-              const nextLayout = {
-                width_px: widthPx,
-                height_px: heightPx,
-                rows: activeState.board.height,
-                cols: activeState.board.width,
-              };
+            const nextGrid = {
+              width_px: widthPx,
+              height_px: heightPx,
+              rows: activeState.board.height,
+              cols: activeState.board.width,
+            };
 
+            setBoardFrame((current) => {
               if (
                 current &&
-                current.width_px === nextLayout.width_px &&
-                current.height_px === nextLayout.height_px &&
-                current.rows === nextLayout.rows &&
-                current.cols === nextLayout.cols
+                current.width_px === nextGrid.width_px &&
+                current.height_px === nextGrid.height_px &&
+                current.rows === nextGrid.rows &&
+                current.cols === nextGrid.cols
               ) {
                 return current;
               }
 
-              return nextLayout;
+              return current
+                ? {
+                    ...current,
+                    ...nextGrid,
+                  }
+                : {
+                    board_left_px: 0,
+                    board_top_px: 0,
+                    ...nextGrid,
+                  };
+            });
+
+            boardRef.current?.measureInWindow((left, top, width, height) => {
+              const nextLayout = {
+                board_left_px: left,
+                board_top_px: top,
+                width_px: width || widthPx,
+                height_px: height || heightPx,
+                rows: activeState.board.height,
+                cols: activeState.board.width,
+              };
+
+              setBoardFrame((current) =>
+                currentFrameMatches(current, nextLayout) ? current : nextLayout,
+              );
             });
           }}
           onTouchStart={(event: unknown) => {
-            const sample = createTraceSample(event);
+            const sample = createTraceSample(event, boardFrame);
             if (!sample) {
               pendingTraceStartRef.current = null;
               return;
@@ -175,7 +202,7 @@ export function EncounterScreen(props: {
             }
           }}
           onMoveShouldSetResponder={(event: unknown) => {
-            const currentSample = createTraceSample(event);
+            const currentSample = createTraceSample(event, boardFrame);
             if (!currentSample || !pendingTraceStartRef.current) {
               return false;
             }
@@ -206,7 +233,7 @@ export function EncounterScreen(props: {
               return;
             }
 
-            const sample = createTraceSample(event);
+            const sample = createTraceSample(event, boardFrame);
             if (!sample) {
               return;
             }
@@ -227,7 +254,7 @@ export function EncounterScreen(props: {
               return;
             }
 
-            const sample = createTraceSample(event);
+            const sample = createTraceSample(event, boardFrame);
             void props.on_apply_trace_selection(
               {
                 trace_id: traceIdRef.current,
@@ -319,8 +346,11 @@ export function EncounterScreen(props: {
   );
 }
 
-function createTraceSample(event: unknown): TraceSample | null {
-  const point = resolveTouchPoint(event);
+function createTraceSample(
+  event: unknown,
+  boardFrame: BoardFrame | null,
+): TraceSample | null {
+  const point = resolveTouchPoint(event, boardFrame);
   if (!point) {
     return null;
   }
@@ -335,6 +365,7 @@ function createTraceSample(event: unknown): TraceSample | null {
 
 function resolveTouchPoint(
   event: unknown,
+  boardFrame: BoardFrame | null,
 ): { x_px: number; y_px: number } | null {
   const nativeEvent = (
     event as {
@@ -342,8 +373,9 @@ function resolveTouchPoint(
     }
   ).nativeEvent;
 
-  return extractLocalTouchPointFromNativeEvent({
+  return extractBoardTouchPointFromNativeEvent({
     native_event: nativeEvent ?? {},
+    board_frame: boardFrame,
   });
 }
 
@@ -371,6 +403,20 @@ function createTraceBoundsFromLayout(
     rows: layout.rows,
     cols: layout.cols,
   };
+}
+
+function currentFrameMatches(
+  current: BoardFrame | null,
+  next: BoardFrame,
+): boolean {
+  return (
+    current?.board_left_px === next.board_left_px &&
+    current?.board_top_px === next.board_top_px &&
+    current?.width_px === next.width_px &&
+    current?.height_px === next.height_px &&
+    current?.rows === next.rows &&
+    current?.cols === next.cols
+  );
 }
 
 function createTraceId(): string {

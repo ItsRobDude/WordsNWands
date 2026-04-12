@@ -29,6 +29,11 @@ export interface BoardGridLayout {
   cols: number;
 }
 
+export interface BoardFrame extends BoardGridLayout {
+  board_left_px: number;
+  board_top_px: number;
+}
+
 export const extractLocalTouchPointFromNativeEvent = (input: {
   native_event: EncounterTraceNativeEvent;
 }): TouchPoint | null => {
@@ -36,6 +41,36 @@ export const extractLocalTouchPointFromNativeEvent = (input: {
     input.native_event.changedTouches?.[0] ??
     input.native_event.touches?.[0] ??
     input.native_event;
+
+  if (point.locationX === undefined || point.locationY === undefined) {
+    return null;
+  }
+
+  return {
+    x_px: point.locationX,
+    y_px: point.locationY,
+  };
+};
+
+export const extractBoardTouchPointFromNativeEvent = (input: {
+  native_event: EncounterTraceNativeEvent;
+  board_frame: BoardFrame | null;
+}): TouchPoint | null => {
+  const point =
+    input.native_event.changedTouches?.[0] ??
+    input.native_event.touches?.[0] ??
+    input.native_event;
+
+  if (
+    input.board_frame &&
+    point.pageX !== undefined &&
+    point.pageY !== undefined
+  ) {
+    return {
+      x_px: point.pageX - input.board_frame.board_left_px,
+      y_px: point.pageY - input.board_frame.board_top_px,
+    };
+  }
 
   if (point.locationX === undefined || point.locationY === undefined) {
     return null;

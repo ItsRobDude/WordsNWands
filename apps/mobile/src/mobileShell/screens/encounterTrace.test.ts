@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  extractBoardTouchPointFromNativeEvent,
   appendStableTracePosition,
   extractLocalTouchPointFromNativeEvent,
   resolveBoardPositionFromGrid,
@@ -20,6 +21,30 @@ test("extractLocalTouchPointFromNativeEvent prefers changed touches", () => {
   assert.deepEqual(point, {
     x_px: 210,
     y_px: 420,
+  });
+});
+
+test("extractBoardTouchPointFromNativeEvent prefers page coordinates relative to the measured board", () => {
+  const point = extractBoardTouchPointFromNativeEvent({
+    native_event: {
+      pageX: 310,
+      pageY: 390,
+      locationX: 12,
+      locationY: 18,
+    },
+    board_frame: {
+      board_left_px: 40,
+      board_top_px: 120,
+      width_px: 300,
+      height_px: 300,
+      rows: 6,
+      cols: 6,
+    },
+  });
+
+  assert.deepEqual(point, {
+    x_px: 270,
+    y_px: 270,
   });
 });
 
