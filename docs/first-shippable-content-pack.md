@@ -200,6 +200,7 @@ This pack uses the existing early progression truth:
 - `sort_index`: `1`
 
 ID convention note:
+
 - use explicit stable machine IDs like `chapter_1_meadow` and keep magical player-facing names in `display_name` (for example, `Sunspell Meadow`)
 
 ### Chapter order in this pack
@@ -221,35 +222,37 @@ Canonical authored progression payload requirement for this pack:
       "display_name": "Sunspell Meadow",
       "habitat_theme_id": "habitat_sunspell_meadow_v1",
       "sort_index": 1,
-      "encounter_ids": [
-        "enc_meadow_001",
-        "enc_meadow_002",
-        "enc_meadow_003"
-      ]
+      "encounter_ids": ["enc_meadow_001", "enc_meadow_002", "enc_meadow_003"]
     }
   ]
 }
 ```
 
 No implied ordering is allowed for authored progression JSON in this pack:
+
 - chapter order is canonicalized by explicit `sort_index`
 - encounter order is canonicalized by `encounter_ids[]` sequence
 
 ### Next-action surface expectations
 
 After starter win:
+
 - primary CTA: `Begin Chapter 1`
 
 After first clear of `enc_meadow_001`:
+
 - primary CTA: `Next Encounter`
 
 After first clear of `enc_meadow_002`:
+
 - primary CTA: `Next Encounter`
 
 After clear of `enc_meadow_003` in this first pack:
+
 - primary CTA: `Return to Home`
 
 Home rule for this pack:
+
 - after starter completion, Home should point at the first unlocked uncleared Meadow encounter
 - do not show a fake Chapter 2 teaser card as the main next action
 
@@ -257,12 +260,12 @@ Home rule for this pack:
 
 ## 6. Canonical encounter roster
 
-| Order | Encounter ID | Creature ID | Display Name | Type | Tier | HP | Move Budget | Base Countdown | Weakness | Resistance | Primary Spell |
-| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | --- | --- | --- |
-| Starter | `enc_starter_001` | `creature_puddle_puff_001` | `Puddle Puff` | `standard` | `gentle` | 56 | 12 | 5 | `light` | `tide` | Bubble 1 tile |
-| 1 | `enc_meadow_001` | `creature_cinder_cub_001` | `Cinder Cub` | `standard` | `standard` | 72 | 10 | 5 | `tide` | `flame` | Soot 2 tiles |
-| 2 | `enc_meadow_002` | `creature_brookling_otter_001` | `Brookling Otter` | `standard` | `standard` | 76 | 10 | 5 | `storm` | `tide` | Rotate row 2 by 1 |
-| 3 | `enc_meadow_003` | `creature_briar_bunny_001` | `Briar Bunny` | `standard` | `challenging` | 80 | 10 | 4 | `flame` | `bloom` | Frozen 3 tiles |
+| Order   | Encounter ID      | Creature ID                    | Display Name      | Type       | Tier          |  HP | Move Budget | Base Countdown | Weakness | Resistance | Primary Spell     |
+| ------- | ----------------- | ------------------------------ | ----------------- | ---------- | ------------- | --: | ----------: | -------------: | -------- | ---------- | ----------------- |
+| Starter | `enc_starter_001` | `creature_puddle_puff_001`     | `Puddle Puff`     | `standard` | `gentle`      |  56 |          12 |              5 | `light`  | `tide`     | Bubble 1 tile     |
+| 1       | `enc_meadow_001`  | `creature_cinder_cub_001`      | `Cinder Cub`      | `standard` | `standard`    |  72 |          10 |              5 | `tide`   | `flame`    | Soot 2 tiles      |
+| 2       | `enc_meadow_002`  | `creature_brookling_otter_001` | `Brookling Otter` | `standard` | `standard`    |  76 |          10 |              5 | `storm`  | `tide`     | Rotate row 2 by 1 |
+| 3       | `enc_meadow_003`  | `creature_briar_bunny_001`     | `Briar Bunny`     | `standard` | `challenging` |  80 |          10 |              4 | `flame`  | `bloom`    | Frozen 3 tiles    |
 
 Pack-wide rules:
 
@@ -616,7 +619,6 @@ Editorial label note: this label is for human review only and has no runtime loa
 
 Starter opening behavior is authored through `starterTutorialScript.starterBoardOpening` in the encounter definition, while `boardConfig` remains only the canonical `RuntimeBoardConfig`.
 
-
 The starter board exists to teach confidence, not to test systemic variety.
 
 ### 8.2 Mainline canonical boardConfig (editorial label: `board_profile_core_mainline_v1`)
@@ -680,6 +682,12 @@ Shared-skill rule: creatures should vary while this board-generation contract st
 The first ship does not need a giant showoff lexicon.
 It needs a trustworthy one.
 
+Long-term lexicon floor rule:
+
+- the shipped English battle lexicon should be grown toward a curated `20,000+` castable-word floor
+- that growth must come from pinned, reviewable snapshot curation rather than runtime generation or permissive dictionary dumping
+- a smaller repo bootstrap snapshot may exist during development, but external-quality ship readiness should not treat that bootstrap size as the final target
+
 The pinned snapshot `val_snapshot_m2_launch_v1` must cover the common, family-safe, player-intuitive vocabulary needed to make this first pack feel smart rather than stingy.
 
 ### Mandatory tagged words for first-pack feel
@@ -688,6 +696,7 @@ These words are not the whole snapshot.
 They are mandatory coverage anchors.
 
 #### Flame
+
 - `burn`
 - `ember`
 - `flame`
@@ -695,6 +704,7 @@ They are mandatory coverage anchors.
 - `torch`
 
 #### Tide
+
 - `rain`
 - `river`
 - `wave`
@@ -702,6 +712,7 @@ They are mandatory coverage anchors.
 - `mist`
 
 #### Bloom
+
 - `leaf`
 - `vine`
 - `moss`
@@ -710,6 +721,7 @@ They are mandatory coverage anchors.
 - `petal`
 
 #### Storm
+
 - `wind`
 - `gust`
 - `storm`
@@ -717,6 +729,7 @@ They are mandatory coverage anchors.
 - `bolt`
 
 #### Stone
+
 - `rock`
 - `stone`
 - `cave`
@@ -724,6 +737,7 @@ They are mandatory coverage anchors.
 - `clay`
 
 #### Light
+
 - `sun`
 - `glow`
 - `beam`

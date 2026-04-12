@@ -5,6 +5,10 @@ import type {
   EncounterRuntimeState,
   HeadlessTranscriptEntry,
 } from "../../../../../packages/game-rules/src/index.ts";
+import type {
+  CastTracePayload,
+  TraceBoardBounds,
+} from "../../../../../packages/game-rules/src/input/boardSelection.ts";
 import type { MobileAppStoreState } from "../store/createMobileAppStore.ts";
 import { describeCastResolution } from "../../verticalSlice/formatters.ts";
 import { ActionButton } from "../components/ActionButton.tsx";
@@ -13,24 +17,13 @@ import { SectionCard } from "../components/SectionCard.tsx";
 import { StatPill } from "../components/StatPill.tsx";
 import { styles } from "../mobileStyles.ts";
 import {
+  createTraceBounds,
+  createTraceSampleFromNativeEvent,
   shouldActivateTraceGesture,
   type BoardTouchNativeEvent,
+  type BoardTouchFrame,
 } from "./boardTouch.ts";
-import {
-  extractLocalTouchPointFromNativeEvent,
-  resolveBoardPositionFromGrid,
-  sampleBoardPositionsAlongSegment,
-  type BoardGridLayout,
-  type TouchPoint,
-} from "./encounterTrace.ts";
 import { resolvePauseExitLabel } from "./screenFlow.ts";
-
-interface TraceSample {
-  pointer_id: number;
-  x_px: number;
-  y_px: number;
-  t_ms: number;
-}
 
 export function EncounterScreen(props: {
   active_state: EncounterRuntimeState | null;
@@ -46,21 +39,18 @@ export function EncounterScreen(props: {
   on_close_pause_menu: MobileAppStoreState["actions"]["closePauseMenu"];
   on_restart_encounter: MobileAppStoreState["actions"]["restartEncounter"];
   on_leave_encounter: MobileAppStoreState["actions"]["leaveEncounter"];
-  on_start_trace_selection: (position: { row: number; col: number }) => void;
-  on_extend_trace_selection: (position: { row: number; col: number }) => void;
-  on_cancel_trace_selection: () => void;
+  on_apply_trace_selection: MobileAppStoreState["actions"]["applyTraceSelection"];
   on_select_board_position: MobileAppStoreState["actions"]["selectBoardPosition"];
   on_clear_selection: MobileAppStoreState["actions"]["clearSelection"];
   on_submit_selection: MobileAppStoreState["actions"]["submitSelection"];
 }): JSX.Element {
-  const pendingTraceStartRef = useRef<TraceSample | null>(null);
-  const pendingTraceStartPositionRef = useRef<{
-    row: number;
-    col: number;
-  } | null>(null);
-  const activeTracePointRef = useRef<TouchPoint | null>(null);
+  const boardRef = useRef<View | null>(null);
+  const pendingTraceStartRef = useRef<ReturnType<
+    typeof createTraceSampleFromNativeEvent
+  > | null>(null);
+  const activeTraceIdRef = useRef<string | null>(null);
   const traceIsActiveRef = useRef(false);
-  const [boardLayout, setBoardLayout] = useState<BoardGridLayout | null>(null);
+  const [boardFrame, setBoardFrame] = useState<BoardTouchFrame | null>(null);
 
   if (!props.active_state) {
     return (
@@ -144,48 +134,40 @@ export function EncounterScreen(props: {
           Current preview: {props.preview_word || "none"}
         </Text>
         <View
+          ref={(node) => {
+            boardRef.current = node;
+          }}
           style={styles.board}
           onLayout={(event) => {
-            setBoardLayout({
-              width_px: event.nativeEvent.layout.width,
-              height_px: event.nativeEvent.layout.height,
-              rows: activeState.board.height,
-              cols: activeState.board.width,
+            const measuredWidth = event.nativeEvent.layout.width;
+            const measuredHeight = event.nativeEvent.layout.height;
+
+            boardRef.current?.measureInWindow((pageX, pageY, width, height) => {
+              setBoardFrame({
+                board_left_px: pageX,
+                board_top_px: pageY,
+                board_width_px: width || measuredWidth,
+                board_height_px: height || measuredHeight,
+              });
             });
           }}
           onTouchStart={(event: unknown) => {
             const sample = createTraceSample(event);
             if (!sample) {
               pendingTraceStartRef.current = null;
-              pendingTraceStartPositionRef.current = null;
               return;
             }
 
-            const point = resolveTouchPoint(event);
             pendingTraceStartRef.current = sample;
-            activeTracePointRef.current = point;
-            pendingTraceStartPositionRef.current = point
-              ? resolveBoardPositionFromGrid({
-                  point,
-                  layout: boardLayout ?? {
-                    width_px: 0,
-                    height_px: 0,
-                    rows: activeState.board.height,
-                    cols: activeState.board.width,
-                  },
-                })
-              : null;
           }}
           onTouchEnd={() => {
             if (!traceIsActiveRef.current) {
               pendingTraceStartRef.current = null;
-              pendingTraceStartPositionRef.current = null;
-              activeTracePointRef.current = null;
             }
           }}
           onMoveShouldSetResponder={(event: unknown) => {
             const currentSample = createTraceSample(event);
-            if (!currentSample || !pendingTraceStartPositionRef.current) {
+            if (!currentSample) {
               return false;
             }
 
@@ -195,79 +177,89 @@ export function EncounterScreen(props: {
             });
           }}
           onResponderGrant={() => {
-            const startingPosition = pendingTraceStartPositionRef.current;
-            if (!startingPosition) {
+            const bounds = buildTraceBounds({
+              frame: boardFrame,
+              active_state: activeState,
+            });
+            const sample = pendingTraceStartRef.current;
+            if (!bounds || !sample) {
               return;
             }
 
             traceIsActiveRef.current = true;
-            activeTracePointRef.current = pendingTraceStartRef.current
-              ? {
-                  x_px: pendingTraceStartRef.current.x_px,
-                  y_px: pendingTraceStartRef.current.y_px,
-                }
-              : null;
-            props.on_start_trace_selection(startingPosition);
+            activeTraceIdRef.current = `trace-${sample.pointer_id}-${sample.t_ms}`;
+            void props.on_apply_trace_selection(
+              {
+                trace_id: activeTraceIdRef.current,
+                phase: "start",
+                samples: [sample],
+              },
+              bounds,
+            );
           }}
           onResponderMove={(event: unknown) => {
-            if (!traceIsActiveRef.current || !boardLayout) {
-              return;
-            }
-
-            const point = resolveTouchPoint(event);
-            const previousPoint = activeTracePointRef.current;
-            if (!point || !previousPoint) {
-              return;
-            }
-
-            const positions = sampleBoardPositionsAlongSegment({
-              from_point: previousPoint,
-              to_point: point,
-              layout: boardLayout,
+            const bounds = buildTraceBounds({
+              frame: boardFrame,
+              active_state: activeState,
             });
-
-            for (const position of positions) {
-              props.on_extend_trace_selection(position);
+            const sample = createTraceSample(event);
+            if (!traceIsActiveRef.current || !bounds || !sample) {
+              return;
             }
 
-            activeTracePointRef.current = point;
+            void props.on_apply_trace_selection(
+              {
+                trace_id:
+                  activeTraceIdRef.current ?? `trace-${sample.pointer_id}`,
+                phase: "move",
+                samples: [sample],
+              },
+              bounds,
+            );
           }}
           onResponderRelease={(event: unknown) => {
-            if (traceIsActiveRef.current && boardLayout) {
-              const point = resolveTouchPoint(event);
-              const previousPoint = activeTracePointRef.current;
-
-              if (point && previousPoint) {
-                const positions = sampleBoardPositionsAlongSegment({
-                  from_point: previousPoint,
-                  to_point: point,
-                  layout: boardLayout,
-                });
-
-                for (const position of positions) {
-                  props.on_extend_trace_selection(position);
-                }
-              }
-            }
-
-            if (traceIsActiveRef.current) {
-              void props.on_submit_selection();
+            const bounds = buildTraceBounds({
+              frame: boardFrame,
+              active_state: activeState,
+            });
+            const sample = createTraceSample(event);
+            if (traceIsActiveRef.current && bounds && sample) {
+              void props.on_apply_trace_selection(
+                {
+                  trace_id:
+                    activeTraceIdRef.current ?? `trace-${sample.pointer_id}`,
+                  phase: "end",
+                  samples: [sample],
+                },
+                bounds,
+              );
             }
 
             traceIsActiveRef.current = false;
             pendingTraceStartRef.current = null;
-            pendingTraceStartPositionRef.current = null;
-            activeTracePointRef.current = null;
+            activeTraceIdRef.current = null;
           }}
           onResponderTerminate={() => {
             if (traceIsActiveRef.current) {
-              props.on_cancel_trace_selection();
+              const bounds = buildTraceBounds({
+                frame: boardFrame,
+                active_state: activeState,
+              });
+              if (bounds) {
+                void props.on_apply_trace_selection(
+                  {
+                    trace_id: activeTraceIdRef.current ?? "trace-cancelled",
+                    phase: "cancel",
+                    samples: [],
+                  },
+                  bounds,
+                );
+              }
             }
 
             traceIsActiveRef.current = false;
             pendingTraceStartRef.current = null;
-            pendingTraceStartPositionRef.current = null;
-            activeTracePointRef.current = null;
+            activeTraceIdRef.current = null;
           }}
         >
           <BattleBoard
@@ -332,28 +324,35 @@ export function EncounterScreen(props: {
   );
 }
 
-function createTraceSample(event: unknown): TraceSample | null {
-  const point = resolveTouchPoint(event);
-  if (!point) {
-    return null;
-  }
-
-  return {
-    pointer_id: 0,
-    x_px: point.x_px,
-    y_px: point.y_px,
-    t_ms: Date.now(),
-  };
-}
-
-function resolveTouchPoint(event: unknown) {
+function createTraceSample(event: unknown) {
   const nativeEvent = (
     event as {
       nativeEvent?: BoardTouchNativeEvent;
     }
   ).nativeEvent;
 
-  return extractLocalTouchPointFromNativeEvent({
+  return createTraceSampleFromNativeEvent({
     native_event: nativeEvent ?? {},
+    frame: {
+      board_left_px: 0,
+      board_top_px: 0,
+      board_width_px: 0,
+      board_height_px: 0,
+    },
+  });
+}
+
+function buildTraceBounds(input: {
+  frame: BoardTouchFrame | null;
+  active_state: EncounterRuntimeState;
+}): TraceBoardBounds | null {
+  if (!input.frame) {
+    return null;
+  }
+
+  return createTraceBounds({
+    frame: input.frame,
+    rows: input.active_state.board.height,
+    cols: input.active_state.board.width,
   });
 }

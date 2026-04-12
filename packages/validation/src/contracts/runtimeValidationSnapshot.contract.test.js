@@ -115,3 +115,30 @@ test("authored runtime snapshot loads through provider lookup path without adapt
   assert.equal(lookup.getEntry("definitelynotaword"), null);
   assert.equal(lookup.hasPrefix("definitelynotaword"), false);
 });
+
+test("authored runtime snapshot keeps ordinary short-word support for early play", () => {
+  const authoredSnapshot = JSON.parse(
+    fs.readFileSync(authoredSnapshotPath, "utf8"),
+  );
+  const lookup = new InMemoryValidationSnapshotLookup(authoredSnapshot);
+
+  for (const word of ["ham", "hat", "cat", "dog", "run", "red", "farm"]) {
+    assert.equal(
+      lookup.hasWord(word),
+      true,
+      `Expected ${word} to be castable.`,
+    );
+  }
+});
+
+test("authored runtime snapshot meets the current minimum castable-word floor", () => {
+  const authoredSnapshot = JSON.parse(
+    fs.readFileSync(authoredSnapshotPath, "utf8"),
+  );
+
+  assert.equal(
+    authoredSnapshot.castable_words.length >= 20000,
+    true,
+    "Expected the authored runtime snapshot to provide at least 20,000 castable words.",
+  );
+});

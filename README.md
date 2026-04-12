@@ -28,6 +28,15 @@ If scripts are not scaffolded yet, follow `docs/engineering-standards.md` sectio
 
 If local setup or dependency installation behaves unexpectedly, use [docs/development-setup-and-dependency-troubleshooting.md](docs/development-setup-and-dependency-troubleshooting.md) as the canonical recovery guide.
 
+Validation snapshot bootstrap helpers:
+
+```bash
+pnpm validation:snapshot:import-frequency-bootstrap
+pnpm validation:snapshot:seed-inputs
+pnpm validation:snapshot:build -- --dry-run
+pnpm validation:snapshot:build
+```
+
 ## Repo map
 
 - `AGENTS.md` — contributor operating rules and doc-routing matrix.

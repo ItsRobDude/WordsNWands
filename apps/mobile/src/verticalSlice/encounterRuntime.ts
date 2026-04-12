@@ -415,9 +415,9 @@ const resolveOpeningMinimumPlayableWordCount = (
   encounter_payload: RuntimeEncounterPayload,
 ): number =>
   encounter_payload.encounter.isStarterEncounter
-    ? 6
+    ? 7
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 5
+      ? 6
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 3
@@ -427,9 +427,9 @@ const resolveOpeningTargetPlayableWordCount = (
   encounter_payload: RuntimeEncounterPayload,
 ): number =>
   encounter_payload.encounter.isStarterEncounter
-    ? 8
+    ? 10
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 7
+      ? 9
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 5
@@ -443,9 +443,9 @@ const resolveOpeningCandidateSearchAttempts = (
   encounter_payload: RuntimeEncounterPayload,
 ): number =>
   encounter_payload.encounter.isStarterEncounter
-    ? 12
+    ? 16
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 10
+      ? 14
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 8
@@ -455,9 +455,9 @@ const resolveRefillMinimumPlayableWordCount = (
   encounter_payload: RuntimeEncounterPayload,
 ): number =>
   encounter_payload.encounter.isStarterEncounter
-    ? 5
+    ? 6
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 4
+      ? 5
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 3
@@ -467,9 +467,9 @@ const resolveRefillTargetPlayableWordCount = (
   encounter_payload: RuntimeEncounterPayload,
 ): number =>
   encounter_payload.encounter.isStarterEncounter
-    ? 7
+    ? 8
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 6
+      ? 7
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 4
@@ -483,9 +483,9 @@ const resolveRefillCandidateSearchAttempts = (
   encounter_payload: RuntimeEncounterPayload,
 ): number =>
   encounter_payload.encounter.isStarterEncounter
-    ? 10
+    ? 14
     : encounter_payload.encounter.balanceMetadata.authoredFailRateBand === "low"
-      ? 8
+      ? 10
       : encounter_payload.encounter.balanceMetadata.authoredFailRateBand ===
           "medium"
         ? 6

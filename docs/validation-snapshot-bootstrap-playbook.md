@@ -6,9 +6,30 @@ This playbook turns the policy in `docs/word-validation-and-element-rules.md` Se
 - `content_version`: `content_m2_launch_v1`
 
 Cross-links:
+
 - policy source: `docs/word-validation-and-element-rules.md` Section 18
 - content operations linkage: `docs/content-pipeline-and-liveops.md` Section 7.4
 - lockfile pin source: `docs/early-content-lock.md` Sections 1 and 2.3
+
+Working target:
+
+- treat `20,000` castable family-safe words as the minimum acceptable long-term floor for the shipped English battle lexicon
+- the repo's current bundled snapshot is still a bootstrap slice and should be expanded through this playbook rather than hand-patched indefinitely
+
+Operational commands:
+
+```bash
+pnpm validation:snapshot:import-frequency-bootstrap
+pnpm validation:snapshot:seed-inputs
+pnpm validation:snapshot:build -- --dry-run
+pnpm validation:snapshot:build
+```
+
+Workflow note:
+
+- `validation:snapshot:import-frequency-bootstrap` stages a large frequency-ranked ordinary-English candidate file and merges a family-safe bootstrap blocklist from documented public sources
+- `validation:snapshot:seed-inputs` creates the required working input files when bootstrapping from an existing pinned snapshot
+- `validation:snapshot:build` writes both the runtime snapshot JSON and the deterministic normalized candidate list used for review
 
 ---
 
@@ -23,11 +44,13 @@ Store candidate inputs under package-local working folders before snapshot assem
 ```txt
 content/packages/content_m2_launch_v1/validation/work/input/
   candidates.core_seed.txt
+  candidates.frequency_bootstrap_*.txt
   candidates.tutorial_and_ch1.txt
   candidates.delta_patch_*.txt
 ```
 
 File format requirements:
+
 - UTF-8 text
 - one raw candidate token per line
 - no header row
@@ -35,9 +58,16 @@ File format requirements:
 - empty lines allowed (ignored during normalization)
 
 Allowed use:
+
 - `candidates.core_seed.txt`: baseline lexicon pull used for first bootstrap pass
+- `candidates.frequency_bootstrap_*.txt`: large frequency-ranked ordinary-English import used to accelerate bootstrap growth toward the 20k+ floor
 - `candidates.tutorial_and_ch1.txt`: guaranteed expected vocabulary from starter/tutorial/chapter-1 authored content
 - `candidates.delta_patch_*.txt`: corrective/additive submissions for later patches
+
+Bootstrap rule:
+
+- when the repo already contains a smaller pinned snapshot, seed `candidates.core_seed.txt` from that snapshot first so future growth remains additive and reviewable
+- when using a large import bootstrap, preserve source metadata under `validation/work/import/` so reviewers can trace where the candidate set came from and how it was filtered
 
 ### 1.2 Blocked-list source
 
@@ -48,6 +78,7 @@ content/packages/content_m2_launch_v1/validation/work/input/blocked.family_safe_
 ```
 
 File format requirements:
+
 - UTF-8 text
 - one normalized blocked word per line (lowercase `a-z` only)
 - no duplicates
@@ -70,6 +101,7 @@ word_normalized,source_file,tier,proposed_decision,proposed_element,frequency_fa
 ```
 
 Field notes:
+
 - `tone_classification` must be one of `family-safe`, `review-required`, `blocked`.
 - `confidence_score` must be a numeric string in `[0.00, 1.00]`.
 - `proposed_element` and `final_decision` are `arcane` by default unless a non-Arcane tag is approved.
@@ -97,9 +129,14 @@ content/packages/content_m2_launch_v1/validation/work/normalized/candidates.norm
 ```
 
 Determinism rules:
+
 - same inputs must produce byte-identical output
 - no locale-sensitive case transforms
 - no frequency-based reordering before human review
+
+Repo automation note:
+
+- `pnpm validation:snapshot:build` writes the normalized output above automatically when not in `--dry-run` mode
 
 ---
 
@@ -110,21 +147,25 @@ Use three explicit passes in the order below.
 ### Pass A — Familiarity and tone pre-screen
 
 Populate these Section 18.1 required fields first:
+
 - `frequency_familiarity_evidence_source`
 - `tone_classification`
 
 Decision guardrails:
+
 - if tone is clearly unsafe, set `tone_classification=blocked` and `final_decision=reject`
 - if familiarity unclear but tone appears safe, use `review-required`
 
 ### Pass B — Tiering, decision, and confidence
 
 Populate:
+
 - `tier` (A/B/C from Section 16)
 - `proposed_decision`
 - `confidence_score`
 
 Apply thresholds from Section 18.2:
+
 - Tier A accept only at `>= 0.80`
 - Tier B accept only at `>= 0.65`
 - Tier B non-Arcane tag candidate requires `>= 0.75`
@@ -133,6 +174,7 @@ Apply thresholds from Section 18.2:
 ### Pass C — Element rationale + adjudication
 
 Populate:
+
 - `proposed_element`
 - `element_rationale` (required for non-Arcane)
 - `reviewer_secondary`
@@ -140,11 +182,13 @@ Populate:
 - `override_required`, `override_rationale`, `content_owner_signoff` when needed
 
 Dispute handling (Section 18.3):
+
 - disagreement default: `valid + arcane` if family-safe and reasonably familiar
 - unclear familiarity/tone: keep invalid for this cut
 - escalate to content owner; target resolution within 2 business days
 
 Completion rule:
+
 - a row is review-complete only when all Section 18.1 required fields are non-empty and `final_decision` is set
 
 ### Optional AI prefill mode
@@ -251,6 +295,7 @@ Example shape (illustrative, aligned to canonical package layout and Section 18 
 ```
 
 Output constraints:
+
 - `castable_words` must be lowercase, deduplicated, sorted ascending
 - `element_tags` keys must be subset of `castable_words`
 - words missing from `element_tags` are implicitly Arcane
@@ -266,6 +311,7 @@ Use this release-note block in package change notes:
 
 ```md
 ## Validation Snapshot Release
+
 - validation_snapshot_version: val_snapshot_m2_launch_v1
 - release_type: initial
 - baseline_reference: none
@@ -289,6 +335,7 @@ Use monotonic patch suffixes for corrections (`_p1`, `_p2`, ...):
 
 ```md
 ## Validation Snapshot Corrective Patch
+
 - validation_snapshot_version: val_snapshot_m2_launch_v1_p1
 - release_type: corrective_patch
 - prior_snapshot_version: val_snapshot_m2_launch_v1
@@ -309,6 +356,7 @@ Use monotonic patch suffixes for corrections (`_p1`, `_p2`, ...):
 ```
 
 Patch rules:
+
 - keep scope minimal to the identified incident
 - avoid unrelated lexicon churn in corrective patches
 - preserve no-silent-drift policy using explicit version increments
