@@ -129,5 +129,58 @@ export const sampleBoardPositionsAlongSegment = (input: {
   return positions;
 };
 
+export const appendStableTracePosition = (input: {
+  current_path: readonly BoardPosition[];
+  next_position: BoardPosition;
+}): BoardPosition[] => {
+  if (input.current_path.length === 0) {
+    return [clonePosition(input.next_position)];
+  }
+
+  const tail = input.current_path[input.current_path.length - 1];
+  if (!tail) {
+    return [clonePosition(input.next_position)];
+  }
+
+  if (isSamePosition(tail, input.next_position)) {
+    return clonePositions(input.current_path);
+  }
+
+  if (!isAdjacent(tail, input.next_position)) {
+    return clonePositions(input.current_path);
+  }
+
+  if (
+    input.current_path.some((position) =>
+      isSamePosition(position, input.next_position),
+    )
+  ) {
+    return clonePositions(input.current_path);
+  }
+
+  return [
+    ...clonePositions(input.current_path),
+    clonePosition(input.next_position),
+  ];
+};
+
 const clamp = (value: number, minimum: number, maximum: number): number =>
   Math.min(maximum, Math.max(minimum, value));
+
+const isAdjacent = (left: BoardPosition, right: BoardPosition): boolean => {
+  const rowDelta = Math.abs(left.row - right.row);
+  const colDelta = Math.abs(left.col - right.col);
+
+  return rowDelta <= 1 && colDelta <= 1 && rowDelta + colDelta > 0;
+};
+
+const isSamePosition = (left: BoardPosition, right: BoardPosition): boolean =>
+  left.row === right.row && left.col === right.col;
+
+const clonePosition = (position: BoardPosition): BoardPosition => ({
+  row: position.row,
+  col: position.col,
+});
+
+const clonePositions = (positions: readonly BoardPosition[]): BoardPosition[] =>
+  positions.map(clonePosition);

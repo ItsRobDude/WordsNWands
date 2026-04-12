@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  appendStableTracePosition,
   extractLocalTouchPointFromNativeEvent,
   resolveBoardPositionFromGrid,
   sampleBoardPositionsAlongSegment,
@@ -81,5 +82,52 @@ test("sampleBoardPositionsAlongSegment interpolates through skipped cells", () =
     { row: 0, col: 3 },
     { row: 0, col: 4 },
     { row: 0, col: 5 },
+  ]);
+});
+
+test("appendStableTracePosition keeps extending swipe paths but ignores accidental backtracking", () => {
+  let path = appendStableTracePosition({
+    current_path: [],
+    next_position: { row: 0, col: 0 },
+  });
+
+  path = appendStableTracePosition({
+    current_path: path,
+    next_position: { row: 0, col: 1 },
+  });
+  path = appendStableTracePosition({
+    current_path: path,
+    next_position: { row: 0, col: 2 },
+  });
+  path = appendStableTracePosition({
+    current_path: path,
+    next_position: { row: 0, col: 1 },
+  });
+
+  assert.deepEqual(path, [
+    { row: 0, col: 0 },
+    { row: 0, col: 1 },
+    { row: 0, col: 2 },
+  ]);
+});
+
+test("appendStableTracePosition ignores reused and non-adjacent positions during a swipe", () => {
+  let path = appendStableTracePosition({
+    current_path: [{ row: 0, col: 0 }],
+    next_position: { row: 1, col: 1 },
+  });
+
+  path = appendStableTracePosition({
+    current_path: path,
+    next_position: { row: 0, col: 0 },
+  });
+  path = appendStableTracePosition({
+    current_path: path,
+    next_position: { row: 3, col: 3 },
+  });
+
+  assert.deepEqual(path, [
+    { row: 0, col: 0 },
+    { row: 1, col: 1 },
   ]);
 });

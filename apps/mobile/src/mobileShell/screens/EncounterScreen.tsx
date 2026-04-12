@@ -21,6 +21,7 @@ import {
   type BoardTouchNativeEvent,
   type TileTouchFrame,
 } from "./boardTouch.ts";
+import { appendStableTracePosition } from "./encounterTrace.ts";
 import { resolvePauseExitLabel } from "./screenFlow.ts";
 
 export function EncounterScreen(props: {
@@ -46,6 +47,7 @@ export function EncounterScreen(props: {
 }): JSX.Element {
   const boardRef = useRef<View | null>(null);
   const lastTracePointRef = useRef<{ x_px: number; y_px: number } | null>(null);
+  const tracePathRef = useRef<BoardPosition[]>([]);
   const traceActiveRef = useRef(false);
   const traceStartPositionRef = useRef<BoardPosition | null>(null);
   const [boardFrame, setBoardFrame] = useState<BoardTouchFrame | null>(null);
@@ -71,6 +73,7 @@ export function EncounterScreen(props: {
     setTileFramesByKey({});
     setBoardFrame(null);
     setPendingTraceStartPosition(null);
+    tracePathRef.current = [];
   }, [props.active_state?.encounter_session_id]);
 
   const boardPanResponder = useMemo(
@@ -126,6 +129,7 @@ export function EncounterScreen(props: {
           }
 
           traceStartPositionRef.current = startPosition;
+          tracePathRef.current = [startPosition];
           setPendingTraceStartPosition(
             props.preview_path_length === 0 ? startPosition : null,
           );
@@ -160,13 +164,14 @@ export function EncounterScreen(props: {
             props.on_start_trace_selection(startPosition);
             traceActiveRef.current = true;
             setPendingTraceStartPosition(null);
+            tracePathRef.current = [startPosition];
           }
 
-          applyInterpolatedTracePositions({
+          tracePathRef.current = applyInterpolatedTracePositions({
             from_point: lastPoint,
             to_point: nextPoint,
             tile_frames: tileFrames,
-            start_position: startPosition,
+            current_trace_path: tracePathRef.current,
             on_extend: props.on_extend_trace_selection,
           });
           lastTracePointRef.current = nextPoint;
@@ -181,11 +186,11 @@ export function EncounterScreen(props: {
                 native_event: event.nativeEvent,
                 board_frame: boardFrame,
               }) ?? lastPoint;
-            applyInterpolatedTracePositions({
+            tracePathRef.current = applyInterpolatedTracePositions({
               from_point: lastPoint,
               to_point: nextPoint,
               tile_frames: tileFrames,
-              start_position: traceStartPositionRef.current,
+              current_trace_path: tracePathRef.current,
               on_extend: props.on_extend_trace_selection,
             });
             void props.on_submit_selection();
@@ -193,6 +198,7 @@ export function EncounterScreen(props: {
             props.on_select_board_position(startPosition);
           }
 
+          tracePathRef.current = [];
           traceStartPositionRef.current = null;
           lastTracePointRef.current = null;
           traceActiveRef.current = false;
@@ -202,6 +208,7 @@ export function EncounterScreen(props: {
             props.on_cancel_trace_selection();
           }
           setPendingTraceStartPosition(null);
+          tracePathRef.current = [];
           traceStartPositionRef.current = null;
           lastTracePointRef.current = null;
           traceActiveRef.current = false;
@@ -448,24 +455,31 @@ function applyInterpolatedTracePositions(input: {
   from_point: { x_px: number; y_px: number };
   to_point: { x_px: number; y_px: number };
   tile_frames: readonly TileTouchFrame[];
-  start_position: BoardPosition | null;
+  current_trace_path: readonly BoardPosition[];
   on_extend: MobileAppStoreState["actions"]["extendTraceSelection"];
-}) {
+}): BoardPosition[] {
   const positions = sampleBoardPositionsFromTileFrames({
     from_point: input.from_point,
     to_point: input.to_point,
     tile_frames: input.tile_frames,
   });
+  let nextTracePath = input.current_trace_path.map((position) => ({
+    row: position.row,
+    col: position.col,
+  }));
 
   for (const position of positions) {
-    if (
-      input.start_position &&
-      position.row === input.start_position.row &&
-      position.col === input.start_position.col
-    ) {
+    const updatedTracePath = appendStableTracePosition({
+      current_path: nextTracePath,
+      next_position: position,
+    });
+    if (updatedTracePath.length === nextTracePath.length) {
       continue;
     }
 
+    nextTracePath = updatedTracePath;
     input.on_extend(position);
   }
+
+  return nextTracePath;
 }
